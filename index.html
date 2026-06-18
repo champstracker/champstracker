@@ -1,0 +1,2568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0d0f14" media="(prefers-color-scheme: dark)">
+<title>Champs Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+/* ═══ DESIGN TOKENS ═══════════════════════════════════ */
+:root{
+  /* Backgrounds */
+  --bg:#f7f8fa;
+  --surface:#ffffff;
+  --surface2:#f2f4f7;
+  --surface3:#e8ebf0;
+
+  /* Borders */
+  --border:rgba(0,0,0,0.08);
+  --border-strong:rgba(0,0,0,0.14);
+
+  /* Text */
+  --text:#0f1117;
+  --text-2:#374151;
+  --text-3:#6b7280;
+  --text-4:#9ca3af;
+
+  /* Shadow */
+  --shadow:0 1px 3px rgba(0,0,0,0.06),0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md:0 4px 12px rgba(0,0,0,0.08);
+
+  /* Sport accents */
+  --football:#166534;
+  --football-light:#dcfce7;
+  --football-border:#86efac;
+  --f1:#b91c1c;
+  --f1-light:#fee2e2;
+  --f1-border:#fca5a5;
+  --cricket:#0369a1;
+  --cricket-light:#e0f2fe;
+  --cricket-border:#7dd3fc;
+  --tennis:#7e22ce;
+  --tennis-light:#f3e8ff;
+  --tennis-border:#d8b4fe;
+
+  /* Status */
+  --status-green-bg:#f0fdf4;--status-green-border:#86efac;--status-green-text:#166534;
+  --status-amber-bg:#fffbeb;--status-amber-border:#fcd34d;--status-amber-text:#92400e;
+  --status-red-bg:#fef2f2;--status-red-border:#fca5a5;--status-red-text:#991b1b;
+  --status-blue-bg:#eff6ff;--status-blue-border:#93c5fd;--status-blue-text:#1e40af;
+  --status-gray-bg:#f9fafb;--status-gray-border:#d1d5db;--status-gray-text:#6b7280;
+
+  /* Pip colours */
+  --pip-done:#1d4ed8;
+  --pip-sprint-border:#d97706;
+  --pip-next:#16a34a;
+  --pip-future:#e5e7eb;
+  --pip-future-text:#9ca3af;
+
+  /* Spacing & radius */
+  --r:8px;
+  --r-lg:12px;
+  --r-xl:16px;
+}
+
+[data-theme="dark"]{
+  --bg:#0d0f14;
+  --surface:#161920;
+  --surface2:#1e2028;
+  --surface3:#262931;
+  --border:rgba(255,255,255,0.07);
+  --border-strong:rgba(255,255,255,0.12);
+  --text:#f1f3f7;
+  --text-2:#c9cdd6;
+  --text-3:#7b8494;
+  --text-4:#4a5168;
+  --shadow:none;
+  --shadow-md:none;
+  --football:#4ade80;--football-light:#052b12;--football-border:#166534;
+  --f1:#f87171;--f1-light:#3d0010;--f1-border:#7f1d1d;
+  --cricket:#38bdf8;--cricket-light:#0c2d3f;--cricket-border:#0369a1;
+  --tennis:#c084fc;--tennis-light:#2d1557;--tennis-border:#7e22ce;
+  --status-green-bg:#052b12;--status-green-border:#166534;--status-green-text:#4ade80;
+  --status-amber-bg:#1c1200;--status-amber-border:#78470a;--status-amber-text:#fbbf24;
+  --status-red-bg:#1a0505;--status-red-border:#7f1d1d;--status-red-text:#f87171;
+  --status-blue-bg:#0d1f38;--status-blue-border:#1e40af;--status-blue-text:#93c5fd;
+  --status-gray-bg:#1e2028;--status-gray-border:#374151;--status-gray-text:#9ca3af;
+  --pip-done:#3b82f6;
+  --pip-sprint-border:#f59e0b;
+  --pip-next:#22c55e;
+  --pip-future:#1e2028;
+  --pip-future-text:#4a5168;
+}
+
+/* ═══ BASE ═════════════════════════════════════════════ */
+body{
+  font-family:'Inter',sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  font-size:14px;
+  line-height:1.6;
+  min-height:100vh;
+  transition:background .2s,color .2s;
+}
+
+/* ═══ HEADER ═══════════════════════════════════════════ */
+.hdr{
+  background:var(--surface);
+  border-bottom:1px solid var(--border-strong);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 24px;height:56px;
+  position:sticky;top:0;z-index:200;
+  box-shadow:var(--shadow);
+}
+.logo{
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:22px;font-weight:800;letter-spacing:.04em;
+  color:var(--text);
+}
+.logo em{color:var(--f1);font-style:normal}
+.hdr-meta{display:flex;align-items:center;gap:10px}
+.live-dot{width:7px;height:7px;border-radius:50%;background:#16a34a;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.hdr-date{font-size:11px;color:var(--text-3);font-weight:500}
+.btn-sm{
+  background:var(--surface2);border:1px solid var(--border-strong);
+  color:var(--text-2);padding:5px 12px;border-radius:6px;
+  font-size:12px;font-weight:600;cursor:pointer;
+  font-family:'Inter',sans-serif;transition:background .15s;
+}
+.btn-sm:hover{background:var(--surface3)}
+.ai-refresh{background:var(--surface2);border:1px solid var(--border-strong);color:var(--text-2);padding:5px 12px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;transition:background .15s}
+.ai-refresh:hover{background:var(--surface3)}
+.theme-toggle{background:var(--surface2);border:1px solid var(--border-strong);color:var(--text-3);padding:5px 10px;border-radius:6px;font-size:12px;cursor:pointer;font-family:'Inter',sans-serif;transition:all .15s}
+.theme-toggle:hover{background:var(--surface3);color:var(--text)}
+
+/* ═══ SPORT TABS ════════════════════════════════════════ */
+.sport-nav{
+  display:flex;gap:0;padding:0 24px;
+  background:var(--surface);
+  border-bottom:1px solid var(--border);
+}
+.snav{
+  padding:12px 20px;font-size:13px;font-weight:600;
+  cursor:pointer;border-bottom:2px solid transparent;
+  color:var(--text-3);transition:all .15s;
+  letter-spacing:.01em;user-select:none;
+}
+.snav:hover{color:var(--text)}
+.snav.football.active{color:var(--football);border-color:var(--football)}
+.snav.f1.active{color:var(--f1);border-color:var(--f1)}
+.snav.cricket.active{color:var(--cricket);border-color:var(--cricket)}
+.snav.tennis.active{color:var(--tennis);border-color:var(--tennis)}
+
+/* ═══ SUB NAVS ══════════════════════════════════════════ */
+.f1-subnav,.fb-subnav{
+  display:none;gap:0;padding:0 24px;
+  background:var(--surface);
+  border-bottom:1px solid var(--border);
+  position:sticky;top:56px;z-index:150;
+  box-shadow:var(--shadow);
+}
+.f1-subnav.visible,.fb-subnav.visible{display:flex}
+.f1-subnav-item,.fb-subnav-item{
+  padding:9px 16px;font-size:12px;font-weight:600;
+  cursor:pointer;border-bottom:2px solid transparent;
+  color:var(--text-3);transition:all .15s;user-select:none;
+}
+.f1-subnav-item:hover,.fb-subnav-item:hover{color:var(--text)}
+.f1-subnav-item.active{color:var(--f1);border-color:var(--f1)}
+.fb-subnav-item.active{color:var(--football);border-color:var(--football)}
+
+/* ═══ MAIN CONTENT ══════════════════════════════════════ */
+.main{padding:24px 24px 60px;max-width:1280px}
+.panel{display:none}.panel.active{display:block}
+
+/* ═══ CHIPS / BADGES ════════════════════════════════════ */
+.chip{
+  display:inline-flex;align-items:center;
+  font-size:10px;font-weight:700;padding:3px 8px;
+  border-radius:4px;letter-spacing:.06em;text-transform:uppercase;
+}
+.chip-fb{background:var(--football-light);color:var(--football)}
+.chip-f1{background:var(--f1-light);color:var(--f1)}
+.chip-c{background:var(--cricket-light);color:var(--cricket)}
+.chip-t{background:var(--tennis-light);color:var(--tennis)}
+.chip-live{background:#fef2f2;color:#b91c1c}
+[data-theme="dark"] .chip-live{background:#3d0a0a;color:#f87171}
+.chip-live-green{background:var(--status-green-bg);color:var(--status-green-text)}
+.chip-up{background:var(--status-blue-bg);color:var(--status-blue-text)}
+
+/* ═══ SECTION HEADERS ═══════════════════════════════════ */
+.sec-block{margin-bottom:32px}
+.sec-title{
+  display:flex;align-items:center;gap:10px;
+  padding:20px 0 14px;
+  border-bottom:2px solid var(--border);
+  margin-bottom:16px;
+}
+.sec-title h1{
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:26px;font-weight:800;letter-spacing:.03em;
+}
+.sec-title h2{
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:20px;font-weight:700;letter-spacing:.03em;
+}
+.sec-hd{
+  display:flex;align-items:center;gap:10px;
+  margin-bottom:12px;padding-bottom:10px;
+  border-bottom:1px solid var(--border);
+}
+.sec-hd h2{
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:18px;font-weight:700;letter-spacing:.03em;
+}
+
+/* Old section hd compatibility */
+.page-title{display:flex;align-items:center;gap:10px;margin-bottom:20px}
+.page-title h1{font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:800;letter-spacing:.03em}
+
+/* ═══ CARDS ═════════════════════════════════════════════ */
+.card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--r-lg);
+  box-shadow:var(--shadow);
+}
+.card-p{padding:16px 20px}
+
+/* ═══ INFO BOX ══════════════════════════════════════════ */
+.info{
+  background:var(--surface2);
+  border-left:3px solid var(--cricket-border);
+  border-radius:0 var(--r) var(--r) 0;
+  padding:10px 14px;
+  font-size:12px;color:var(--text-3);
+  line-height:1.7;margin-bottom:14px;
+}
+.info strong{color:var(--text)}
+
+/* ═══ TABLES ════════════════════════════════════════════ */
+.tbl-wrap{overflow-x:auto;border-radius:var(--r-lg);border:1px solid var(--border);background:var(--surface)}
+table{width:100%;border-collapse:collapse}
+thead tr{background:var(--surface2)}
+th{
+  font-size:10px;font-weight:700;color:var(--text-3);
+  letter-spacing:.07em;text-transform:uppercase;
+  padding:10px 14px;text-align:left;
+  white-space:nowrap;border-bottom:1px solid var(--border);
+}
+th.r{text-align:right}
+td{
+  padding:11px 14px;
+  border-bottom:1px solid var(--border);
+  white-space:nowrap;
+  background:var(--surface);
+  color:var(--text-2);
+  font-size:13px;
+}
+td.r{text-align:right;font-variant-numeric:tabular-nums}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--surface2)}
+
+.pos{color:var(--text-3);font-size:11px;font-weight:700;width:24px;display:inline-block;font-variant-numeric:tabular-nums}
+.pos.p1{color:#d97706}
+.driver-cell{display:flex;align-items:center;gap:10px}
+.team-bar{width:3px;height:24px;border-radius:2px;flex-shrink:0}
+.driver-name{font-weight:600;font-size:13px;color:var(--text)}
+.driver-team{font-size:11px;color:var(--text-3);margin-top:1px}
+.pts-main{font-weight:700;font-size:14px;color:var(--text)}
+
+/* ═══ STATUS PILLS ══════════════════════════════════════ */
+.spill{
+  display:inline-block;font-size:10px;font-weight:700;
+  padding:3px 8px;border-radius:5px;
+  letter-spacing:.05em;white-space:nowrap;
+  border:1px solid transparent;
+}
+.s-title{background:var(--status-amber-bg);color:var(--status-amber-text);border-color:var(--status-amber-border)}
+.s-contend{background:var(--status-green-bg);color:var(--status-green-text);border-color:var(--status-green-border)}
+.s-watch{background:var(--status-amber-bg);color:var(--status-amber-text);border-color:var(--status-amber-border)}
+.s-math{background:var(--status-gray-bg);color:var(--status-gray-text);border-color:var(--status-gray-border)}
+.s-out{background:var(--status-red-bg);color:var(--status-red-text);border-color:var(--status-red-border)}
+.s-regional{background:var(--status-blue-bg);color:var(--status-blue-text);border-color:var(--status-blue-border)}
+.s-qualified{background:var(--status-green-bg);color:var(--status-green-text);border-color:var(--status-green-border)}
+.s-contention{background:var(--status-amber-bg);color:var(--status-amber-text);border-color:var(--status-amber-border)}
+
+/* ═══ F1 — ROUNDS ═══════════════════════════════════════ */
+.f1-section-hd{padding:20px 0 10px;border-bottom:2px solid var(--border);margin-bottom:16px}
+.f1-sec-label{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+.f1-sec-num{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:800;color:var(--text-3);letter-spacing:.12em}
+.f1-sec-title{font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:800;letter-spacing:.03em}
+.champ-pts-note{font-size:11px;color:var(--text-3);line-height:1.9}
+.champ-pts-note strong{color:var(--text)}
+
+/* Rounds bar */
+.rounds-bar{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r-lg);padding:16px 20px;margin-bottom:20px;
+  display:flex;align-items:center;gap:20px;flex-wrap:wrap;
+  box-shadow:var(--shadow);
+}
+.rb-stat{text-align:center}
+.rb-stat .n{font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:800}
+.rb-stat .l{font-size:10px;color:var(--text-3);letter-spacing:.06em;text-transform:uppercase;margin-top:1px}
+.rb-label{font-size:12px;color:var(--text-3)}
+.rb-label strong{color:var(--text);font-size:15px}
+.rb-track{flex:1;min-width:160px;height:5px;background:var(--surface3);border-radius:3px}
+.rb-fill{height:100%;border-radius:3px}
+
+/* Pip strip */
+.pip-strip{display:flex;gap:4px;flex-wrap:wrap;align-items:center;margin-top:6px}
+.pip{width:24px;height:24px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;cursor:default;transition:transform .1s;flex-shrink:0}
+.pip:hover{transform:scale(1.2);z-index:2}
+.pip-race{background:var(--pip-done);color:#fff}
+.pip-sprint{background:var(--pip-done);color:#fff;border:2px solid var(--pip-sprint-border)}
+.pip-next{background:transparent;border:2px solid var(--pip-next);color:var(--pip-next)}
+.pip-future{background:var(--pip-future);border:1px solid var(--border);color:var(--pip-future-text)}
+.pip-sprint-upcoming{background:transparent;border:2px solid var(--pip-sprint-border);color:var(--pip-sprint-border)}
+.pip-legend{display:flex;gap:14px;margin-top:8px;flex-wrap:wrap}
+.pip-leg-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text-3)}
+.pip-leg-dot{width:12px;height:12px;border-radius:3px;flex-shrink:0}
+
+/* Rounds toggle */
+.rounds-toggle{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+.rtgl{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r-lg);padding:18px 20px 16px;
+  cursor:pointer;transition:all .18s;position:relative;overflow:hidden;
+  box-shadow:var(--shadow);
+}
+.rtgl::before{content:'';position:absolute;top:0;left:0;width:4px;height:100%;background:var(--border);transition:background .18s}
+.rtgl.active::before{background:var(--pip-done)}
+.rtgl.active{background:var(--surface2);border-color:var(--border-strong)}
+.rtgl:hover:not(.active){background:var(--surface2)}
+.rtgl-meta{display:flex;align-items:baseline;gap:10px;margin-bottom:4px}
+.rtgl-count{font-family:'Barlow Condensed',sans-serif;font-size:40px;font-weight:800;line-height:1;color:var(--pip-done)}
+.rtgl-count-up{font-family:'Barlow Condensed',sans-serif;font-size:40px;font-weight:800;line-height:1;color:var(--status-green-text)}
+[data-theme="dark"] .rtgl-count-up{color:var(--pip-next)}
+.rtgl-label{font-family:'Barlow Condensed',sans-serif;font-size:19px;font-weight:700;letter-spacing:.02em;color:var(--text)}
+.rtgl-detail{font-size:12px;color:var(--text);font-weight:500;margin-bottom:3px}
+.rtgl-sub{font-size:11px;color:var(--text-3)}
+.rtgl-arrow{position:absolute;right:18px;top:50%;transform:translateY(-50%);font-size:20px;color:var(--text-3)}
+.rtgl.active .rtgl-arrow{color:var(--pip-done)}
+
+/* View mode */
+.view-mode-bar{display:flex;align-items:center;gap:8px;margin-bottom:14px}
+.vmode-btn{padding:5px 12px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;border:1px solid var(--border-strong);background:transparent;color:var(--text-3);transition:all .15s}
+.vmode-btn.active{background:var(--text);color:var(--surface);border-color:var(--text)}
+.vmode-btn:hover:not(.active){color:var(--text);background:var(--surface2)}
+
+/* Round cards */
+.round-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);margin-bottom:8px;overflow:hidden;box-shadow:var(--shadow)}
+.round-hd{display:flex;align-items:center;gap:12px;padding:13px 16px;cursor:pointer;user-select:none;transition:background .15s;position:relative;overflow:hidden}
+.round-hd:hover{background:var(--surface2)}
+.round-flag-bg{position:absolute;right:12px;top:50%;transform:translateY(-50%);font-family:'Barlow Condensed',sans-serif;font-size:52px;font-weight:800;letter-spacing:.05em;color:var(--text);opacity:.04;pointer-events:none;user-select:none;transition:opacity .2s;z-index:0;line-height:1}
+.round-hd:hover .round-flag-bg{opacity:.07}
+.round-num{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:800;color:var(--pip-done);background:var(--surface2);border:1px solid var(--border);padding:3px 8px;border-radius:5px;letter-spacing:.06em;white-space:nowrap;position:relative}
+.round-info{flex:1;position:relative}
+.round-gp{font-weight:600;font-size:13px;color:var(--text)}
+.round-date{font-size:11px;color:var(--text-3);margin-top:1px}
+.round-winner{display:flex;gap:12px;align-items:center;font-size:12px;position:relative}
+.p1b{color:#d97706;font-weight:700}
+.p2b{color:var(--text-3);font-weight:600}
+.p3b{color:#b45309;font-weight:600}
+.chevron{font-size:10px;color:var(--text-3);transition:transform .2s;margin-left:4px;flex-shrink:0;position:relative}
+.chevron.open{transform:rotate(180deg)}
+.round-body{display:none;border-top:1px solid var(--border)}
+.round-body.open{display:block}
+.sprint-badge{font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;background:var(--status-amber-bg);color:var(--status-amber-text);border:1px solid var(--status-amber-border);letter-spacing:.05em;text-transform:uppercase;margin-left:6px;vertical-align:middle}
+
+/* Result tables */
+.res-section{padding:12px 16px}
+.res-section-hd{font-size:10px;font-weight:700;color:var(--text-3);letter-spacing:.07em;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.res-tbl{width:100%;border-collapse:collapse;font-size:12px}
+.res-tbl th{font-size:10px;font-weight:700;color:var(--text-3);letter-spacing:.07em;text-transform:uppercase;padding:5px 8px;border-bottom:1px solid var(--border);text-align:left;background:var(--surface2)}
+.res-tbl th.r{text-align:right}
+.res-tbl td{padding:7px 8px;border-bottom:1px solid var(--border);background:var(--surface);color:var(--text-2)}
+.res-tbl td.r{text-align:right;font-variant-numeric:tabular-nums;color:var(--text-3)}
+.res-tbl tr:last-child td{border-bottom:none}
+.res-tbl tr:hover td{background:var(--surface2)}
+.pos-medal{font-size:13px;margin-right:2px}
+
+/* Upcoming rounds */
+.upc-total-bar{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:14px 20px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;box-shadow:var(--shadow)}
+.upc-total-bar .big{font-family:'Barlow Condensed',sans-serif;font-size:30px;font-weight:800;color:#d97706}
+.upc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(185px,1fr));gap:10px}
+.upc-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:14px 16px;box-shadow:var(--shadow)}
+.upc-card.next{border-color:var(--pip-next);border-width:2px}
+.upc-rnum{font-size:10px;font-weight:700;color:var(--pip-done);letter-spacing:.07em;text-transform:uppercase;margin-bottom:3px}
+.upc-card.next .upc-rnum{color:var(--pip-next)}
+.upc-gp{font-weight:600;font-size:13px;color:var(--text);margin-bottom:2px}
+.upc-circuit{font-size:11px;color:var(--text-3)}
+.upc-date{font-size:11px;color:var(--text-3)}
+.upc-pts-row{display:flex;align-items:baseline;gap:5px;margin-top:10px;border-top:1px solid var(--border);padding-top:10px}
+.upc-pts-row .big{font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:800;color:var(--pip-done)}
+.upc-pts-row .lbl{font-size:11px;color:var(--text-3)}
+.upc-sprint-flag{font-size:10px;font-weight:700;color:var(--status-amber-text);margin-top:4px}
+
+/* Horizontal selector */
+.hscroll-strip{display:flex;gap:8px;overflow-x:auto;padding-bottom:8px;margin-bottom:12px;scrollbar-width:thin}
+.hpill{flex-shrink:0;padding:8px 14px;border-radius:var(--r-lg);border:1px solid var(--border);background:var(--surface);cursor:pointer;transition:all .15s;text-align:center;box-shadow:var(--shadow);min-width:88px}
+.hpill:hover{background:var(--surface2)}
+.hpill.sel{background:var(--pip-done);border-color:var(--pip-done)}
+.hpill.sel .hpill-rnum,.hpill.sel .hpill-name{color:#fff}
+.hpill.sprint-pill{border-color:var(--pip-sprint-border);border-width:2px}
+.hpill.sel.sprint-pill{background:var(--pip-done)}
+.hpill-rnum{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:800;letter-spacing:.07em;color:var(--text-3);display:block}
+.hpill-name{font-size:12px;font-weight:600;color:var(--text);display:block;margin-top:2px;white-space:nowrap}
+.hdetail-panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--shadow);overflow:hidden}
+.hdetail-hd{display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--border);background:var(--surface2);flex-wrap:wrap}
+.hdetail-gp{font-weight:700;font-size:15px;color:var(--text)}
+.hdetail-meta{font-size:11px;color:var(--text-3);margin-top:2px}
+.hdetail-podium{display:flex;gap:14px;margin-left:auto}
+
+/* Accordion */
+.acc-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);margin-bottom:6px;overflow:hidden;box-shadow:var(--shadow)}
+.acc-hd{display:flex;align-items:center;gap:12px;padding:12px 16px;cursor:pointer;user-select:none;transition:background .15s}
+.acc-hd:hover,.acc-hd.open{background:var(--surface2)}
+.acc-body{display:none;border-top:1px solid var(--border)}
+.acc-body.open{display:block}
+
+/* Championship columns */
+.champ-cols{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
+.champ-col-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.champ-col-hd h2{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;letter-spacing:.03em}
+
+/* ═══ FOOTBALL ═══════════════════════════════════════════ */
+.fb-section-hd{padding:20px 0 10px;border-bottom:2px solid var(--border);margin-bottom:16px}
+.fb-sec-label{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+.fb-sec-num{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:800;color:var(--text-3);letter-spacing:.12em}
+.fb-sec-title{font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:800;letter-spacing:.03em}
+
+/* Group tabs */
+.grp-tabs{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:16px}
+.grp-tab{padding:5px 12px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--text-3);transition:all .15s;font-family:'Inter',sans-serif}
+.grp-tab.active{background:var(--football);color:#fff;border-color:var(--football)}
+.grp-tab:hover:not(.active){color:var(--text);background:var(--surface2)}
+
+/* Group standings card */
+.grp-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--shadow)}
+.grp-card-hd{background:var(--football);color:#fff;padding:10px 16px;display:flex;align-items:center;justify-content:space-between}
+.grp-card-hd .grp-name{font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:800;letter-spacing:.04em}
+.grp-card-hd .grp-teams{font-size:10px;opacity:.85}
+.grp-tbl{width:100%;border-collapse:collapse;font-size:12px}
+.grp-tbl th{font-size:10px;font-weight:700;color:var(--text-3);letter-spacing:.07em;text-transform:uppercase;padding:7px 10px;border-bottom:1px solid var(--border);text-align:left;background:var(--surface2)}
+.grp-tbl th.r{text-align:right}
+.grp-tbl td{padding:8px 10px;border-bottom:1px solid var(--border);background:var(--surface);color:var(--text-2)}
+.grp-tbl td.r{text-align:right;font-variant-numeric:tabular-nums;color:var(--text-3)}
+.grp-tbl tr:last-child td{border-bottom:none}
+.grp-tbl tr:hover td{background:var(--surface2)}
+.team-flag{font-size:15px;margin-right:5px}
+.team-nm{font-weight:600;font-size:12px;color:var(--text)}
+.q-dot{display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:5px;vertical-align:middle;flex-shrink:0}
+.q-auto{background:var(--pip-done)}
+.q-poss{background:var(--status-amber-text)}
+.q-out2{background:var(--status-gray-border)}
+.pts-bold{font-weight:700;color:var(--text) !important}
+.grp-fixtures{padding:10px 14px;border-top:1px solid var(--border);background:var(--surface2)}
+.fix-hd{font-size:10px;font-weight:700;color:var(--text-3);letter-spacing:.07em;text-transform:uppercase;margin-bottom:8px}
+.fix-row{display:flex;align-items:center;padding:5px 0;border-bottom:1px solid var(--border);font-size:12px}
+.fix-row:last-child{border-bottom:none}
+.fix-teams{flex:1;display:flex;align-items:center;justify-content:space-between}
+.fix-home{text-align:right;flex:1;font-weight:500;color:var(--text-2)}
+.fix-away{text-align:left;flex:1;font-weight:500;color:var(--text-2)}
+.fix-score{min-width:56px;text-align:center;font-weight:700;font-family:'Barlow Condensed',sans-serif;font-size:14px;border-radius:5px;padding:2px 8px;margin:0 6px;background:var(--surface3)}
+.fix-score.done{color:var(--text);background:var(--surface3)}
+.fix-score.upcoming{color:var(--text-3);font-size:11px;font-weight:600;font-family:'Inter',sans-serif;background:var(--surface3)}
+.fix-score.live{color:#dc2626;animation:pulse 1.5s infinite;background:#fee2e2}
+
+/* R32 bracket */
+.bracket-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px}
+.bracket-match{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--border);border-radius:var(--r);padding:12px 14px;box-shadow:var(--shadow)}
+.bracket-match-hd{font-size:10px;font-weight:700;color:var(--text-3);letter-spacing:.07em;text-transform:uppercase;margin-bottom:8px;display:flex;justify-content:space-between}
+.bracket-team{display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border);font-size:13px;color:var(--text-2)}
+.bracket-team:last-of-type{border-bottom:none}
+.bracket-venue{font-size:10px;color:var(--text-3);margin-top:5px}
+
+/* Pathway */
+.pathway-visual{overflow-x:auto;padding-bottom:8px;margin-bottom:20px}
+.pathway-row{display:flex;align-items:stretch;gap:0;min-width:860px}
+.pathway-stage{flex:1;min-width:120px}
+.pathway-stage-hd{color:#fff;text-align:center;padding:8px 4px;font-size:9px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;line-height:1.4}
+.pathway-slots{padding:4px}
+.pathway-slot{background:var(--surface);border:1px solid var(--border);border-radius:5px;padding:7px 8px;margin-bottom:3px;font-size:10px;font-weight:600;text-align:center;line-height:1.5;color:var(--text-2)}
+.pathway-slot.tbd{color:var(--text-3);font-weight:400}
+.pathway-arrow{display:flex;align-items:center;justify-content:center;padding:0 2px;color:var(--text-3);font-size:16px;align-self:center}
+
+/* Football status pills */
+.fb-pill{display:inline-block;font-size:10px;font-weight:700;padding:3px 8px;border-radius:5px;letter-spacing:.04em;white-space:nowrap;border:1px solid transparent}
+.fb-alive{background:var(--status-green-bg);color:var(--status-green-text);border-color:var(--status-green-border)}
+.fb-danger{background:var(--status-amber-bg);color:var(--status-amber-text);border-color:var(--status-amber-border)}
+.fb-out{background:var(--status-red-bg);color:var(--status-red-text);border-color:var(--status-red-border)}
+.fb-qualified{background:var(--status-blue-bg);color:var(--status-blue-text);border-color:var(--status-blue-border)}
+
+/* ═══ CRICKET ════════════════════════════════════════════ */
+.fmt-tabs{display:flex;gap:6px;margin-bottom:18px;flex-wrap:wrap}
+.ftab{padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border-strong);background:transparent;color:var(--text-3);transition:all .15s;font-family:'Inter',sans-serif}
+.ftab.active{background:var(--text);color:var(--surface)}
+.ftab:hover:not(.active){color:var(--text);background:var(--surface2)}
+.fpanel{display:none}.fpanel.active{display:block}
+
+/* Pathway grid */
+.pw-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;margin-bottom:16px}
+.pw-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:16px;box-shadow:var(--shadow)}
+.pw-card h3{font-size:12px;font-weight:700;margin-bottom:10px}
+.pw-row{display:flex;gap:8px;margin-bottom:7px;align-items:flex-start}
+.pw-dot{min-width:20px;height:20px;border-radius:50%;background:var(--surface3);font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;color:var(--text-3);margin-top:1px;flex-shrink:0}
+.pw-text{font-size:12px;color:var(--text-3);line-height:1.6}
+.pw-text strong{color:var(--text)}
+
+/* WTC PCT bar */
+.pct-bar-wrap{display:flex;align-items:center;gap:8px}
+.pct-bar{height:4px;border-radius:2px;background:var(--surface3);flex:1;min-width:60px}
+.pct-fill{height:100%;border-radius:2px}
+
+/* ═══ TENNIS ════════════════════════════════════════════ */
+.slam-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;margin-bottom:20px}
+.slam{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-xl);padding:18px;position:relative;overflow:hidden;box-shadow:var(--shadow)}
+.slam::after{content:'';position:absolute;top:0;left:0;right:0;height:4px}
+.slam.ao::after{background:#2563eb}
+.slam.fo::after{background:#c2410c}
+.slam.wb::after{background:#16a34a}
+.slam.us::after{background:#0891b2}
+.slam-event{font-size:10px;font-weight:700;color:var(--text-3);letter-spacing:.08em;text-transform:uppercase;margin-bottom:3px}
+.slam-name{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:800;margin-bottom:2px;color:var(--text)}
+.slam-dates{font-size:11px;color:var(--text-3);margin-bottom:8px}
+.surface{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:5px;letter-spacing:.05em;margin-bottom:10px}
+.clay{background:#fed7aa;color:#7c2d12}
+.grass{background:#bbf7d0;color:#14532d}
+.hard{background:#bfdbfe;color:#1e3a5f}
+[data-theme="dark"] .clay{background:#431407;color:#fb923c}
+[data-theme="dark"] .grass{background:#052b12;color:#4ade80}
+[data-theme="dark"] .hard{background:#0a1e38;color:#60a5fa}
+.champ-row{display:flex;justify-content:space-between;margin-bottom:5px}
+.champ-lbl{font-size:10px;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px}
+.champ-name{font-size:13px;font-weight:600;color:var(--text)}
+.champ-flag{font-size:11px;color:var(--text-3)}
+.slam-status{display:inline-block;font-size:10px;font-weight:700;padding:3px 9px;border-radius:5px;margin-top:8px;border:1px solid transparent}
+.done{background:var(--status-green-bg);color:var(--status-green-text);border-color:var(--status-green-border)}
+.coming{background:var(--status-blue-bg);color:var(--status-blue-text);border-color:var(--status-blue-border)}
+
+/* Rankings */
+.rank-cols{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.rank-sec{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:16px;box-shadow:var(--shadow)}
+.rank-sec h3{font-size:11px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px}
+.rank-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)}
+.rank-row:last-child{border-bottom:none}
+.rp{min-width:22px;font-size:12px;font-weight:700;color:var(--text-3)}
+.rp.g1{color:#d97706}
+.rp.g3{color:#d97706;opacity:.7}
+.rn{flex:1;font-size:13px;font-weight:500;color:var(--text)}
+.rc{font-size:11px;color:var(--text-3);min-width:20px}
+.rpts{font-size:12px;font-weight:600;color:var(--text-3)}
+
+/* ═══ AI PANEL ══════════════════════════════════════════ */
+.ai-panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-xl);padding:20px;margin-top:28px;box-shadow:var(--shadow)}
+.ai-panel h3{font-size:14px;font-weight:700;margin-bottom:4px;color:var(--text)}
+.ai-panel p{font-size:12px;color:var(--text-3);margin-bottom:14px}
+.ai-btns{display:flex;gap:8px;flex-wrap:wrap}
+.ab{padding:7px 14px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;border:1px solid var(--border-strong);transition:all .15s}
+.ab-pri{background:#1d4ed8;color:#fff;border-color:#1d4ed8}.ab-pri:hover{background:#1e40af}
+.ab-sec{background:transparent;color:var(--text)}.ab-sec:hover{background:var(--surface2)}
+.ai-loading{display:none;align-items:center;gap:8px;color:var(--text-3);font-size:12px;margin-top:12px}
+.ai-loading.on{display:flex}
+.dots span{width:5px;height:5px;border-radius:50%;background:var(--text-3);display:inline-block;margin:0 2px;animation:b .9s infinite ease-in-out}
+.dots span:nth-child(2){animation-delay:.2s}.dots span:nth-child(3){animation-delay:.4s}
+@keyframes b{0%,80%,100%{transform:scale(.6)}40%{transform:scale(1)}}
+.ai-out{display:none;margin-top:12px;padding:14px;background:var(--surface2);border-radius:var(--r);font-size:12px;color:var(--text-3);line-height:1.8;white-space:pre-wrap}
+.ai-out.on{display:block}
+
+/* ═══ RESPONSIVE ════════════════════════════════════════ */
+
+/* ── Tablet (≤ 860px) ── */
+@media(max-width:860px){
+  .champ-cols{grid-template-columns:1fr}
+  .rounds-toggle{grid-template-columns:1fr}
+  .rank-cols{grid-template-columns:1fr}
+  .bracket-grid{grid-template-columns:1fr 1fr}
+}
+
+/* ── Mobile (≤ 640px) ── */
+@media(max-width:640px){
+  /* Layout */
+  .main{padding:12px 12px 40px}
+  .hdr{padding:0 12px;height:50px}
+  .sport-nav{padding:0 12px}
+  .f1-subnav,.fb-subnav{padding:0 12px;top:50px}
+
+  /* Header — hide date, compress */
+  .hdr-date{display:none}
+  .logo{font-size:18px}
+  .theme-toggle span{display:none}
+
+  /* Sport tabs — scrollable */
+  .sport-nav{overflow-x:auto;gap:0;-webkit-overflow-scrolling:touch}
+  .sport-nav::-webkit-scrollbar{display:none}
+  .snav{padding:10px 14px;font-size:12px;white-space:nowrap;flex-shrink:0}
+
+  /* Format tabs — scrollable */
+  .fmt-tabs{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:4px}
+  .fmt-tabs::-webkit-scrollbar{display:none}
+  .ftab{flex-shrink:0;white-space:nowrap}
+
+  /* Section titles */
+  .f1-sec-title,.fb-sec-title{font-size:22px}
+  .sec-title h1{font-size:22px}
+
+  /* Tables — make them scroll horizontally */
+  .tbl-wrap{border-radius:var(--r)}
+  th,td{padding:8px 10px;font-size:12px}
+  .driver-team{display:none}
+
+  /* Rounds toggle — stack */
+  .rounds-toggle{grid-template-columns:1fr}
+  .rtgl-count,.rtgl-count-up{font-size:32px}
+
+  /* Round cards — hide podium names */
+  .round-winner{display:none}
+  .round-hd{padding:11px 12px;gap:8px}
+  .round-num{font-size:10px;padding:2px 6px}
+
+  /* Pip strip — tighter */
+  .pip{width:20px;height:20px;font-size:8px}
+  .pip-legend{gap:10px}
+  .pip-leg-item{font-size:10px}
+
+  /* Upcoming grid — 2 cols */
+  .upc-grid{grid-template-columns:1fr 1fr}
+  .upc-card{padding:10px 12px}
+  .upc-pts-row .big{font-size:20px}
+
+  /* Championship cols — stack */
+  .champ-cols{grid-template-columns:1fr}
+  .champ-pts-note{font-size:11px}
+
+  /* Football groups — stack */
+  #fb-groups-content > div[style*="grid"]{grid-template-columns:1fr !important;display:block !important}
+  .grp-card{margin-bottom:12px}
+  .grp-tbl th,.grp-tbl td{padding:6px 8px;font-size:11px}
+
+  /* Bracket — 1 col */
+  .bracket-grid{grid-template-columns:1fr}
+
+  /* Pathway visual — scroll */
+  .pathway-visual{margin:0 -12px;padding:0 12px 8px}
+
+  /* Tennis */
+  .slam-grid{grid-template-columns:1fr 1fr}
+  .rank-cols{grid-template-columns:1fr}
+
+  /* Pathway grid */
+  .pw-grid{grid-template-columns:1fr}
+
+  /* AI panel */
+  .ai-btns{flex-direction:column}
+  .ab{width:100%;text-align:center}
+
+  /* Horizontal scroll strip */
+  .hscroll-strip{gap:6px}
+  .hpill{min-width:72px;padding:7px 10px}
+  .hpill-name{font-size:11px}
+
+  /* WTC bar */
+  .rounds-bar{padding:12px 14px;gap:12px}
+
+  /* Status pills */
+  .spill{font-size:9px;padding:2px 6px}
+  .fb-pill{font-size:9px;padding:2px 6px}
+}
+
+/* ── Small mobile (≤ 380px) ── */
+@media(max-width:380px){
+  .slam-grid{grid-template-columns:1fr}
+  .upc-grid{grid-template-columns:1fr}
+  .snav{padding:10px 10px;font-size:11px}
+  th,td{padding:7px 8px;font-size:11px}
+}
+
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="logo">CHAMPS <em>TRACKER</em></div>
+  <div class="hdr-meta">
+    <div class="live-dot"></div>
+    <span class="hdr-date" id="hdrDate"></span>
+    <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">🌙 Dark</button>
+    <button class="ai-refresh" onclick="aiGo('Give a brief update on F1 2026 standings, ICC WTC standings, and tennis Grand Slam news as of June 2026. Be structured and concise.')">⟳ Refresh</button>
+  </div>
+</div>
+
+<div class="sport-nav">
+  <div class="snav football active" onclick="sw('football')">⚽ Football</div>
+  <div class="snav f1" onclick="sw('f1')">🏎 Formula 1</div>
+  <div class="snav cricket" onclick="sw('cricket')">🏏 Cricket</div>
+  <div class="snav tennis" onclick="sw('tennis')">🎾 Tennis</div>
+</div>
+
+<!-- Football sticky sub-nav -->
+<div class="fb-subnav" id="fb-subnav">
+  <a class="fb-subnav-item active" onclick="scrollToFbSection('fb-groups')">🗂 Groups</a>
+  <a class="fb-subnav-item" onclick="scrollToFbSection('fb-best3rd')">🏅 Best 3rd</a>
+  <a class="fb-subnav-item" onclick="scrollToFbSection('fb-r32')">⚔️ Round of 32</a>
+  <a class="fb-subnav-item" onclick="scrollToFbSection('fb-pathway')">🏆 Pathway</a>
+</div>
+
+<!-- F1 sticky sub-nav (only visible when F1 is active) -->
+<div class="f1-subnav" id="f1-subnav">
+  <a class="f1-subnav-item active" onclick="scrollToSection('f1-rounds')">🏁 Rounds</a>
+  <a class="f1-subnav-item" onclick="scrollToSection('f1-champs')">🏆 Championships</a>
+</div>
+
+<div class="main">
+
+<!-- ══════════════════════════════════════
+     F1 PANEL
+══════════════════════════════════════ -->
+<div id="p-f1" class="panel">
+
+  <!-- ─── SECTION 1: ROUNDS ─────────────────── -->
+  <div class="f1-section-hd" id="f1-rounds">
+    <div class="f1-sec-label">
+      <span class="f1-sec-num">01</span>
+      <span class="f1-sec-title">Rounds</span>
+      <span class="chip chip-f1">2026 SEASON</span>
+    </div>
+    <!-- pip strip -->
+    <div class="pip-strip" id="pip-strip"></div>
+  </div>
+
+  <!-- Rounds toggle -->
+  <div class="rounds-toggle">
+    <div class="rtgl active" id="rtgl-done" onclick="showRounds('done')">
+      <div class="rtgl-meta">
+        <span class="rtgl-count">7</span>
+        <span class="rtgl-label">Completed</span>
+      </div>
+      <div class="rtgl-detail">R1 Australia → R7 Spain</div>
+      <div class="rtgl-sub">7 races · 3 sprints</div>
+      <div class="rtgl-arrow">↓</div>
+    </div>
+    <div class="rtgl" id="rtgl-upcoming" onclick="showRounds('upcoming')">
+      <div class="rtgl-meta">
+        <span class="rtgl-count rtgl-count-up">15</span>
+        <span class="rtgl-label">Upcoming</span>
+      </div>
+      <div class="rtgl-detail">Next: R8 Austria · Jun 28</div>
+      <div class="rtgl-sub">399 pts still available</div>
+      <div class="rtgl-arrow">↓</div>
+    </div>
+  </div>
+
+  <!-- COMPLETED ROUNDS -->
+  <div id="rounds-done" class="rounds-section">
+    <!-- view mode switcher -->
+    <div class="view-mode-bar">
+      <span style="font-size:11px;color:var(--muted);font-weight:600">View:</span>
+      <button class="vmode-btn active" id="vmode-h" onclick="setViewMode('horizontal')">⟷ Selector</button>
+      <button class="vmode-btn" id="vmode-a" onclick="setViewMode('accordion')">☰ Accordion</button>
+    </div>
+
+    <!-- OPTION 3: Horizontal selector + single detail panel -->
+    <div id="view-horizontal">
+      <div class="hscroll-strip" id="hscroll-strip"></div>
+      <div class="hdetail-panel" id="hdetail-panel"></div>
+    </div>
+
+    <!-- OPTION 1: Accordion, one open at a time -->
+    <div id="view-accordion" style="display:none">
+      <div id="accordion-content"></div>
+    </div>
+  </div>
+
+  <!-- UPCOMING ROUNDS -->
+  <div id="rounds-upcoming" class="rounds-section" style="display:none">
+    <div id="rounds-upcoming-content"></div>
+  </div>
+
+  <!-- ─── SECTION 2: CHAMPIONSHIPS ──────────── -->
+  <div class="f1-section-hd" id="f1-champs" style="margin-top:32px">
+    <div class="f1-sec-label">
+      <span class="f1-sec-num">02</span>
+      <span class="f1-sec-title">Championships</span>
+      <span class="chip chip-f1">AFTER R7</span>
+    </div>
+    <div class="champ-pts-note">
+      Race win = <strong>25 pts</strong> · Sprint win = <strong>8 pts</strong> · No fastest lap point
+      · Normal max = <strong>25</strong> · Sprint weekend max = <strong>33</strong>
+      · <strong style="color:var(--amber)">399 pts</strong> remaining (drivers) · <strong style="color:var(--amber)">690 pts</strong> remaining (constructors)
+    </div>
+  </div>
+
+  <div class="champ-cols">
+    <!-- DRIVERS -->
+    <div class="champ-col">
+      <div class="champ-col-hd">
+        <h2>Drivers</h2>
+        <span style="font-size:11px;color:var(--muted)">22 of 22</span>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr>
+            <th>#</th><th>Driver</th><th class="r">Pts</th><th class="r">Gap</th><th class="r">Max</th><th>Status</th>
+          </tr></thead>
+          <tbody id="drv-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- CONSTRUCTORS -->
+    <div class="champ-col">
+      <div class="champ-col-hd">
+        <h2>Constructors</h2>
+        <span style="font-size:11px;color:var(--muted)">11 of 11</span>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr>
+            <th>#</th><th>Constructor</th><th class="r">Pts</th><th class="r">Gap</th><th class="r">Max</th><th>Status</th>
+          </tr></thead>
+          <tbody id="con-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /f1 panel -->
+
+<!-- ══════════════════════════════════════
+     CRICKET PANEL
+══════════════════════════════════════ -->
+
+<!-- ══════════════════════════════════════
+     FOOTBALL / FIFA PANEL
+══════════════════════════════════════ -->
+<div id="p-football" class="panel active">
+
+  <div class="fb-section-hd" id="fb-groups">
+    <div class="fb-sec-label">
+      <span class="fb-sec-num">01</span>
+      <span class="fb-sec-title">FIFA World Cup 2026</span>
+      <span class="chip chip-fb">GROUP STAGE</span>
+      <span class="chip chip-live-green">🔴 LIVE</span>
+    </div>
+    <div style="font-size:11px;color:var(--muted);line-height:1.8">
+      🇺🇸🇲🇽🇨🇦 Hosted across USA, Mexico & Canada · Jun 11 – Jul 19, 2026 · 48 teams · 12 groups · 104 matches
+      · <strong style="color:var(--text)">Group stage ends Jun 27</strong> · Round of 32 starts Jun 28 · Final Jul 19 at MetLife Stadium, New York
+    </div>
+  </div>
+
+  <!-- Progress bar -->
+  <div class="rounds-bar" style="margin-bottom:16px">
+    <div class="rb-stat"><div class="n" style="color:var(--football)">24</div><div class="l">Played</div></div>
+    <div style="display:flex;flex-direction:column;gap:6px;flex:1;min-width:160px">
+      <div class="rb-label">Matchday <strong>1</strong> complete · MD2 underway · Updated Jun 18</div>
+      <div class="rb-track"><div class="rb-fill" style="width:23%;background:var(--football)"></div></div>
+    </div>
+    <div class="rb-stat"><div class="n" style="color:var(--green)">80</div><div class="l">Remaining</div></div>
+    <div class="rb-stat"><div class="n" style="color:var(--amber)">104</div><div class="l">Total</div></div>
+  </div>
+
+  <!-- Group selector tabs -->
+  <div class="grp-tabs" id="grp-tabs">
+    <button class="grp-tab active" onclick="showGroup('A')">A</button>
+    <button class="grp-tab" onclick="showGroup('B')">B</button>
+    <button class="grp-tab" onclick="showGroup('C')">C</button>
+    <button class="grp-tab" onclick="showGroup('D')">D</button>
+    <button class="grp-tab" onclick="showGroup('E')">E</button>
+    <button class="grp-tab" onclick="showGroup('F')">F</button>
+    <button class="grp-tab" onclick="showGroup('G')">G</button>
+    <button class="grp-tab" onclick="showGroup('H')">H</button>
+    <button class="grp-tab" onclick="showGroup('I')">I</button>
+    <button class="grp-tab" onclick="showGroup('J')">J</button>
+    <button class="grp-tab" onclick="showGroup('K')">K</button>
+    <button class="grp-tab" onclick="showGroup('L')">L</button>
+    <button class="grp-tab" style="background:var(--bg3);color:var(--muted);border-color:var(--border)" onclick="showGroup('ALL')">All</button>
+  </div>
+  <div id="fb-groups-content"></div>
+
+
+    <!-- Best 3rd Place Teams -->
+    <div class="fb-section-hd" id="fb-best3rd" style="margin-top:28px">
+      <div class="fb-sec-label">
+        <span class="fb-sec-num">02b</span>
+        <span class="fb-sec-title">Best 3rd-Placed Teams</span>
+        <span class="chip chip-up">LIVE RACE</span>
+      </div>
+      <div style="font-size:11px;color:var(--muted)">
+        8 best 3rd-placed teams from the 12 groups advance to Round of 32.
+        Ranked by <strong style="color:var(--text)">Points → GD → GF → Wins</strong>.
+        Current top 8 shown in <strong style="color:var(--pip-done)">blue</strong> — updated after Matchday 1.
+      </div>
+    </div>
+    <div class="tbl-wrap" style="margin-bottom:20px">
+      <table>
+        <thead><tr>
+          <th>#</th><th>Team</th><th>Grp</th>
+          <th class="r">MP</th><th class="r">W</th><th class="r">D</th><th class="r">L</th>
+          <th class="r">GF</th><th class="r">GA</th><th class="r">GD</th><th class="r">Pts</th>
+        </tr></thead>
+        <tbody>
+          <tr style="background:var(--status-blue-bg)"><td><span class="pos p1">1</span></td><td>🇳🇱 Netherlands</td><td style="color:var(--muted);font-size:11px">F</td><td class="r">1</td><td class="r">0</td><td class="r">1</td><td class="r">0</td><td class="r">2</td><td class="r">2</td><td class="r">0</td><td class="r pts-main">1</td></tr>
+          <tr style="background:var(--status-blue-bg)"><td><span class="pos">2</span></td><td>🇧🇷 Brazil</td><td style="color:var(--muted);font-size:11px">C</td><td class="r">1</td><td class="r">0</td><td class="r">1</td><td class="r">0</td><td class="r">1</td><td class="r">1</td><td class="r">0</td><td class="r pts-main">1</td></tr>
+          <tr style="background:var(--status-blue-bg)"><td><span class="pos">3</span></td><td>🇧🇪 Belgium</td><td style="color:var(--muted);font-size:11px">G</td><td class="r">1</td><td class="r">0</td><td class="r">1</td><td class="r">0</td><td class="r">1</td><td class="r">1</td><td class="r">0</td><td class="r pts-main">1</td></tr>
+          <tr style="background:var(--status-blue-bg)"><td><span class="pos">4</span></td><td>🇶🇦 Qatar</td><td style="color:var(--muted);font-size:11px">B</td><td class="r">1</td><td class="r">0</td><td class="r">1</td><td class="r">0</td><td class="r">1</td><td class="r">1</td><td class="r">0</td><td class="r pts-main">1</td></tr>
+          <tr style="background:var(--status-blue-bg)"><td><span class="pos">5</span></td><td>🇵🇹 Portugal</td><td style="color:var(--muted);font-size:11px">K</td><td class="r">1</td><td class="r">0</td><td class="r">1</td><td class="r">0</td><td class="r">1</td><td class="r">1</td><td class="r">0</td><td class="r pts-main">1</td></tr>
+          <tr style="background:var(--status-blue-bg)"><td><span class="pos">6</span></td><td>🇪🇸 Spain</td><td style="color:var(--muted);font-size:11px">H</td><td class="r">1</td><td class="r">0</td><td class="r">1</td><td class="r">0</td><td class="r">0</td><td class="r">0</td><td class="r">0</td><td class="r pts-main">1</td></tr>
+          <tr style="background:var(--status-blue-bg)"><td><span class="pos">7</span></td><td>🇨🇿 Czechia</td><td style="color:var(--muted);font-size:11px">A</td><td class="r">1</td><td class="r">0</td><td class="r">0</td><td class="r">1</td><td class="r">1</td><td class="r">2</td><td class="r" style="color:var(--red)">-1</td><td class="r pts-main">0</td></tr>
+          <tr style="background:var(--status-blue-bg)"><td><span class="pos">8</span></td><td>🇪🇨 Ecuador</td><td style="color:var(--muted);font-size:11px">E</td><td class="r">1</td><td class="r">0</td><td class="r">0</td><td class="r">1</td><td class="r">0</td><td class="r">1</td><td class="r" style="color:var(--red)">-1</td><td class="r pts-main">0</td></tr>
+          <tr><td><span class="pos" style="color:var(--muted)">9</span></td><td>🇵🇦 Panama</td><td style="color:var(--muted);font-size:11px">L</td><td class="r">1</td><td class="r">0</td><td class="r">0</td><td class="r">1</td><td class="r">0</td><td class="r">1</td><td class="r" style="color:var(--red)">-1</td><td class="r pts-main">0</td></tr>
+          <tr><td><span class="pos" style="color:var(--muted)">10</span></td><td>🇸🇳 Senegal</td><td style="color:var(--muted);font-size:11px">I</td><td class="r">1</td><td class="r">0</td><td class="r">0</td><td class="r">1</td><td class="r">1</td><td class="r">3</td><td class="r" style="color:var(--red)">-2</td><td class="r pts-main">0</td></tr>
+          <tr><td><span class="pos" style="color:var(--muted)">11</span></td><td>🇯🇴 Jordan</td><td style="color:var(--muted);font-size:11px">J</td><td class="r">1</td><td class="r">0</td><td class="r">0</td><td class="r">1</td><td class="r">1</td><td class="r">3</td><td class="r" style="color:var(--red)">-2</td><td class="r pts-main">0</td></tr>
+          <tr><td><span class="pos" style="color:var(--muted)">12</span></td><td>🇹🇷 Türkiye</td><td style="color:var(--muted);font-size:11px">D</td><td class="r">1</td><td class="r">0</td><td class="r">0</td><td class="r">1</td><td class="r">1</td><td class="r">4</td><td class="r" style="color:var(--red)">-3</td><td class="r pts-main">0</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:16px">
+      ⚠️ Groups C/D/H/I/J/K/L 3rd place teams still have 2 matches remaining — this ranking will change significantly. 
+      <strong style="color:var(--text)">Groups with 3rd place on 0pts (Czechia, Ecuador, Panama etc.) must win to qualify.</strong>
+      Current top 6 on 1pt each — all tied until GF separates them (Netherlands leads on GF:2).
+    </div>
+  <!-- Round of 32 -->
+  <div class="fb-section-hd" id="fb-r32" style="margin-top:28px">
+    <div class="fb-sec-label">
+      <span class="fb-sec-num">02</span>
+      <span class="fb-sec-title">Round of 32</span>
+      <span class="chip chip-up">JUN 28 – JUL 3</span>
+    </div>
+    <div style="font-size:11px;color:var(--muted)">
+      32 teams advance from groups: <strong style="color:var(--text)">Top 2 from each group (24 teams)</strong> + <strong style="color:var(--text)">8 best 3rd-placed teams</strong>. All fixtures pre-defined by FIFA — no draw needed.
+    </div>
+  </div>
+  <div id="fb-r32-content"></div>
+
+  <!-- Pathway to Final -->
+  <div class="fb-section-hd" id="fb-pathway" style="margin-top:28px">
+    <div class="fb-sec-label">
+      <span class="fb-sec-num">03</span>
+      <span class="fb-sec-title">Pathway to the Final</span>
+      <span class="chip chip-fb">FULL BRACKET</span>
+    </div>
+    <div style="font-size:11px;color:var(--muted)">Win 5 knockout matches to lift the trophy on Jul 19 at MetLife Stadium, New York.</div>
+  </div>
+  <div id="fb-pathway-content"></div>
+
+</div><!-- /football panel -->
+
+<div id="p-cricket" class="panel">
+  <div class="page-title"><h1>Cricket</h1><span class="chip chip-c">ICC</span></div>
+
+  <div class="fmt-tabs">
+    <button class="ftab active" onclick="sf(this,'women')">🔴 WT20 WC 2026</button>
+    <button class="ftab" onclick="sf(this,'wtc')">WTC 2025–27</button>
+    <button class="ftab" onclick="sf(this,'odi')">ODI WC 2027</button>
+    <button class="ftab" onclick="sf(this,'t20')">T20 WC 2028</button>
+    <button class="ftab" onclick="sf(this,'wodi29')">W ODI WC 2029</button>
+  </div>
+
+  <!-- WTC -->
+  <div id="fp-wtc" class="fpanel">
+    <div class="sec-hd"><h2>ICC World Test Championship 2025–2027</h2><span class="chip chip-live">LIVE CYCLE</span></div>
+    <div class="info"><strong>Final at Lord's, June 2027.</strong> Top 2 qualify. Ranked by PCT (% of contested points won). Win = 12 pts · Draw = 4 pts · Loss = 0 pts. 9 teams, 71 matches.</div>
+    <div class="rounds-bar" style="margin-bottom:16px">
+      <div class="rb-stat"><div class="n" style="color:var(--cricket)">~30</div><div class="l">Played</div></div>
+      <div style="display:flex;flex-direction:column;gap:6px;flex:1;min-width:160px">
+        <div class="rb-label">Cycle runs until <strong>June 2027</strong> — approx. 40% of matches complete</div>
+        <div class="rb-track"><div class="rb-fill" style="width:42%;background:var(--cricket)"></div></div>
+      </div>
+      <div class="rb-stat"><div class="n" style="color:var(--green)">41</div><div class="l">Remaining</div></div>
+      <div class="rb-stat"><div class="n" style="color:var(--amber)">71</div><div class="l">Total</div></div>
+    </div>
+    <div class="tbl-wrap">
+      <table><thead><tr>
+        <th>#</th><th>Team</th><th class="r">M</th><th class="r">W</th><th class="r">L</th><th class="r">D</th><th class="r">Pts</th><th class="r">PCT %</th><th>Status</th>
+      </tr></thead><tbody id="wtc-body"></tbody></table>
+    </div>
+    <div class="pw-grid" style="margin-top:16px">
+      <div class="pw-card"><h3 style="color:var(--green)">🏆 Title Contenders</h3>
+        <div class="pw-row"><div class="pw-dot">1</div><div class="pw-text"><strong>Australia 87.5%</strong> — leads comfortably; need to maintain current form</div></div>
+        <div class="pw-row"><div class="pw-dot">2</div><div class="pw-text"><strong>New Zealand 77.8%</strong> — strong early record; key series vs Eng & Pak ahead</div></div>
+        <div class="pw-row"><div class="pw-dot">3</div><div class="pw-text"><strong>South Africa 75%</strong> — 3 wins from 4; difficult schedule with Aus & Eng remaining</div></div>
+      </div>
+      <div class="pw-card"><h3 style="color:var(--amber)">⚠️ In the Hunt</h3>
+        <div class="pw-row"><div class="pw-dot">4</div><div class="pw-text"><strong>Sri Lanka 66.7%</strong> — only 2 games played; schedule picks up significantly</div></div>
+        <div class="pw-row"><div class="pw-dot">5</div><div class="pw-text"><strong>Pakistan 50%</strong> — must win upcoming series vs WI and build PCT consistently</div></div>
+        <div class="pw-row"><div class="pw-dot">6</div><div class="pw-text"><strong>India 48.2%</strong> — 4W 4L 1D from 9; must win home series and improve away form</div></div>
+      </div>
+      <div class="pw-card"><h3 style="color:var(--red)">❌ Steep Climb</h3>
+        <div class="pw-row"><div class="pw-dot">7</div><div class="pw-text"><strong>England 31.7%</strong> — 2-pt over-rate deduction; need near-perfect remaining campaign</div></div>
+        <div class="pw-row"><div class="pw-dot">8</div><div class="pw-text"><strong>Bangladesh 16.7%</strong> — 0W 1L 1D; path open but requires strong back half</div></div>
+        <div class="pw-row"><div class="pw-dot">9</div><div class="pw-text"><strong>West Indies 4.2%</strong> — 0 wins from 8; mathematically alive but effectively eliminated</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ODI -->
+  <div id="fp-odi" class="fpanel">
+    <div class="sec-hd"><h2>Men's ODI World Cup 2027</h2><span class="chip chip-up">OCT 4 – NOV 21 2027</span></div>
+    <div class="info"><strong>Host:</strong> South Africa, Zimbabwe & Namibia. <strong>14 teams.</strong> SA & ZIM auto-qualified as full-member hosts. Top 8 in ICC ODI Rankings on <strong>31 Mar 2027</strong> qualify directly. 4 more spots via ODI Qualifier 2027.</div>
+    <div class="tbl-wrap">
+      <table><thead><tr>
+        <th>#</th><th>Team</th><th class="r">Rating</th><th>Pathway</th><th>Status</th>
+      </tr></thead><tbody id="odi-body"></tbody></table>
+    </div>
+    <div class="pw-grid" style="margin-top:16px">
+      <div class="pw-card"><h3 style="color:var(--green)">✅ Auto-qualified</h3>
+        <div class="pw-row"><div class="pw-dot">H</div><div class="pw-text"><strong>South Africa</strong> — full-member co-host</div></div>
+        <div class="pw-row"><div class="pw-dot">H</div><div class="pw-text"><strong>Zimbabwe</strong> — full-member co-host</div></div>
+      </div>
+      <div class="pw-card"><h3 style="color:var(--blue)">📊 Direct: Top-8 Rankings Race</h3>
+        <div class="pw-row"><div class="pw-dot">★</div><div class="pw-text"><strong>India, NZ, Aus, Pak</strong> — safe at current ratings; need no disasters</div></div>
+        <div class="pw-row"><div class="pw-dot">!</div><div class="pw-text"><strong>Afghanistan (95)</strong> — surprisingly inside top 8; must hold ranking through early 2027</div></div>
+        <div class="pw-row"><div class="pw-dot">!</div><div class="pw-text"><strong>England (88)</strong> — only 5 pts ahead of Bangladesh; real danger of falling out of direct zone</div></div>
+        <div class="pw-row"><div class="pw-dot">!</div><div class="pw-text"><strong>Bangladesh (83)</strong> — 5 pts behind England; could overtake with a strong ODI run</div></div>
+      </div>
+      <div class="pw-card"><h3 style="color:var(--muted)">🔁 Qualifier Route (2027)</h3>
+        <div class="pw-row"><div class="pw-dot">Q</div><div class="pw-text">10-team qualifier fills <strong>4 remaining spots</strong>: ranks 9–10 + CWC League Two top 4 + Qualifier Play-Off top 4</div></div>
+        <div class="pw-row"><div class="pw-dot">Q</div><div class="pw-text"><strong>Namibia</strong> (host, associate member) must qualify via this route</div></div>
+        <div class="pw-row"><div class="pw-dot">Q</div><div class="pw-text">Netherlands, Scotland, USA, Ireland, Nepal all chasing League Two pathway</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- T20 2028 -->
+  <div id="fp-t20" class="fpanel">
+    <div class="sec-hd"><h2>Men's T20 World Cup 2028</h2><span class="chip chip-up">OCT–NOV 2028 • AUS & NZ</span></div>
+    <div class="info"><strong>12 of 20 teams already qualified directly.</strong> India are defending T20 champions after winning the 2026 WC in Ahmedabad. 8 remaining spots via regional qualifying (Africa 2, Asia 2, Europe 2, Americas 1, EAP 1).</div>
+    <div class="tbl-wrap">
+      <table><thead><tr>
+        <th>Team</th><th>Method</th><th>Status</th>
+      </tr></thead>
+      <tbody>
+        <tr><td>🇦🇺 Australia</td><td>Co-host</td><td><span class="spill s-contend">QUALIFIED</span></td></tr>
+        <tr><td>🇳🇿 New Zealand</td><td>Co-host + 2026 Super 8</td><td><span class="spill s-contend">QUALIFIED</span></td></tr>
+        <tr><td>🇮🇳 India</td><td>2026 Champions + Super 8</td><td><span class="spill s-title">CHAMPIONS</span></td></tr>
+        <tr><td>🇵🇰 Pakistan</td><td>2026 Super 8</td><td><span class="spill s-contend">QUALIFIED</span></td></tr>
+        <tr><td>🏴󠁧󠁢󠁥󠁮󠁧󠁿 England</td><td>2026 Super 8</td><td><span class="spill s-contend">QUALIFIED</span></td></tr>
+        <tr><td>🇿🇦 South Africa</td><td>2026 Super 8</td><td><span class="spill s-contend">QUALIFIED</span></td></tr>
+        <tr><td>🇱🇰 Sri Lanka</td><td>2026 Super 8</td><td><span class="spill s-contend">QUALIFIED</span></td></tr>
+        <tr><td>🇿🇼 Zimbabwe</td><td>2026 Super 8</td><td><span class="spill s-contend">QUALIFIED</span></td></tr>
+        <tr><td>🇼🇮 West Indies</td><td>2026 Super 8</td><td><span class="spill s-contend">QUALIFIED</span></td></tr>
+        <tr><td>🇧🇩 Bangladesh</td><td>T20I Rankings (Mar 9 2026)</td><td><span class="spill s-contend">QUALIFIED</span></td></tr>
+        <tr><td>🇦🇫 Afghanistan</td><td>T20I Rankings (Mar 9 2026)</td><td><span class="spill s-contend">QUALIFIED</span></td></tr>
+        <tr><td>🇮🇪 Ireland</td><td>T20I Rankings (Mar 9 2026)</td><td><span class="spill s-contend">QUALIFIED</span></td></tr>
+        <tr><td>🌍 Africa (2 teams)</td><td>Regional qualifier — ongoing</td><td><span class="spill s-watch">IN PROGRESS</span></td></tr>
+        <tr><td>🌏 Asia (2 teams)</td><td>Regional qualifier — TBA</td><td><span class="spill s-watch">TBA</span></td></tr>
+        <tr><td>🌍 Europe (2 teams)</td><td>Regional qualifier — May 2026</td><td><span class="spill s-watch">IN PROGRESS</span></td></tr>
+        <tr><td>🌎 Americas + EAP (2 teams)</td><td>Regional qualifier — Mar–May 2026</td><td><span class="spill s-watch">IN PROGRESS</span></td></tr>
+      </tbody>
+    </table>
+    </div>
+  </div>
+
+  <!-- Women's -->
+  <div id="fp-women" class="fpanel active">
+    <div class="sec-hd">
+      <h2>ICC Women's T20 World Cup 2026</h2>
+      <span class="chip chip-live">🔴 LIVE</span>
+      <span class="chip chip-up" style="margin-left:4px">JUN 12 – JUL 5</span>
+    </div>
+    <div class="info">
+      <strong>Host: England</strong> · 12 teams · 33 matches · 7 venues across England & Wales.
+      <strong>Defending champions: New Zealand</strong> (won 2024). Top 2 from each group advance to semi-finals.
+      Semi-finals: Jun 30 & Jul 2 (The Oval) · Final: <strong>Jul 5, Lord's, London</strong>
+    </div>
+
+    <!-- Group A -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px">
+      <div class="grp-card">
+        <div class="grp-card-hd"><span class="grp-name">Group A</span><span class="grp-teams">Top 2 advance to semis</span></div>
+        <table class="grp-tbl">
+          <thead><tr><th>Team</th><th class="r">M</th><th class="r">W</th><th class="r">L</th><th class="r">Pts</th><th class="r">NRR</th></tr></thead>
+          <tbody>
+            <tr><td><span class="q-dot q-auto"></span>🇮🇳 India</td><td class="r">2</td><td class="r">2</td><td class="r">0</td><td class="r pts-bold">4</td><td class="r" style="color:var(--green)">+3.975</td></tr>
+            <tr><td><span class="q-dot q-auto"></span>🇦🇺 Australia</td><td class="r">2</td><td class="r">2</td><td class="r">0</td><td class="r pts-bold">4</td><td class="r" style="color:var(--green)">+3.875</td></tr>
+            <tr><td><span class="q-dot q-poss"></span>🇿🇦 South Africa</td><td class="r">2</td><td class="r">1</td><td class="r">1</td><td class="r pts-bold">2</td><td class="r" style="color:var(--amber)">-1.097</td></tr>
+            <tr><td><span class="q-dot q-poss"></span>🇧🇩 Bangladesh</td><td class="r">2</td><td class="r">1</td><td class="r">1</td><td class="r pts-bold">2</td><td class="r" style="color:var(--amber)">-1.790</td></tr>
+            <tr><td><span class="q-dot q-out2"></span>🇵🇰 Pakistan</td><td class="r">2</td><td class="r">0</td><td class="r">2</td><td class="r pts-bold">0</td><td class="r" style="color:var(--red)">-2.263</td></tr>
+            <tr><td><span class="q-dot q-out2"></span>🇳🇱 Netherlands</td><td class="r">2</td><td class="r">0</td><td class="r">2</td><td class="r pts-bold">0</td><td class="r" style="color:var(--red)">-2.611</td></tr>
+          </tbody>
+        </table>
+        <div class="grp-fixtures">
+          <div class="fix-hd">Results</div>
+          <div class="fix-row"><div class="fix-teams"><span class="fix-home">Australia</span><span class="fix-score done">W by 65</span><span class="fix-away">S. Africa</span></div></div>
+          <div class="fix-row"><div class="fix-teams"><span class="fix-home">Bangladesh</span><span class="fix-score done">W by 6wkt</span><span class="fix-away">Netherlands</span></div></div>
+          <div class="fix-row"><div class="fix-teams"><span class="fix-home">India</span><span class="fix-score done">W by 64</span><span class="fix-away">Pakistan</span></div></div>
+          <div class="fix-row"><div class="fix-teams"><span class="fix-home">Australia</span><span class="fix-score done">W by 9wkt</span><span class="fix-away">Bangladesh</span></div></div>
+          <div class="fix-row"><div class="fix-teams"><span class="fix-home">India</span><span class="fix-score done">W by 95</span><span class="fix-away">Netherlands</span></div></div>
+          <div class="fix-row"><div class="fix-teams"><span class="fix-home">S. Africa</span><span class="fix-score done">W</span><span class="fix-away">Pakistan</span></div></div>
+        </div>
+      </div>
+
+      <!-- Group B -->
+      <div class="grp-card">
+        <div class="grp-card-hd"><span class="grp-name">Group B</span><span class="grp-teams">Top 2 advance to semis</span></div>
+        <table class="grp-tbl">
+          <thead><tr><th>Team</th><th class="r">M</th><th class="r">W</th><th class="r">L</th><th class="r">Pts</th><th class="r">NRR</th></tr></thead>
+          <tbody>
+            <tr><td><span class="q-dot q-auto"></span>🏴󠁧󠁢󠁥󠁮󠁧󠁿 England</td><td class="r">2</td><td class="r">2</td><td class="r">0</td><td class="r pts-bold">4</td><td class="r" style="color:var(--green)">+2.763</td></tr>
+            <tr><td><span class="q-dot q-poss"></span>🏴󠁧󠁢󠁳󠁣󠁴󠁿 Scotland</td><td class="r">1</td><td class="r">1</td><td class="r">0</td><td class="r pts-bold">2</td><td class="r" style="color:var(--green)">+2.000</td></tr>
+            <tr><td><span class="q-dot q-poss"></span>🇼🇮 West Indies</td><td class="r">1</td><td class="r">1</td><td class="r">0</td><td class="r pts-bold">2</td><td class="r" style="color:var(--green)">+0.118</td></tr>
+            <tr><td><span class="q-dot q-poss"></span>🇱🇰 Sri Lanka</td><td class="r">2</td><td class="r">1</td><td class="r">1</td><td class="r pts-bold">2</td><td class="r" style="color:var(--amber)">-2.040</td></tr>
+            <tr><td><span class="q-dot q-out2"></span>🇳🇿 New Zealand</td><td class="r">2</td><td class="r">0</td><td class="r">2</td><td class="r pts-bold">0</td><td class="r" style="color:var(--red)">-0.200</td></tr>
+            <tr><td><span class="q-dot q-out2"></span>🇮🇪 Ireland</td><td class="r">2</td><td class="r">0</td><td class="r">2</td><td class="r pts-bold">0</td><td class="r" style="color:var(--red)">-1.492</td></tr>
+          </tbody>
+        </table>
+        <div class="grp-fixtures">
+          <div class="fix-hd">Results</div>
+          <div class="fix-row"><div class="fix-teams"><span class="fix-home">England</span><span class="fix-score done">W by 87</span><span class="fix-away">Sri Lanka</span></div></div>
+          <div class="fix-row"><div class="fix-teams"><span class="fix-home">Scotland</span><span class="fix-score done">W by 40</span><span class="fix-away">Ireland</span></div></div>
+          <div class="fix-row"><div class="fix-teams"><span class="fix-home">W. Indies</span><span class="fix-score done">W by 7wkt</span><span class="fix-away">New Zealand</span></div></div>
+          <div class="fix-row"><div class="fix-teams"><span class="fix-home">Sri Lanka</span><span class="fix-score done">W by 3</span><span class="fix-away">New Zealand</span></div></div>
+          <div class="fix-row"><div class="fix-teams"><span class="fix-home">England</span><span class="fix-score done">W by 32</span><span class="fix-away">Ireland</span></div></div>
+          <div class="fix-row"><div class="fix-teams"><span class="fix-home">W. Indies</span><span class="fix-score upcoming">Today</span><span class="fix-away">Scotland</span></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Key matches remaining -->
+    <div class="info" style="margin-bottom:16px">
+      <strong>🔑 Key storylines:</strong> India lead Group A on NRR after 95-run win vs Netherlands · Australia 9wkt rout of Bangladesh · <strong>NZ in crisis</strong> — lost BOTH openers (WI + SL) — defending champions on brink of elimination · Sri Lanka stunning — beat NZ to stay alive · Scotland impressive with +2.00 NRR · Jun 28: Australia vs India at Leeds — the Group A decider
+    </div>
+
+    <!-- Pathway -->
+    <div class="sec-hd"><h2>Pathway to the Final</h2></div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px">
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:12px;text-align:center;box-shadow:var(--shadow)">
+        <div style="font-size:10px;font-weight:700;color:var(--cricket);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Group Stage</div>
+        <div style="font-size:11px;color:var(--muted)">Jun 12–28<br>12 teams<br>30 matches</div>
+      </div>
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:12px;text-align:center;box-shadow:var(--shadow)">
+        <div style="font-size:10px;font-weight:700;color:var(--cricket);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Semi-Finals</div>
+        <div style="font-size:11px;color:var(--muted)">Jun 30 & Jul 2<br>The Oval<br>Top 2 each group</div>
+      </div>
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:12px;text-align:center;box-shadow:var(--shadow)">
+        <div style="font-size:10px;font-weight:700;color:var(--cricket);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Final</div>
+        <div style="font-size:11px;color:var(--muted)">Jul 5<br>Lord's, London<br>🏆 Champion</div>
+      </div>
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:12px;text-align:center;box-shadow:var(--shadow)">
+        <div style="font-size:10px;font-weight:700;color:var(--amber);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Defending Champs</div>
+        <div style="font-size:11px;color:var(--muted)">🇳🇿 New Zealand<br>Won 2024<br>⚠️ Under pressure</div>
+      </div>
+    </div>
+
+    <div class="pw-grid">
+
+      <div class="pw-card"><h3 style="color:var(--cricket)">Women's Test</h3>
+        <div class="pw-row"><div class="pw-dot">ℹ</div><div class="pw-text">No formal WTC for women yet. Ashes and bilateral series ongoing.</div></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- W ODI WC 2029 panel -->
+  <div id="fp-wodi29" class="fpanel">
+    <div class="sec-hd">
+      <h2>Women's ODI World Cup 2029</h2>
+      <span class="chip chip-c">QUALIFICATION OPEN</span>
+    </div>
+    <div class="info">
+      <strong>10 teams</strong> (expanded from 8) · Qualification via <strong>ICC Women's Championship 2025–2029</strong> ·
+      132 ODIs across 44 three-match series · <strong>Top 7 + host(s) qualify automatically</strong> · Bottom 3 go to Qualifier.
+      2025 WC winner <strong>India 🇮🇳</strong> leads the seedings.
+    </div>
+    <div class="pw-grid">
+      <div class="pw-card">
+        <h3 style="color:var(--green)">✅ ICC Women's Championship 2025–29</h3>
+        <div class="pw-row"><div class="pw-dot">11</div><div class="pw-text"><strong>11 teams</strong> — India, South Africa, Australia, England, Sri Lanka, New Zealand, Bangladesh, Pakistan, West Indies, Ireland, Zimbabwe (new)</div></div>
+        <div class="pw-row"><div class="pw-dot">📋</div><div class="pw-text">Each team plays <strong>8 three-match ODI series</strong> (4 home, 4 away) = 24 ODIs per team</div></div>
+        <div class="pw-row"><div class="pw-dot">🏆</div><div class="pw-text"><strong>Top 7 + host</strong> qualify automatically. Bottom 3 enter World Cup Qualifier</div></div>
+        <div class="pw-row"><div class="pw-dot">📊</div><div class="pw-text">2 pts win · 1 pt tie/no result · 0 loss. Tiebreaker: wins → NRR → H2H</div></div>
+      </div>
+      <div class="pw-card">
+        <h3 style="color:var(--amber)">📊 Seedings (2025 WC finish)</h3>
+        <div class="pw-row"><div class="pw-dot">1</div><div class="pw-text"><strong>India 🇮🇳</strong> — 2025 Champions · Maiden title</div></div>
+        <div class="pw-row"><div class="pw-dot">2</div><div class="pw-text"><strong>South Africa 🇿🇦</strong> — 2025 Runners-up</div></div>
+        <div class="pw-row"><div class="pw-dot">3</div><div class="pw-text"><strong>Australia 🇦🇺</strong> — 7-time champions</div></div>
+        <div class="pw-row"><div class="pw-dot">4</div><div class="pw-text"><strong>England 🏴󠁧󠁢󠁥󠁮󠁧󠁿</strong> · 5. Sri Lanka 🇱🇰 · 6. New Zealand 🇳🇿</div></div>
+        <div class="pw-row"><div class="pw-dot">7</div><div class="pw-text"><strong>Bangladesh 🇧🇩</strong> · 8. Pakistan 🇵🇰 · 9. West Indies 🇼🇮 · 10. Ireland 🇮🇪 · 11. Zimbabwe 🇿🇼</div></div>
+      </div>
+      <div class="pw-card">
+        <h3 style="color:var(--cricket)">🔁 Qualifier Route</h3>
+        <div class="pw-row"><div class="pw-dot">Q</div><div class="pw-text">Bottom 3 from ICC Women's Championship enter the <strong>2029 WC Qualifier</strong></div></div>
+        <div class="pw-row"><div class="pw-dot">→</div><div class="pw-text">Associates qualify via ICC Women's Championship League 2 + regional pathways</div></div>
+        <div class="pw-row"><div class="pw-dot">📅</div><div class="pw-text">Cycle runs until <strong>early 2029</strong>. Host TBD — auto-qualifies regardless of standings</div></div>
+      </div>
+    </div>
+  </div>
+</div><!-- /cricket -->
+
+<!-- ══════════════════════════════════════
+     TENNIS PANEL
+══════════════════════════════════════ -->
+<div id="p-tennis" class="panel">
+  <div class="page-title"><h1>Tennis 2026</h1><span class="chip chip-t">SEASON LIVE</span></div>
+
+  <!-- Tennis format tabs -->
+  <div class="fmt-tabs">
+    <button class="ftab active" onclick="sf(this,'t-slams')">🏆 Grand Slams</button>
+    <button class="ftab" onclick="sf(this,'t-atp')">🎾 Road to Turin (ATP)</button>
+    <button class="ftab" onclick="sf(this,'t-wta')">🎾 Road to Riyadh (WTA)</button>
+  </div>
+
+  <!-- GRAND SLAMS -->
+  <div id="fp-t-slams" class="fpanel active">
+  <div class="sec-hd"><h2>Grand Slams 2026</h2><span class="chip chip-t">4 MAJORS</span></div>
+
+  <div class="slam-grid">
+    <div class="slam ao">
+      <div class="slam-event">Australian Open</div>
+      <div class="slam-name">Melbourne</div>
+      <div class="slam-dates">Jan 17 – Feb 1, 2026</div>
+      <span class="surface hard">Hard Court</span>
+      <div class="champ-row">
+        <div><div class="champ-lbl">Men's</div><div class="champ-name">C. Alcaraz</div><div class="champ-flag">🇪🇸 Spain</div></div>
+        <div style="text-align:right"><div class="champ-lbl">Women's</div><div class="champ-name">E. Rybakina</div><div class="champ-flag">🇰🇿 Kazakhstan</div></div>
+      </div>
+      <span class="slam-status done">✓ Completed</span>
+    </div>
+    <div class="slam fo">
+      <div class="slam-event">French Open</div>
+      <div class="slam-name">Roland-Garros</div>
+      <div class="slam-dates">May 24 – Jun 7, 2026</div>
+      <span class="surface clay">Clay</span>
+      <div class="champ-row">
+        <div><div class="champ-lbl">Men's</div><div class="champ-name">A. Zverev</div><div class="champ-flag">🇩🇪 Germany — 1st Slam</div></div>
+        <div style="text-align:right"><div class="champ-lbl">Women's</div><div class="champ-name">M. Andreeva</div><div class="champ-flag">🇷🇺 Russia · 1st Slam</div></div>
+      </div>
+      <span class="slam-status done">✓ Completed</span>
+    </div>
+    <div class="slam wb">
+      <div class="slam-event">Wimbledon</div>
+      <div class="slam-name">London</div>
+      <div class="slam-dates">Jun 29 – Jul 12, 2026</div>
+      <span class="surface grass">Grass</span>
+      <div class="champ-row">
+        <div><div class="champ-lbl">Defending (M)</div><div class="champ-name">J. Sinner</div><div class="champ-flag">🇮🇹 Italy</div></div>
+        <div style="text-align:right"><div class="champ-lbl">Defending (W)</div><div class="champ-name">I. Świątek</div><div class="champ-flag">🇵🇱 Poland</div></div>
+      </div>
+      <span class="slam-status coming">⟳ Starts Jun 29</span>
+    </div>
+    <div class="slam us">
+      <div class="slam-event">US Open</div>
+      <div class="slam-name">New York</div>
+      <div class="slam-dates">Aug 23 – Sep 13, 2026</div>
+      <span class="surface hard">Hard Court</span>
+      <div class="champ-row">
+        <div><div class="champ-lbl">Defending (M)</div><div class="champ-name">J. Sinner</div><div class="champ-flag">🇮🇹 Italy</div></div>
+        <div style="text-align:right"><div class="champ-lbl">Defending (W)</div><div class="champ-name">C. Gauff</div><div class="champ-flag">🇺🇸 USA</div></div>
+      </div>
+      <span class="slam-status coming">⟳ Starts Aug 23</span>
+    </div>
+  </div>
+
+  <div class="info">
+    <strong>Wimbledon watch:</strong> Sinner enters as World No.1 and defending champion. Alcaraz is <strong>absent</strong> (wrist injury) — first Slam miss since 2022. Zverev, fresh off his first Grand Slam title at Roland-Garros, is the danger man. Andreeva (Roland-Garros champion) enters Wimbledon on grass for the first time as a major winner. Sabalenka (WTA No.1) is heavy favourite on grass.
+  </div>
+
+  <div class="section">
+    <div class="sec-hd"><h2>World Rankings</h2><span class="chip chip-t">POST ROLAND-GARROS</span></div>
+    <div class="rank-cols">
+      <div class="rank-sec">
+        <h3>ATP — Men's Singles</h3>
+        <div class="rank-row"><div class="rp g1">1</div><div class="rn">Jannik Sinner</div><div class="rc">🇮🇹</div><div class="rpts">13,500</div></div>
+        <div class="rank-row"><div class="rp g3">2</div><div class="rn">Carlos Alcaraz</div><div class="rc">🇪🇸</div><div class="rpts">9,960</div></div>
+        <div class="rank-row"><div class="rp g3">3</div><div class="rn">Alexander Zverev</div><div class="rc">🇩🇪</div><div class="rpts">7,195</div></div>
+        <div class="rank-row"><div class="rp">4</div><div class="rn">F. Auger-Aliassime</div><div class="rc">🇨🇦</div><div class="rpts">—</div></div>
+        <div class="rank-row"><div class="rp">5</div><div class="rn">Ben Shelton</div><div class="rc">🇺🇸</div><div class="rpts">—</div></div>
+        <div class="rank-row"><div class="rp">6</div><div class="rn">Daniil Medvedev</div><div class="rc">🇷🇺</div><div class="rpts">—</div></div>
+        <div class="rank-row"><div class="rp">7</div><div class="rn">Alex de Minaur</div><div class="rc">🇦🇺</div><div class="rpts">—</div></div>
+        <div class="rank-row"><div class="rp">10</div><div class="rn">Flavio Cobolli</div><div class="rc">🇮🇹</div><div class="rpts">Career high</div></div>
+      </div>
+      <div class="rank-sec">
+        <h3>WTA — Women's Singles</h3>
+        <div class="rank-row"><div class="rp g1">1</div><div class="rn">Aryna Sabalenka</div><div class="rc">🇧🇾</div><div class="rpts">—</div></div>
+        <div class="rank-row"><div class="rp g3">2</div><div class="rn">Elena Rybakina</div><div class="rc">🇰🇿</div><div class="rpts">—</div></div>
+        <div class="rank-row"><div class="rp g3">3</div><div class="rn">Coco Gauff</div><div class="rc">🇺🇸</div><div class="rpts">—</div></div>
+        <div class="rank-row"><div class="rp">4</div><div class="rn">Iga Świątek</div><div class="rc">🇵🇱</div><div class="rpts">—</div></div>
+        <div class="rank-row"><div class="rp">5</div><div class="rn">Jessica Pegula</div><div class="rc">🇺🇸</div><div class="rpts">—</div></div>
+        <div class="rank-row"><div class="rp">6</div><div class="rn">Amanda Anisimova</div><div class="rc">🇺🇸</div><div class="rpts">—</div></div>
+        <div class="rank-row"><div class="rp">7</div><div class="rn">Elina Svitolina</div><div class="rc">🇺🇦</div><div class="rpts">—</div></div>
+        <div class="rank-row"><div class="rp">8</div><div class="rn">Mirra Andreeva</div><div class="rc">🇷🇺</div><div class="rpts">—</div></div>
+      </div>
+    </div>
+  </div>
+  </div><!-- /fp-t-slams -->
+
+  <!-- ATP ROAD TO TURIN -->
+  <div id="fp-t-atp" class="fpanel">
+    <div class="sec-hd"><h2>Road to Turin — ATP Finals 2026</h2><span class="chip chip-t">NOV 15–22 · TURIN</span></div>
+    <div class="info">
+      <strong>Nitto ATP Finals · Inalpi Arena, Turin, Italy · Nov 15–22, 2026.</strong>
+      Top 8 in the Race qualify. Points earned Jan 1 – Paris Masters (late Oct).
+      Grand Slam win = 2,000 pts · Masters 1000 win = 1,000 pts · ATP 500 win = 500 pts.
+      <strong style="color:var(--tennis)">Wimbledon (Jun 29)</strong> is the next major swing — 2,000 pts available, could shake the entire top 10.
+    </div>
+    <div class="tbl-wrap" id="atp-race-tbl">
+      <table>
+        <thead><tr>
+          <th>#</th><th>Player</th><th class="r">Race Pts</th><th class="r">Gap to #8</th><th>Status</th>
+        </tr></thead>
+        <tbody id="atp-race-body"></tbody>
+      </table>
+    </div>
+    <div class="info" style="margin-top:14px">
+      <strong>Key stories:</strong> Shelton vs FAA — only <strong>5 pts</strong> separate 8th and 9th ·
+      Zverev within 910 pts of Sinner after Roland Garros title · Djokovic 13th, outside qualification zone ·
+      Darderi (15th), Rublev (16th) — surprise positions · Tiafoe and Lehecka level on 1,255 pts at 17th/18th ·
+      Wimbledon (Jun 29) — 2,000 pts available, could shake entire top 20
+    </div>
+  </div>
+
+  <!-- WTA ROAD TO RIYADH -->
+  <div id="fp-t-wta" class="fpanel">
+    <div class="sec-hd"><h2>Road to Riyadh — WTA Finals 2026</h2><span class="chip chip-t">NOV 7–14 · RIYADH</span></div>
+    <div class="info">
+      <strong>PIF WTA Finals · King Saud University Indoor Arena, Riyadh, Saudi Arabia · Nov 7–14, 2026.</strong>
+      Top 8 qualify. Points earned from week before 2025 Finals through late Oct 2026. Reigning champion: <strong>Elena Rybakina</strong>.
+      Grand Slam win = 2,000 pts · WTA 1000 win = 1,000 pts · WTA 500 win = 500 pts.
+      <strong style="color:var(--tennis)">Wimbledon (Jun 29)</strong> — 2,000 pts available, could reshuffle entire leaderboard.
+    </div>
+    <div class="tbl-wrap" id="wta-race-tbl">
+      <table>
+        <thead><tr>
+          <th>#</th><th>Player</th><th class="r">Race Pts</th><th class="r">Gap to #8</th><th>Status</th>
+        </tr></thead>
+        <tbody id="wta-race-body"></tbody>
+      </table>
+    </div>
+    <div class="info" style="margin-top:14px">
+      <strong>Key stories:</strong> Andreeva leads after Roland Garros maiden title at 19 ·
+      Muchova vs Mboko — only <strong>17 pts</strong> separate 8th and 9th ·
+      Swiatek 11th despite being 4-time Roland Garros champion — must perform at Wimbledon ·
+      Chwalinska jumped 117 places after Paris final run · Rybakina defending champion
+    </div>
+  </div>
+
+</div><!-- /tennis -->
+
+<!-- AI Panel -->
+<div class="ai-panel">
+  <h3>🤖 AI Data Refresh</h3>
+  <p>Fetch the latest standings and analysis via live web search.</p>
+  <div class="ai-btns">
+    <button class="ab ab-pri" onclick="aiGo('Latest F1 2026 driver and constructor standings after Barcelona GP round 7. Who leads, what are the gaps, and who is still mathematically in the title race?')">F1 Standings</button>
+    <button class="ab ab-pri" onclick="aiGo('Latest ICC World Test Championship 2025-27 points table standings and PCT percentages after the most recent Tests played in June 2026')">WTC Update</button>
+    <button class="ab ab-pri" onclick="aiGo('Current ICC Men ODI rankings June 2026, and which teams are on the bubble for 2027 ODI World Cup direct qualification')">ODI Rankings</button>
+    <button class="ab ab-pri" onclick="aiGo('Wimbledon 2026 preview: draws, top seeds, Sinner vs Alcaraz storyline, who are the favourites')">Wimbledon Preview</button>
+    <button class="ab ab-sec" onclick="customQ()">Custom ↗</button>
+  </div>
+  <div class="ai-loading" id="aiLoad"><div class="dots"><span></span><span></span><span></span></div><span>Fetching latest data...</span></div>
+  <div class="ai-out" id="aiOut"></div>
+</div>
+
+</div><!-- /main -->
+
+<script>
+// Set live date in header
+(function(){
+  const d = new Date();
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const el = document.getElementById('hdrDate');
+  if(el) el.textContent = months[d.getMonth()] + ' ' + d.getDate() + ' ' + d.getFullYear();
+})();
+
+// ═══════════════════════════════════════════
+// ROUNDS DATA
+// ═══════════════════════════════════════════
+const PTS = [25,18,15,12,10,8,6,4,2,1];
+const SPRINT_PTS = [8,7,6,5,4,3,2,1];
+
+const completedRounds = [
+  { round:1, gp:'Australian GP', flag:'🇦🇺', code:'AUS', iso2:'au', circuit:'Albert Park', date:'Mar 8 2026', sprint:false,
+    race:[
+      {pos:1,driver:'G. Russell',    team:'Mercedes',    pts:25},
+      {pos:2,driver:'K. Antonelli',  team:'Mercedes',    pts:18},
+      {pos:3,driver:'C. Leclerc',    team:'Ferrari',     pts:15},
+      {pos:4,driver:'L. Hamilton',   team:'Ferrari',     pts:12},
+      {pos:5,driver:'L. Norris',     team:'McLaren',     pts:10},
+      {pos:6,driver:'M. Verstappen', team:'Red Bull',    pts:8},
+      {pos:7,driver:'O. Bearman',    team:'Haas',        pts:6},
+      {pos:8,driver:'A. Lindblad',   team:'Racing Bulls',pts:4},
+      {pos:9,driver:'G. Bortoleto',  team:'Audi',        pts:2},
+      {pos:10,driver:'P. Gasly',     team:'Alpine',      pts:1},
+    ]
+  },
+  { round:2, gp:'Chinese GP', flag:'🇨🇳', code:'CHN', iso2:'cn', circuit:'Shanghai', date:'Mar 15 2026', sprint:true,
+    sprintRes:[
+      {pos:1,driver:'G. Russell',    team:'Mercedes',    pts:8},
+      {pos:2,driver:'K. Antonelli',  team:'Mercedes',    pts:7},
+      {pos:3,driver:'C. Leclerc',    team:'Ferrari',     pts:6},
+      {pos:4,driver:'L. Hamilton',   team:'Ferrari',     pts:5},
+      {pos:5,driver:'L. Norris',     team:'McLaren',     pts:4},
+      {pos:6,driver:'O. Piastri',    team:'McLaren',     pts:3},
+      {pos:7,driver:'M. Verstappen', team:'Red Bull',    pts:2},
+      {pos:8,driver:'P. Gasly',      team:'Alpine',      pts:1},
+    ],
+    race:[
+      {pos:1,driver:'K. Antonelli',  team:'Mercedes',    pts:25},
+      {pos:2,driver:'G. Russell',    team:'Mercedes',    pts:18},
+      {pos:3,driver:'L. Hamilton',   team:'Ferrari',     pts:15},
+      {pos:4,driver:'C. Leclerc',    team:'Ferrari',     pts:12},
+      {pos:5,driver:'L. Norris',     team:'McLaren',     pts:10},
+      {pos:6,driver:'O. Piastri',    team:'McLaren',     pts:8},
+      {pos:7,driver:'M. Verstappen', team:'Red Bull',    pts:6},
+      {pos:8,driver:'P. Gasly',      team:'Alpine',      pts:4},
+      {pos:9,driver:'I. Hadjar',     team:'Red Bull',    pts:2},
+      {pos:10,driver:'O. Bearman',   team:'Haas',        pts:1},
+    ]
+  },
+  { round:3, gp:'Japanese GP', flag:'🇯🇵', code:'JPN', iso2:'jp', circuit:'Suzuka', date:'Mar 29 2026', sprint:false,
+    race:[
+      {pos:1,driver:'K. Antonelli',  team:'Mercedes',    pts:25},
+      {pos:2,driver:'O. Piastri',    team:'McLaren',     pts:18},
+      {pos:3,driver:'C. Leclerc',    team:'Ferrari',     pts:15},
+      {pos:4,driver:'G. Russell',    team:'Mercedes',    pts:12},
+      {pos:5,driver:'L. Norris',     team:'McLaren',     pts:10},
+      {pos:6,driver:'L. Hamilton',   team:'Ferrari',     pts:8},
+      {pos:7,driver:'P. Gasly',      team:'Alpine',      pts:6},
+      {pos:8,driver:'M. Verstappen', team:'Red Bull',    pts:4},
+      {pos:9,driver:'L. Lawson',     team:'Racing Bulls',pts:2},
+      {pos:10,driver:'E. Ocon',      team:'Haas',        pts:1},
+    ]
+  },
+  { round:4, gp:'Miami GP', flag:'🇺🇸', code:'USA', iso2:'us', circuit:'Miami International Autodrome', date:'May 3 2026', sprint:true,
+    sprintRes:[
+      {pos:1,driver:'L. Norris',     team:'McLaren',     pts:8},
+      {pos:2,driver:'O. Piastri',    team:'McLaren',     pts:7},
+      {pos:3,driver:'C. Leclerc',    team:'Ferrari',     pts:6},
+      {pos:4,driver:'G. Russell',    team:'Mercedes',    pts:5},
+      {pos:5,driver:'M. Verstappen', team:'Red Bull',    pts:4},
+      {pos:6,driver:'K. Antonelli',  team:'Mercedes',    pts:3},
+      {pos:7,driver:'L. Hamilton',   team:'Ferrari',     pts:2},
+      {pos:8,driver:'P. Gasly',      team:'Alpine',      pts:1},
+    ],
+    race:[
+      {pos:1,driver:'K. Antonelli',  team:'Mercedes',    pts:25},
+      {pos:2,driver:'L. Norris',     team:'McLaren',     pts:18},
+      {pos:3,driver:'O. Piastri',    team:'McLaren',     pts:15},
+      {pos:4,driver:'G. Russell',    team:'Mercedes',    pts:12},
+      {pos:5,driver:'M. Verstappen', team:'Red Bull',    pts:10},
+      {pos:6,driver:'L. Hamilton',   team:'Ferrari',     pts:8},
+      {pos:7,driver:'F. Colapinto',  team:'Alpine',      pts:6},
+      {pos:8,driver:'C. Leclerc',    team:'Ferrari',     pts:4},
+      {pos:9,driver:'C. Sainz',      team:'Williams',    pts:2},
+      {pos:10,driver:'A. Albon',     team:'Williams',    pts:1},
+    ]
+  },
+  { round:5, gp:'Canadian GP', flag:'🇨🇦', code:'CAN', iso2:'ca', circuit:'Circuit Gilles-Villeneuve', date:'May 24 2026', sprint:true,
+    sprintRes:[
+      {pos:1,driver:'G. Russell',    team:'Mercedes',    pts:8},
+      {pos:2,driver:'L. Norris',     team:'McLaren',     pts:7},
+      {pos:3,driver:'K. Antonelli',  team:'Mercedes',    pts:6},
+      {pos:4,driver:'O. Piastri',    team:'McLaren',     pts:5},
+      {pos:5,driver:'L. Hamilton',   team:'Ferrari',     pts:4},
+      {pos:6,driver:'M. Verstappen', team:'Red Bull',    pts:3},
+      {pos:7,driver:'C. Leclerc',    team:'Ferrari',     pts:2},
+      {pos:8,driver:'I. Hadjar',     team:'Red Bull',    pts:1},
+    ],
+    race:[
+      {pos:1,driver:'K. Antonelli',  team:'Mercedes',    pts:25},
+      {pos:2,driver:'L. Hamilton',   team:'Ferrari',     pts:18},
+      {pos:3,driver:'M. Verstappen', team:'Red Bull',    pts:15},
+      {pos:4,driver:'O. Piastri',    team:'McLaren',     pts:12},
+      {pos:5,driver:'C. Leclerc',    team:'Ferrari',     pts:10},
+      {pos:6,driver:'P. Gasly',      team:'Alpine',      pts:8},
+      {pos:7,driver:'I. Hadjar',     team:'Red Bull',    pts:6},
+      {pos:8,driver:'O. Bearman',    team:'Haas',        pts:4},
+      {pos:9,driver:'F. Colapinto',  team:'Alpine',      pts:2},
+      {pos:10,driver:'A. Lindblad',  team:'Racing Bulls',pts:1},
+    ]
+  },
+  { round:6, gp:'Monaco GP', flag:'🇲🇨', code:'MON', iso2:'mc', circuit:'Circuit de Monaco', date:'Jun 7 2026', sprint:false,
+    race:[
+      {pos:1,driver:'K. Antonelli',  team:'Mercedes',    pts:25},
+      {pos:2,driver:'L. Hamilton',   team:'Ferrari',     pts:18},
+      {pos:3,driver:'P. Gasly',      team:'Alpine',      pts:15},
+      {pos:4,driver:'I. Hadjar',     team:'Red Bull',    pts:12},
+      {pos:5,driver:'L. Norris',     team:'McLaren',     pts:10},
+      {pos:6,driver:'O. Piastri',    team:'McLaren',     pts:8},
+      {pos:7,driver:'F. Colapinto',  team:'Alpine',      pts:6},
+      {pos:8,driver:'A. Lindblad',   team:'Racing Bulls',pts:4},
+      {pos:9,driver:'C. Sainz',      team:'Williams',    pts:2},
+      {pos:10,driver:'L. Lawson',    team:'Racing Bulls',pts:1},
+    ]
+  },
+  { round:7, gp:'Barcelona GP', flag:'🇪🇸', code:'ESP', iso2:'es', circuit:'Circuit de Barcelona-Catalunya', date:'Jun 14 2026', sprint:false,
+    race:[
+      {pos:1,driver:'L. Hamilton',   team:'Ferrari',     pts:25},
+      {pos:2,driver:'G. Russell',    team:'Mercedes',    pts:18},
+      {pos:3,driver:'L. Norris',     team:'McLaren',     pts:15},
+      {pos:4,driver:'M. Verstappen', team:'Red Bull',    pts:12},
+      {pos:5,driver:'O. Piastri',    team:'McLaren',     pts:10},
+      {pos:6,driver:'I. Hadjar',     team:'Red Bull',    pts:8},
+      {pos:7,driver:'P. Gasly',      team:'Alpine',      pts:6},
+      {pos:8,driver:'F. Colapinto',  team:'Alpine',      pts:4},
+      {pos:9,driver:'L. Lawson',     team:'Racing Bulls',pts:2},
+      {pos:10,driver:'A. Lindblad',  team:'Racing Bulls',pts:1},
+    ]
+  },
+];
+
+const upcomingRounds = [
+  {round:8,  gp:'Austrian GP',       flag:'🇦🇹', code:'AUT', iso2:'at', circuit:'Red Bull Ring',              date:'Jun 28 2026', sprint:false, maxPts:25},
+  {round:9,  gp:'British GP',        flag:'🇬🇧', code:'GBR', iso2:'gb', circuit:'Silverstone',                date:'Jul 5 2026',  sprint:true,  maxPts:33},
+  {round:10, gp:'Belgian GP',        flag:'🇧🇪', code:'BEL', iso2:'be', circuit:'Spa-Francorchamps',          date:'Jul 19 2026', sprint:false, maxPts:25},
+  {round:11, gp:'Hungarian GP',      flag:'🇭🇺', code:'HUN', iso2:'hu', circuit:'Hungaroring',                date:'Jul 26 2026', sprint:false, maxPts:25},
+  {round:12, gp:'Dutch GP',          flag:'🇳🇱', code:'NED', iso2:'nl', circuit:'Zandvoort',                  date:'Aug 23 2026', sprint:true,  maxPts:33},
+  {round:13, gp:'Italian GP',        flag:'🇮🇹', code:'ITA', iso2:'it', circuit:'Monza',                      date:'Sep 6 2026',  sprint:false, maxPts:25},
+  {round:14, gp:'Madrid GP',         flag:'🇪🇸', code:'MAD', iso2:'es', circuit:'Madring',                    date:'Sep 13 2026', sprint:false, maxPts:25},
+  {round:15, gp:'Azerbaijan GP',     flag:'🇦🇿', code:'AZE', iso2:'az', circuit:'Baku City Circuit',          date:'Sep 26 2026', sprint:false, maxPts:25},
+  {round:16, gp:'Singapore GP',      flag:'🇸🇬', code:'SGP', iso2:'sg', circuit:'Marina Bay Street Circuit',  date:'Oct 11 2026', sprint:true,  maxPts:33},
+  {round:17, gp:'US GP',             flag:'🇺🇸', code:'USA', iso2:'us', circuit:'Circuit of the Americas',    date:'Oct 25 2026', sprint:false, maxPts:25},
+  {round:18, gp:'Mexican GP',        flag:'🇲🇽', code:'MEX', iso2:'mx', circuit:'Autodromo Hermanos Rodriguez',date:'Nov 1 2026', sprint:false, maxPts:25},
+  {round:19, gp:'São Paulo GP',      flag:'🇧🇷', code:'BRA', iso2:'br', circuit:'Interlagos',                 date:'Nov 8 2026',  sprint:false, maxPts:25},
+  {round:20, gp:'Las Vegas GP',      flag:'🇺🇸', code:'LVG', iso2:'us', circuit:'Las Vegas Strip Circuit',    date:'Nov 21 2026', sprint:false, maxPts:25},
+  {round:21, gp:'Qatar GP',          flag:'🇶🇦', code:'QAT', iso2:'qa', circuit:'Lusail Circuit',             date:'Nov 29 2026', sprint:false, maxPts:25},
+  {round:22, gp:'Abu Dhabi GP',      flag:'🇦🇪', code:'ABD', iso2:'ae', circuit:'Yas Marina Circuit',         date:'Dec 6 2026',  sprint:false, maxPts:25},
+];
+
+// ═══════════════════════════════════════════
+// RENDER ROUNDS
+// ═══════════════════════════════════════════
+function medalIcon(pos){ return pos===1?'🥇':pos===2?'🥈':pos===3?'🥉':''; }
+
+function renderPips(){
+  const strip = document.getElementById('pip-strip');
+  if(!strip) return;
+  const sprintDone     = new Set([2,4,5]);
+  const sprintUpcoming = new Set([9,12,16]);
+  const gpNames = ['Australia','China','Japan','Miami','Canada','Monaco','Spain',
+    'Austria','Britain','Belgium','Hungary','Netherlands','Italy','Madrid',
+    'Azerbaijan','Singapore','USA','Mexico','São Paulo','Las Vegas','Qatar','Abu Dhabi'];
+
+  let dots = '';
+  for(let i=1;i<=22;i++){
+    let cls, label;
+    if(i<=7){
+      cls   = sprintDone.has(i) ? 'pip pip-sprint' : 'pip pip-race';
+      label = `R${i} ${gpNames[i-1]}${sprintDone.has(i)?' · Sprint weekend':' · Completed'}`;
+    } else if(i===8){
+      cls   = 'pip pip-next';
+      label = `R8 ${gpNames[7]} · NEXT UP`;
+    } else {
+      cls   = sprintUpcoming.has(i) ? 'pip pip-sprint-upcoming' : 'pip pip-future';
+      label = `R${i} ${gpNames[i-1]}${sprintUpcoming.has(i)?' · Sprint weekend':''}`;
+    }
+    dots += `<div class="${cls}" title="${label}">${i}</div>`;
+  }
+
+  const legend = `<div class="pip-legend">
+    <div class="pip-leg-item"><div class="pip-leg-dot" style="background:var(--pip-race)"></div>Race done</div>
+    <div class="pip-leg-item"><div class="pip-leg-dot" style="background:var(--pip-race);border:2px solid var(--pip-sprint-border)"></div>Sprint weekend</div>
+    <div class="pip-leg-item"><div class="pip-leg-dot" style="border:2px solid var(--pip-next-border);background:transparent"></div>Next up</div>
+    <div class="pip-leg-item"><div class="pip-leg-dot" style="background:var(--pip-future-bg);border:1px solid var(--border)"></div>Upcoming</div>
+  </div>`;
+
+  strip.innerHTML = `<div style="display:flex;gap:5px;flex-wrap:wrap;align-items:center">${dots}</div>${legend}`;
+}
+
+function renderResultTable(rows, isSprint){
+  return `<table class="res-tbl">
+    <thead><tr><th>Pos</th><th>Driver</th><th>Team</th><th class="r">Pts</th></tr></thead>
+    <tbody>${rows.map(r=>`<tr>
+      <td><span class="pos-medal">${medalIcon(r.pos)}</span>${r.pos>3?r.pos:''}</td>
+      <td style="font-weight:${r.pos<=3?'600':'400'}">${r.driver}</td>
+      <td style="color:var(--muted)">${r.team}</td>
+      <td class="r" style="font-weight:700;color:${r.pts>0?'var(--text)':'var(--dim)'}">${r.pts}</td>
+    </tr>`).join('')}</tbody>
+  </table>`;
+}
+
+// ── OPTION 3: Horizontal selector ──────────────
+function renderHorizontal(){
+  const strip = document.getElementById('hscroll-strip');
+  const panel = document.getElementById('hdetail-panel');
+  if(!strip||!panel) return;
+
+  strip.innerHTML = completedRounds.map((r,i)=>{
+    const hasSprint = r.sprint && r.sprintRes;
+    return `<div class="hpill${hasSprint?' sprint-pill':''}${i===0?' sel':''}" onclick="selectRound(${r.round})" id="hpill-${r.round}">
+      <span class="hpill-rnum">R${r.round}</span>
+      <span class="hpill-name">${r.gp.replace(' GP','')}</span>
+    </div>`;
+  }).join('');
+
+  showRoundDetail(completedRounds[0]);
+}
+
+function showRoundDetail(r){
+  const panel = document.getElementById('hdetail-panel');
+  const hasSprint = r.sprint && r.sprintRes;
+  const winner = r.race[0], p2 = r.race[1], p3 = r.race[2];
+  panel.innerHTML = `
+    <div class="hdetail-hd">
+      <div>
+        <div class="hdetail-gp">${r.flag} ${r.gp}${hasSprint?'<span class="sprint-badge" style="margin-left:8px">Sprint</span>':''}</div>
+        <div class="hdetail-meta">${r.circuit} · ${r.date}</div>
+      </div>
+      <div class="hdetail-podium">
+        <span class="p1b">🥇 ${winner.driver}</span>
+        <span class="p2b">🥈 ${p2.driver}</span>
+        <span class="p3b">🥉 ${p3.driver}</span>
+      </div>
+    </div>
+    ${hasSprint?`<div class="res-section">
+      <div class="res-section-hd">⚡ <span style="color:var(--amber)">Sprint</span></div>
+      ${renderResultTable(r.sprintRes,true)}
+    </div>`:''}
+    <div class="res-section"${hasSprint?' style="border-top:1px solid var(--border)"':''}>
+      <div class="res-section-hd">🏆 Grand Prix</div>
+      ${renderResultTable(r.race,false)}
+    </div>`;
+}
+
+function selectRound(num){
+  document.querySelectorAll('.hpill').forEach(p=>p.classList.remove('sel'));
+  document.getElementById('hpill-'+num).classList.add('sel');
+  const r = completedRounds.find(r=>r.round===num);
+  if(r) showRoundDetail(r);
+}
+
+// ── OPTION 1: Accordion, one open at a time ──────
+let openAccordion = null;
+
+function renderAccordion(){
+  const el = document.getElementById('accordion-content');
+  if(!el) return;
+  el.innerHTML = completedRounds.map((r,i)=>{
+    const hasSprint = r.sprint && r.sprintRes;
+    const winner = r.race[0], p2 = r.race[1], p3 = r.race[2];
+    return `<div class="acc-card">
+      <div class="acc-hd${i===0?' open':''}" onclick="toggleAccordion(this,${r.round})" id="acc-hd-${r.round}">
+        <span class="round-num">R${r.round}</span>
+        <div class="round-info">
+          <div class="round-gp">${r.gp}${hasSprint?'<span class="sprint-badge">Sprint</span>':''}</div>
+          <div class="round-date">${r.circuit} · ${r.date}</div>
+        </div>
+        <div class="round-winner">
+          <span class="p1b">🥇 ${winner.driver}</span>
+          <span class="p2b">🥈 ${p2.driver}</span>
+          <span class="p3b">🥉 ${p3.driver}</span>
+        </div>
+        <span class="chevron${i===0?' open':''}">▼</span>
+      </div>
+      <div class="acc-body${i===0?' open':''}" id="acc-body-${r.round}">
+        ${hasSprint?`<div class="res-section">
+          <div class="res-section-hd">⚡ <span style="color:var(--amber)">Sprint</span></div>
+          ${renderResultTable(r.sprintRes,true)}
+        </div>`:''}
+        <div class="res-section"${hasSprint?' style="border-top:1px solid var(--border)"':''}>
+          <div class="res-section-hd">🏆 Grand Prix</div>
+          ${renderResultTable(r.race,false)}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+  openAccordion = completedRounds[0].round;
+}
+
+function toggleAccordion(hd, num){
+  // Close currently open one
+  if(openAccordion !== null && openAccordion !== num){
+    const prevHd   = document.getElementById('acc-hd-'+openAccordion);
+    const prevBody = document.getElementById('acc-body-'+openAccordion);
+    if(prevHd)   { prevHd.classList.remove('open'); prevHd.querySelector('.chevron').classList.remove('open'); }
+    if(prevBody) prevBody.classList.remove('open');
+  }
+  // Toggle clicked one
+  const body = document.getElementById('acc-body-'+num);
+  const isOpen = body.classList.contains('open');
+  hd.classList.toggle('open', !isOpen);
+  hd.querySelector('.chevron').classList.toggle('open', !isOpen);
+  body.classList.toggle('open', !isOpen);
+  openAccordion = isOpen ? null : num;
+}
+
+// ── View mode switcher ───────────────────────────
+function setViewMode(mode){
+  document.getElementById('vmode-h').classList.toggle('active', mode==='horizontal');
+  document.getElementById('vmode-a').classList.toggle('active', mode==='accordion');
+  document.getElementById('view-horizontal').style.display = mode==='horizontal'?'block':'none';
+  document.getElementById('view-accordion').style.display  = mode==='accordion'?'block':'none';
+}
+
+function renderCompletedRounds(){
+  renderHorizontal();
+  renderAccordion();
+}
+
+function renderUpcomingRounds(){
+  const el = document.getElementById('rounds-upcoming-content');
+  const total = upcomingRounds.reduce((s,r)=>s+r.maxPts,0);
+  el.innerHTML = `
+  <div class="upc-total-bar">
+    <div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:2px">Total points still available for drivers</div>
+      <div style="display:flex;align-items:baseline;gap:8px">
+        <span class="big">${total}</span>
+        <span style="font-size:12px;color:var(--muted)">across ${upcomingRounds.length} rounds</span>
+      </div>
+    </div>
+    <div style="font-size:11px;color:var(--muted);text-align:right;line-height:1.8">
+      Normal max: <strong style="color:var(--text)">25 pts</strong><br>
+      Sprint weekend max: <strong style="color:var(--text)">33 pts</strong>
+    </div>
+  </div>
+  <div class="upc-grid">
+    ${upcomingRounds.map((r,i)=>`
+    <div class="upc-card${i===0?' next':''}">
+      <div class="upc-rnum" style="position:relative">ROUND ${r.round}${i===0?' · NEXT UP':''}</div>
+      <div class="upc-gp" style="position:relative">${r.gp}</div>
+      <div class="upc-circuit" style="position:relative">${r.circuit}</div>
+      <div class="upc-date" style="position:relative">${r.date}</div>
+      <div class="upc-pts-row" style="position:relative">
+        <span class="big">${r.maxPts}</span>
+        <span class="lbl">max pts</span>
+      </div>
+      ${r.sprint?'<div class="upc-sprint-flag" style="position:relative">⚡ Sprint Weekend</div>':''}
+    </div>`).join('')}
+  </div>`;
+}
+
+function showRounds(which){
+  document.getElementById('rtgl-done').classList.toggle('active', which==='done');
+  document.getElementById('rtgl-upcoming').classList.toggle('active', which==='upcoming');
+  document.getElementById('rounds-done').style.display = which==='done'?'block':'none';
+  document.getElementById('rounds-upcoming').style.display = which==='upcoming'?'block':'none';
+}
+
+function initF1(){
+  if(document.getElementById('drv-body').innerHTML === '') {
+    renderPips();
+    renderCompletedRounds();
+    renderUpcomingRounds();
+    renderDrivers();
+    renderConstructors();
+  }
+}
+
+
+
+// 15 rounds left: 12 normal (25 pts each) + 3 sprint weekends (33 pts each = 25 race + 8 sprint)
+const REMAINING = (12 * 25) + (3 * 33); // = 399 (drivers)
+// Constructors max: best possible is P1+P2 every race
+// Normal weekend: 25+18 = 43. Sprint weekend: 25+18+8+7 = 58
+const CREM = (12 * 43) + (3 * 58); // = 516 + 174 = 690
+
+const drivers = [
+  {pos:1, name:'Kimi Antonelli',    team:'Mercedes',    flag:'🇮🇹',pts:156,gap:0,   color:'#00d2be',status:'title',   slabel:'LEADER'},
+  {pos:2, name:'Lewis Hamilton',    team:'Ferrari',     flag:'🇬🇧',pts:115,gap:41,  color:'#dc0000',status:'title',   slabel:'TITLE FIGHT'},
+  {pos:3, name:'George Russell',    team:'Mercedes',    flag:'🇬🇧',pts:106,gap:50,  color:'#00d2be',status:'title',   slabel:'TITLE FIGHT'},
+  {pos:4, name:'Charles Leclerc',   team:'Ferrari',     flag:'🇲🇨',pts:75, gap:81,  color:'#dc0000',status:'contend', slabel:'CONTENDER'},
+  {pos:5, name:'Lando Norris',      team:'McLaren',     flag:'🇬🇧',pts:73, gap:83,  color:'#ff8000',status:'contend', slabel:'CONTENDER'},
+  {pos:6, name:'Oscar Piastri',     team:'McLaren',     flag:'🇦🇺',pts:68, gap:88,  color:'#ff8000',status:'contend', slabel:'CONTENDER'},
+  {pos:7, name:'Max Verstappen',    team:'Red Bull',    flag:'🇳🇱',pts:55, gap:101, color:'#0600ef',status:'contend', slabel:'CONTENDER'},
+  {pos:8, name:'Pierre Gasly',      team:'Alpine',      flag:'🇫🇷',pts:41, gap:115, color:'#0090ff',status:'watch',   slabel:'IN HUNT'},
+  {pos:9, name:'Isack Hadjar',      team:'Red Bull',    flag:'🇫🇷',pts:34, gap:122, color:'#0600ef',status:'watch',   slabel:'IN HUNT'},
+  {pos:10,name:'Liam Lawson',       team:'Racing Bulls',flag:'🇳🇿',pts:28, gap:128, color:'#6692ff',status:'watch',   slabel:'IN HUNT'},
+  {pos:11,name:'Oliver Bearman',    team:'Haas',        flag:'🇬🇧',pts:18, gap:138, color:'#b6babd',status:'watch',   slabel:'IN HUNT'},
+  {pos:12,name:'Franco Colapinto',  team:'Alpine',      flag:'🇦🇷',pts:16, gap:140, color:'#0090ff',status:'watch',   slabel:'IN HUNT'},
+  {pos:13,name:'Arvid Lindblad',    team:'Racing Bulls',flag:'🇸🇪',pts:13, gap:143, color:'#6692ff',status:'math',    slabel:'MATH ONLY'},
+  {pos:14,name:'Carlos Sainz',      team:'Williams',    flag:'🇪🇸',pts:6,  gap:150, color:'#005aff',status:'math',    slabel:'MATH ONLY'},
+  {pos:15,name:'Alex Albon',        team:'Williams',    flag:'🇹🇭',pts:5,  gap:151, color:'#005aff',status:'math',    slabel:'MATH ONLY'},
+  {pos:16,name:'Esteban Ocon',      team:'Haas',        flag:'🇫🇷',pts:3,  gap:153, color:'#b6babd',status:'math',    slabel:'MATH ONLY'},
+  {pos:17,name:'Gabriel Bortoleto', team:'Audi',        flag:'🇧🇷',pts:2,  gap:154, color:'#c8d402',status:'math',    slabel:'MATH ONLY'},
+  {pos:18,name:'Fernando Alonso',   team:'Aston Martin',flag:'🇪🇸',pts:1,  gap:155, color:'#006f62',status:'math',    slabel:'MATH ONLY'},
+  {pos:19,name:'Nico Hülkenberg',   team:'Audi',        flag:'🇩🇪',pts:0,  gap:156, color:'#c8d402',status:'math',    slabel:'MATH ONLY'},
+  {pos:20,name:'Lance Stroll',      team:'Aston Martin',flag:'🇨🇦',pts:0,  gap:156, color:'#006f62',status:'math',    slabel:'MATH ONLY'},
+  {pos:21,name:'Valtteri Bottas',   team:'Cadillac',    flag:'🇫🇮',pts:0,  gap:156, color:'#c40000',status:'math',    slabel:'MATH ONLY'},
+  {pos:22,name:'Sergio Pérez',      team:'Cadillac',    flag:'🇲🇽',pts:0,  gap:156, color:'#c40000',status:'math',    slabel:'MATH ONLY'},
+];
+
+const constructors = [
+  {pos:1, team:'Mercedes',    pts:262,gap:0,   color:'#00d2be',status:'title',   slabel:'LEADING'},
+  {pos:2, team:'Ferrari',     pts:190,gap:72,  color:'#dc0000',status:'title',   slabel:'TITLE FIGHT'},
+  {pos:3, team:'McLaren',     pts:141,gap:121, color:'#ff8000',status:'contend', slabel:'CONTENDER'},
+  {pos:4, team:'Red Bull',    pts:89, gap:173, color:'#0600ef',status:'contend', slabel:'CONTENDER'},
+  {pos:5, team:'Alpine',      pts:60, gap:202, color:'#0090ff',status:'watch',   slabel:'IN HUNT'},
+  {pos:6, team:'Racing Bulls',pts:38, gap:224, color:'#6692ff',status:'watch',   slabel:'IN HUNT'},
+  {pos:7, team:'Haas',        pts:21, gap:241, color:'#b6babd',status:'math',    slabel:'MATH ONLY'},
+  {pos:8, team:'Williams',    pts:11, gap:251, color:'#005aff',status:'math',    slabel:'MATH ONLY'},
+  {pos:9, team:'Audi',        pts:2,  gap:260, color:'#c8d402',status:'math',    slabel:'MATH ONLY'},
+  {pos:10,team:'Aston Martin',pts:1,  gap:261, color:'#006f62',status:'math',    slabel:'MATH ONLY'},
+  {pos:11,team:'Cadillac',    pts:0,  gap:262, color:'#c40000',status:'math',    slabel:'MATH ONLY'},
+];
+
+const wtc = [
+  {pos:1,team:'Australia',   flag:'🇦🇺',p:8, w:7,l:1,d:0,pts:84,pct:87.5,  status:'title'},
+  {pos:2,team:'New Zealand', flag:'🇳🇿',p:3, w:2,l:0,d:1,pts:28,pct:77.78, status:'contend'},
+  {pos:3,team:'South Africa',flag:'🇿🇦',p:4, w:3,l:1,d:0,pts:36,pct:75.0,  status:'contend'},
+  {pos:4,team:'Sri Lanka',   flag:'🇱🇰',p:2, w:1,l:0,d:1,pts:16,pct:66.67, status:'contend'},
+  {pos:5,team:'Pakistan',    flag:'🇵🇰',p:2, w:1,l:1,d:0,pts:12,pct:50.0,  status:'watch'},
+  {pos:6,team:'India',       flag:'🇮🇳',p:9, w:4,l:4,d:1,pts:52,pct:48.15, status:'watch'},
+  {pos:7,team:'England',     flag:'🏴󠁧󠁢󠁥󠁮󠁧󠁿',p:10,w:3,l:6,d:1,pts:38,pct:31.67, status:'math'},
+  {pos:8,team:'Bangladesh',  flag:'🇧🇩',p:2, w:0,l:1,d:1,pts:4, pct:16.67, status:'out'},
+  {pos:9,team:'West Indies', flag:'🇼🇮',p:8, w:0,l:7,d:1,pts:4, pct:4.17,  status:'out'},
+];
+
+const odi = [
+  {rank:1, team:'India',        flag:'🇮🇳',rating:119,note:'Safe direct entry',       cls:'contend'},
+  {rank:2, team:'New Zealand',  flag:'🇳🇿',rating:111,note:'Safe direct entry',       cls:'contend'},
+  {rank:3, team:'Australia',    flag:'🇦🇺',rating:109,note:'Safe direct entry',       cls:'contend'},
+  {rank:4, team:'Pakistan',     flag:'🇵🇰',rating:102,note:'Safe direct entry',       cls:'contend'},
+  {rank:5, team:'South Africa', flag:'🇿🇦',rating:98, note:'Host — auto qualified',   cls:'title'},
+  {rank:6, team:'Sri Lanka',    flag:'🇱🇰',rating:98, note:'On the bubble',           cls:'watch'},
+  {rank:7, team:'Afghanistan',  flag:'🇦🇫',rating:95, note:'Bubble — must hold form', cls:'watch'},
+  {rank:8, team:'England',      flag:'🏴󠁧󠁢󠁥󠁮󠁧󠁿',rating:88, note:'5 pts ahead of BGD — danger zone',cls:'math'},
+  {rank:9, team:'Bangladesh',   flag:'🇧🇩',rating:83, note:'5 pts behind ENG — chasing',cls:'math'},
+  {rank:10,team:'West Indies',  flag:'🇼🇮',rating:77, note:'Qualifier route needed',  cls:'out'},
+  {rank:11,team:'Zimbabwe',     flag:'🇿🇼',rating:54, note:'Host — auto qualified',   cls:'title'},
+  {rank:12,team:'Ireland',      flag:'🇮🇪',rating:52, note:'Qualifier route',         cls:'out'},
+];
+
+// ═══════════════════════════════════════════
+// RENDER HELPERS
+// ═══════════════════════════════════════════
+const statusMap = {
+  title:  {cls:'s-title',   lbl:'TITLE FIGHT'},
+  contend:{cls:'s-contend', lbl:'CONTENDER'},
+  watch:  {cls:'s-watch',   lbl:'IN HUNT'},
+  math:   {cls:'s-math',    lbl:'MATH ONLY'},
+  out:    {cls:'s-out',     lbl:'ELIMINATED'},
+};
+
+function pill(status, label){
+  const s = statusMap[status] || {cls:'s-out',lbl:label};
+  return `<span class="spill ${s.cls}">${label || s.lbl}</span>`;
+}
+
+function renderDrivers(){
+  const leader = drivers[0].pts;
+  const body = document.getElementById('drv-body');
+  body.innerHTML = drivers.map((d,i)=>{
+    const maxPossible = d.pts + REMAINING;
+    const canWin = maxPossible >= leader;
+    const barW = Math.max(2, Math.round((d.pts / (leader + 20)) * 100));
+    const gapCell = d.gap===0
+      ? `<span style="color:var(--green);font-weight:700">—</span>`
+      : `<span style="color:var(--red)">-${d.gap}</span>`;
+    const status = !canWin ? 'out' : d.status;
+    const slabel = !canWin ? 'ELIMINATED' : (statusMap[status]||{lbl:d.slabel}).lbl;
+    return `<tr>
+      <td><span class="pos${i===0?' p1':''}">${d.pos}</span></td>
+      <td><div class="driver-cell">
+        <div class="team-bar" style="background:${d.color}"></div>
+        <div><div class="driver-name">${d.flag} ${d.name}</div><div class="driver-team">${d.team}</div></div>
+      </div></td>
+      <td class="r"><span class="pts-main">${d.pts}</span></td>
+      <td class="r">${gapCell}</td>
+      <td class="r" style="font-size:11px;color:var(--muted)">${maxPossible}</td>
+      <td>${pill(status, slabel)}</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderConstructors(){
+  const leader = constructors[0].pts;
+  const body = document.getElementById('con-body');
+  body.innerHTML = constructors.map((c,i)=>{
+    const maxPossible = c.pts + CREM;
+    const canWin = maxPossible >= leader;
+    const gapCell = c.gap===0
+      ? `<span style="color:var(--green);font-weight:700">—</span>`
+      : `<span style="color:var(--red)">-${c.gap}</span>`;
+    const status = !canWin ? 'out' : c.status;
+    const slabel = !canWin ? 'ELIMINATED' : c.slabel;
+    return `<tr>
+      <td><span class="pos${i===0?' p1':''}">${c.pos}</span></td>
+      <td><div class="driver-cell">
+        <div class="team-bar" style="background:${c.color}"></div>
+        <div class="driver-name">${c.team}</div>
+      </div></td>
+      <td class="r"><span class="pts-main">${c.pts}</span></td>
+      <td class="r">${gapCell}</td>
+      <td class="r" style="font-size:11px;color:var(--muted)">${maxPossible}</td>
+      <td>${pill(status, slabel)}</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderWTC(){
+  const body = document.getElementById('wtc-body');
+  body.innerHTML = wtc.map((t,i)=>{
+    const c = t.pct>=65?'var(--green)':t.pct>=40?'var(--amber)':'var(--red)';
+    const bw = Math.round(t.pct);
+    return `<tr>
+      <td><span class="pos${i===0?' p1':''}">${t.pos}</span></td>
+      <td><div class="driver-cell">
+        <div class="driver-name">${t.flag} ${t.team}</div>
+      </div></td>
+      <td class="r">${t.p}</td><td class="r">${t.w}</td>
+      <td class="r">${t.l}</td><td class="r">${t.d}</td>
+      <td class="r">${t.pts}</td>
+      <td class="r">
+        <div class="bar-wrap" style="justify-content:flex-end">
+          <div class="bar-bg"><div class="bar-fill" style="width:${bw}%;background:${c}"></div></div>
+          <span style="color:${c};font-weight:700;min-width:44px;text-align:right">${t.pct}%</span>
+        </div>
+      </td>
+      <td>${pill(t.status)}</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderODI(){
+  const body = document.getElementById('odi-body');
+  body.innerHTML = odi.map((t,i)=>`<tr>
+    <td><span class="pos">${t.rank}</span></td>
+    <td><div class="driver-name">${t.flag} ${t.team}</div></td>
+    <td class="r" style="font-weight:700">${t.rating}</td>
+    <td style="font-size:12px;color:var(--muted)">${t.note}</td>
+    <td>${pill(t.cls)}</td>
+  </tr>`).join('');
+}
+
+// ── Page init ──────────────────────────────
+// Cricket renders (always needed for background)
+renderWTC(); renderODI();
+
+
+// ═══════════════════════════════════════════
+// FOOTBALL / FIFA 2026 DATA
+// ═══════════════════════════════════════════
+const fbGroups = {
+  A:{ name:'Group A', teams:[
+    {flag:'🇲🇽',name:'Mexico',     p:1,w:1,d:0,l:0,gf:2,ga:0,gd:2,pts:3,tcs:-1,status:'alive'},
+    {flag:'🇰🇷',name:'S. Korea',   p:1,w:1,d:0,l:0,gf:2,ga:1,gd:1,pts:3,status:'alive'},
+    {flag:'🇨🇿',name:'Czech Rep.',  p:1,w:0,d:0,l:1,gf:1,ga:2,gd:-1,pts:0,status:'alive'},
+    {flag:'🇿🇦',name:'S. Africa',   p:1,w:0,d:0,l:1,gf:0,ga:2,gd:-2,pts:0,status:'alive'},
+  ], fixtures:[
+    {home:'Mexico',away:'S. Africa',hs:2,as:0,date:'Jun 11',done:true},
+    {home:'S. Korea',away:'Czech Rep.',hs:2,as:1,date:'Jun 11',done:true},
+    {home:'Czech Rep.',away:'S. Africa',hs:null,as:null,date:'Jun 18',done:false},
+    {home:'Mexico',away:'S. Korea',hs:null,as:null,date:'Jun 18',done:false},
+    {home:'Czech Rep.',away:'Mexico',hs:null,as:null,date:'Jun 24',done:false},
+    {home:'S. Africa',away:'S. Korea',hs:null,as:null,date:'Jun 24',done:false},
+  ]},
+  B:{ name:'Group B', teams:[
+    {flag:'🇨🇦',name:'Canada',      p:1,w:0,d:1,l:0,gf:1,ga:1,gd:0,pts:1,status:'alive'},
+    {flag:'🇨🇭',name:'Switzerland', p:1,w:0,d:1,l:0,gf:1,ga:1,gd:0,pts:1,status:'alive'},
+    {flag:'🇧🇦',name:'Bosnia',      p:1,w:0,d:1,l:0,gf:1,ga:1,gd:0,pts:1,status:'alive'},
+    {flag:'🇶🇦',name:'Qatar',       p:1,w:0,d:1,l:0,gf:1,ga:1,gd:0,pts:1,status:'alive'},
+  ], fixtures:[
+    {home:'Canada',away:'Bosnia',hs:1,as:1,date:'Jun 12',done:true},
+    {home:'Switzerland',away:'Qatar',hs:1,as:1,date:'Jun 12',done:true},
+    {home:'Switzerland',away:'Bosnia',hs:null,as:null,date:'Jun 18',done:false},
+    {home:'Canada',away:'Qatar',hs:null,as:null,date:'Jun 18',done:false},
+    {home:'Switzerland',away:'Canada',hs:null,as:null,date:'Jun 24',done:false},
+    {home:'Bosnia',away:'Qatar',hs:null,as:null,date:'Jun 24',done:false},
+  ]},
+  C:{ name:'Group C', teams:[
+    {flag:'🏴󠁧󠁢󠁳󠁣󠁴󠁿',name:'Scotland',   p:1,w:1,d:0,l:0,gf:1,ga:0,gd:1,pts:3,status:'alive'},
+    {flag:'🇲🇦',name:'Morocco',    p:1,w:0,d:1,l:0,gf:1,ga:1,gd:0,pts:1,status:'alive'},
+    {flag:'🇧🇷',name:'Brazil',     p:1,w:0,d:1,l:0,gf:1,ga:1,gd:0,pts:1,status:'alive'},
+    {flag:'🇭🇹',name:'Haiti',      p:1,w:0,d:0,l:1,gf:0,ga:1,gd:-1,pts:0,status:'alive'},
+  ], fixtures:[
+    {home:'Brazil',away:'Morocco',hs:1,as:1,date:'Jun 13',done:true},
+    {home:'Scotland',away:'Haiti',hs:1,as:0,date:'Jun 13',done:true},
+    {home:'Scotland',away:'Morocco',hs:null,as:null,date:'Jun 19',done:false},
+    {home:'Brazil',away:'Haiti',hs:null,as:null,date:'Jun 19',done:false},
+    {home:'Scotland',away:'Brazil',hs:null,as:null,date:'Jun 24',done:false},
+    {home:'Morocco',away:'Haiti',hs:null,as:null,date:'Jun 24',done:false},
+  ]},
+  D:{ name:'Group D', teams:[
+    {flag:'🇺🇸',name:'USA',        p:1,w:1,d:0,l:0,gf:4,ga:1,gd:3,pts:3,tcs:-1,status:'alive'},
+    {flag:'🇦🇺',name:'Australia',  p:1,w:1,d:0,l:0,gf:2,ga:0,gd:2,pts:3,tcs:0,status:'alive'},
+    {flag:'🇵🇾',name:'Paraguay',   p:1,w:0,d:0,l:1,gf:1,ga:4,gd:-3,pts:0,tcs:-5,status:'alive'},
+    {flag:'🇹🇷',name:'Turkey',     p:1,w:0,d:0,l:1,gf:0,ga:2,gd:-2,pts:0,tcs:-1,status:'alive'},
+  ], fixtures:[
+    {home:'USA',away:'Turkey',hs:4,as:1,date:'Jun 12',done:true},
+    {home:'Australia',away:'Paraguay',hs:2,as:0,date:'Jun 12',done:true},
+    {home:'USA',away:'Australia',hs:null,as:null,date:'Jun 19',done:false},
+    {home:'Turkey',away:'Paraguay',hs:null,as:null,date:'Jun 19',done:false},
+    {home:'Turkey',away:'USA',hs:null,as:null,date:'Jun 25',done:false},
+    {home:'Paraguay',away:'Australia',hs:null,as:null,date:'Jun 25',done:false},
+  ]},
+  E:{ name:'Group E', teams:[
+    {flag:'🇩🇪',name:'Germany',    p:1,w:1,d:0,l:0,gf:7,ga:1,gd:6,pts:3,status:'alive'},
+    {flag:'🇨🇮',name:'Ivory Coast',p:1,w:1,d:0,l:0,gf:1,ga:0,gd:1,pts:3,status:'alive'},
+    {flag:'🇪🇨',name:'Ecuador',    p:1,w:0,d:0,l:1,gf:0,ga:1,gd:-1,pts:0,status:'alive'},
+    {flag:'🇨🇼',name:'Curaçao',    p:1,w:0,d:0,l:1,gf:1,ga:7,gd:-6,pts:0,status:'alive'},
+  ], fixtures:[
+    {home:'Germany',away:'Curaçao',hs:7,as:1,date:'Jun 14',done:true},
+    {home:'Ivory Coast',away:'Ecuador',hs:1,as:0,date:'Jun 14',done:true},
+    {home:'Germany',away:'Ivory Coast',hs:null,as:null,date:'Jun 20',done:false},
+    {home:'Ecuador',away:'Curaçao',hs:null,as:null,date:'Jun 20',done:false},
+    {home:'Ecuador',away:'Germany',hs:null,as:null,date:'Jun 25',done:false},
+    {home:'Curaçao',away:'Ivory Coast',hs:null,as:null,date:'Jun 25',done:false},
+  ]},
+  F:{ name:'Group F', teams:[
+    {flag:'🇸🇪',name:'Sweden',     p:1,w:1,d:0,l:0,gf:5,ga:1,gd:4,pts:3,status:'alive'},
+    {flag:'🇯🇵',name:'Japan',      p:1,w:0,d:1,l:0,gf:2,ga:2,gd:0,pts:1,status:'alive'},
+    {flag:'🇳🇱',name:'Netherlands',p:1,w:0,d:1,l:0,gf:2,ga:2,gd:0,pts:1,status:'alive'},
+    {flag:'🇹🇳',name:'Tunisia',    p:1,w:0,d:0,l:1,gf:1,ga:5,gd:-4,pts:0,status:'alive'},
+  ], fixtures:[
+    {home:'Sweden',away:'Tunisia',hs:5,as:1,date:'Jun 14',done:true},
+    {home:'Netherlands',away:'Japan',hs:2,as:2,date:'Jun 14',done:true},
+    {home:'Netherlands',away:'Sweden',hs:null,as:null,date:'Jun 20',done:false},
+    {home:'Japan',away:'Tunisia',hs:null,as:null,date:'Jun 20',done:false},
+    {home:'Japan',away:'Sweden',hs:null,as:null,date:'Jun 25',done:false},
+    {home:'Tunisia',away:'Netherlands',hs:null,as:null,date:'Jun 25',done:false},
+  ]},
+  G:{ name:'Group G', teams:[
+    {flag:'🇳🇿',name:'New Zealand',p:1,w:0,d:1,l:0,gf:2,ga:2,gd:0,pts:1,so:1,status:'alive'},
+    {flag:'🇮🇷',name:'Iran',       p:1,w:0,d:1,l:0,gf:2,ga:2,gd:0,pts:1,so:2,status:'alive'},
+    {flag:'🇧🇪',name:'Belgium',    p:1,w:0,d:1,l:0,gf:1,ga:1,gd:0,pts:1,status:'alive'},
+    {flag:'🇪🇬',name:'Egypt',      p:1,w:0,d:1,l:0,gf:1,ga:1,gd:0,pts:1,status:'alive'},
+  ], fixtures:[
+    {home:'Iran',away:'New Zealand',hs:2,as:2,date:'Jun 15',done:true},
+    {home:'Belgium',away:'Egypt',hs:1,as:1,date:'Jun 15',done:true},
+    {home:'Belgium',away:'Iran',hs:null,as:null,date:'Jun 21',done:false},
+    {home:'New Zealand',away:'Egypt',hs:null,as:null,date:'Jun 21',done:false},
+    {home:'New Zealand',away:'Belgium',hs:null,as:null,date:'Jun 26',done:false},
+    {home:'Egypt',away:'Iran',hs:null,as:null,date:'Jun 26',done:false},
+  ]},
+  H:{ name:'Group H', teams:[
+    {flag:'🇺🇾',name:'Uruguay',    p:1,w:0,d:1,l:0,gf:1,ga:1,gd:0,pts:1,so:1,status:'alive'},
+    {flag:'🇸🇦',name:'Saudi Arabia',p:1,w:0,d:1,l:0,gf:1,ga:1,gd:0,pts:1,so:2,status:'alive'},
+    {flag:'🇪🇸',name:'Spain',      p:1,w:0,d:1,l:0,gf:0,ga:0,gd:0,pts:1,so:3,status:'alive'},
+    {flag:'🇨🇻',name:'Cape Verde', p:1,w:0,d:1,l:0,gf:0,ga:0,gd:0,pts:1,so:4,status:'alive'},
+  ], fixtures:[
+    {home:'Spain',away:'Cape Verde',hs:0,as:0,date:'Jun 15',done:true},
+    {home:'Uruguay',away:'Saudi Arabia',hs:1,as:1,date:'Jun 15',done:true},
+    {home:'Spain',away:'Uruguay',hs:null,as:null,date:'Jun 21',done:false},
+    {home:'Saudi Arabia',away:'Cape Verde',hs:null,as:null,date:'Jun 21',done:false},
+    {home:'Uruguay',away:'Cape Verde',hs:null,as:null,date:'Jun 26',done:false},
+    {home:'Saudi Arabia',away:'Spain',hs:null,as:null,date:'Jun 26',done:false},
+  ]},
+  I:{ name:'Group I', teams:[
+    {flag:'🇳🇴',name:'Norway',     p:1,w:1,d:0,l:0,gf:4,ga:1,gd:3,pts:3,status:'alive'},
+    {flag:'🇫🇷',name:'France',     p:1,w:1,d:0,l:0,gf:3,ga:1,gd:2,pts:3,status:'alive'},
+    {flag:'🇸🇳',name:'Senegal',    p:1,w:0,d:0,l:1,gf:1,ga:3,gd:-2,pts:0,status:'alive'},
+    {flag:'🇮🇶',name:'Iraq',       p:1,w:0,d:0,l:1,gf:1,ga:4,gd:-3,pts:0,status:'alive'},
+  ], fixtures:[
+    {home:'France',away:'Senegal',hs:3,as:1,date:'Jun 16',done:true},
+    {home:'Norway',away:'Iraq',hs:4,as:1,date:'Jun 16',done:true},
+    {home:'France',away:'Iraq',hs:null,as:null,date:'Jun 22',done:false},
+    {home:'Norway',away:'Senegal',hs:null,as:null,date:'Jun 22',done:false},
+    {home:'Norway',away:'France',hs:null,as:null,date:'Jun 26',done:false},
+    {home:'Senegal',away:'Iraq',hs:null,as:null,date:'Jun 26',done:false},
+  ]},
+  J:{ name:'Group J', teams:[
+    {flag:'🇦🇷',name:'Argentina',  p:1,w:1,d:0,l:0,gf:3,ga:0,gd:3,pts:3,status:'alive'},
+    {flag:'🇦🇹',name:'Austria',    p:1,w:1,d:0,l:0,gf:3,ga:1,gd:2,pts:3,status:'alive'},
+    {flag:'🇩🇿',name:'Algeria',    p:1,w:0,d:0,l:1,gf:0,ga:3,gd:-3,pts:0,status:'alive'},
+    {flag:'🇯🇴',name:'Jordan',     p:1,w:0,d:0,l:1,gf:1,ga:3,gd:-2,pts:0,status:'alive'},
+  ], fixtures:[
+    {home:'Argentina',away:'Algeria',hs:3,as:0,date:'Jun 16',done:true},
+    {home:'Austria',away:'Jordan',hs:3,as:1,date:'Jun 17',done:true},
+    {home:'Argentina',away:'Austria',hs:null,as:null,date:'Jun 22',done:false},
+    {home:'Jordan',away:'Algeria',hs:null,as:null,date:'Jun 22',done:false},
+    {home:'Algeria',away:'Austria',hs:null,as:null,date:'Jun 27',done:false},
+    {home:'Jordan',away:'Argentina',hs:null,as:null,date:'Jun 27',done:false},
+  ]},
+  K:{ name:'Group K', teams:[
+    {flag:'🇵🇹',name:'Portugal',   p:1,w:0,d:1,l:0,gf:1,ga:1,gd:0,pts:1,tcs:-1,so:3,status:'alive'},
+    {flag:'🇨🇴',name:'Colombia',   p:1,w:1,d:0,l:0,gf:3,ga:1,gd:2,pts:3,status:'alive'},
+    {flag:'🇺🇿',name:'Uzbekistan', p:1,w:0,d:0,l:1,gf:1,ga:3,gd:-2,pts:0,status:'alive'},
+    {flag:'🇨🇩',name:'DR Congo',   p:1,w:0,d:1,l:0,gf:1,ga:1,gd:0,pts:1,tcs:0,so:2,status:'alive'},
+  ], fixtures:[
+    {home:'Portugal',away:'DR Congo',hs:1,as:1,date:'Jun 17',done:true},
+    {home:'Uzbekistan',away:'Colombia',hs:1,as:3,date:'Jun 17',done:true},
+    {home:'Portugal',away:'Uzbekistan',hs:null,as:null,date:'Jun 23',done:false},
+    {home:'Colombia',away:'DR Congo',hs:null,as:null,date:'Jun 23',done:false},
+    {home:'Colombia',away:'Portugal',hs:null,as:null,date:'Jun 27',done:false},
+    {home:'DR Congo',away:'Uzbekistan',hs:null,as:null,date:'Jun 27',done:false},
+  ]},
+  L:{ name:'Group L', teams:[
+    {flag:'🏴󠁧󠁢󠁥󠁮󠁧󠁿',name:'England',    p:1,w:1,d:0,l:0,gf:4,ga:2,gd:2,pts:3,status:'alive'},
+    {flag:'🇭🇷',name:'Croatia',    p:1,w:0,d:0,l:1,gf:2,ga:4,gd:-2,pts:0,status:'alive'},
+    {flag:'🇬🇭',name:'Ghana',      p:1,w:1,d:0,l:0,gf:1,ga:0,gd:1,pts:3,status:'alive'},
+    {flag:'🇵🇦',name:'Panama',     p:1,w:0,d:0,l:1,gf:0,ga:1,gd:-1,pts:0,status:'alive'},
+  ], fixtures:[
+    {home:'England',away:'Croatia',hs:4,as:2,date:'Jun 17',done:true},
+    {home:'Ghana',away:'Panama',hs:1,as:0,date:'Jun 17',done:true},
+    {home:'England',away:'Ghana',hs:null,as:null,date:'Jun 23',done:false},
+    {home:'Panama',away:'Croatia',hs:null,as:null,date:'Jun 23',done:false},
+    {home:'Panama',away:'England',hs:null,as:null,date:'Jun 27',done:false},
+    {home:'Croatia',away:'Ghana',hs:null,as:null,date:'Jun 27',done:false},
+  ]},
+};
+
+const r32Matches = [
+  {id:'M73',home:'A2',away:'B2',venue:'Los Angeles',date:'Jun 28',done:false},
+  {id:'M74',home:'E1',away:'Best 3rd (A/B/C/D/F)',venue:'Boston',date:'Jun 29',done:false},
+  {id:'M75',home:'F1',away:'C2',venue:'Guadalupe, Mexico',date:'Jun 29',done:false},
+  {id:'M76',home:'C1',away:'F2',venue:'Houston',date:'Jun 29',done:false},
+  {id:'M77',home:'I1',away:'Best 3rd (C/D/F/G/H)',venue:'New York-NJ',date:'Jun 30',done:false},
+  {id:'M78',home:'E2',away:'I2',venue:'Dallas',date:'Jun 30',done:false},
+  {id:'M79',home:'A1',away:'Best 3rd (C/E/F/H/I)',venue:'Mexico City',date:'Jun 30',done:false},
+  {id:'M80',home:'L1',away:'Best 3rd (E/H/I/J/K)',venue:'Atlanta',date:'Jul 1',done:false},
+  {id:'M81',home:'D1',away:'Best 3rd (B/E/F/I/J)',venue:'San Francisco',date:'Jul 1',done:false},
+  {id:'M82',home:'G1',away:'Best 3rd (A/E/H/I/J)',venue:'Seattle',date:'Jul 1',done:false},
+  {id:'M83',home:'K2',away:'L2',venue:'Toronto',date:'Jul 2',done:false},
+  {id:'M84',home:'H1',away:'J2',venue:'Los Angeles',date:'Jul 2',done:false},
+  {id:'M85',home:'B1',away:'Best 3rd (E/F/G/I/J)',venue:'Vancouver',date:'Jul 2',done:false},
+  {id:'M86',home:'J1',away:'H2',venue:'Miami',date:'Jul 2',done:false},
+  {id:'M87',home:'K1',away:'Best 3rd (D/E/I/J/L)',venue:'Kansas City',date:'Jul 2',done:false},
+  {id:'M88',home:'D2',away:'G2',venue:'Dallas',date:'Jul 3',done:false},
+];
+
+const fbQualStatus = {
+  alive: {cls:'fb-alive', label:'IN CONTENTION'},
+  danger: {cls:'fb-danger', label:'DANGER ZONE'},
+  qualified: {cls:'fb-qualified', label:'QUALIFIED'},
+  out: {cls:'fb-out', label:'ELIMINATED'},
+};
+
+// ═══════════════════════════════════════════
+// RENDER FOOTBALL
+// ═══════════════════════════════════════════
+function renderFbGroups(filter){
+  const el = document.getElementById('fb-groups-content');
+  const groups = filter === 'ALL' ? Object.keys(fbGroups) : [filter];
+
+  el.innerHTML = groups.map(key => {
+    const g = fbGroups[key];
+    const sorted = [...g.teams].sort((a,b) => b.pts-a.pts || b.gd-a.gd || b.gf-a.gf || (b.tcs||0)-(a.tcs||0) || (a.so||99)-(b.so||99));
+
+    const standing = sorted.map((t,i) => {
+      const dotCls = i<2 ? 'q-auto' : i===2 ? 'q-poss' : 'q-out';
+      const dotTitle = i<2 ? 'Auto qualify' : i===2 ? 'Possible (best 3rd)' : 'Must improve';
+      return `<tr>
+        <td><span class="q-dot ${dotCls}" title="${dotTitle}"></span><span class="team-flag">${t.flag}</span><span class="team-nm">${t.name}</span></td>
+        <td class="r">${t.p}</td>
+        <td class="r">${t.w}</td>
+        <td class="r">${t.d}</td>
+        <td class="r">${t.l}</td>
+        <td class="r">${t.gf}</td>
+        <td class="r">${t.ga}</td>
+        <td class="r" style="color:${t.gd>0?'var(--green)':t.gd<0?'var(--red)':'var(--muted)'}">${t.gd>0?'+'+t.gd:t.gd}</td>
+        <td class="r pts-bold">${t.pts}</td>
+      </tr>`;
+    }).join('');
+
+    const fixtures = g.fixtures.map(f => {
+      let scoreHtml;
+      if(f.live) scoreHtml = `<span class="fix-score upcoming" style="color:#dc2626;font-weight:700">Jun 17</span>`;
+      else if(f.done) scoreHtml = `<span class="fix-score done">${f.hs} – ${f.as}</span>`;
+      else scoreHtml = `<span class="fix-score upcoming">${f.date}</span>`;
+      return `<div class="fix-row">
+        <div class="fix-teams">
+          <span class="fix-home">${f.home}</span>
+          ${scoreHtml}
+          <span class="fix-away">${f.away}</span>
+        </div>
+      </div>`;
+    }).join('');
+
+    return `<div class="grp-panel active" style="margin-bottom:14px">
+      <div class="grp-card">
+        <div class="grp-card-hd">
+          <span class="grp-name">${g.name}</span>
+          <span class="grp-teams">Top 2 qualify automatically · Best 3rd may advance</span>
+        </div>
+        <table class="grp-tbl">
+          <thead><tr>
+            <th>Team</th><th class="r">P</th><th class="r">W</th><th class="r">D</th>
+            <th class="r">L</th><th class="r">GF</th><th class="r">GA</th><th class="r">GD</th><th class="r">Pts</th>
+          </tr></thead>
+          <tbody>${standing}</tbody>
+        </table>
+        <div class="grp-fixtures">
+          <div class="fix-hd">Fixtures & Results</div>
+          ${fixtures}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Fix layout for single group vs all
+  if(filter !== 'ALL'){
+    el.innerHTML = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">` + el.innerHTML + `</div>`;
+  }
+}
+
+function showGroup(g){
+  document.querySelectorAll('.grp-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.grp-tab').forEach(t => {
+    if(t.textContent === g) t.classList.add('active');
+  });
+  renderFbGroups(g);
+}
+
+function renderR32(){
+  const el = document.getElementById('fb-r32-content');
+  if(!el) return;
+
+  const proj = {
+    A:{1:'Mexico 🇲🇽',2:'S. Korea 🇰🇷',3:'Czech Rep. 🇨🇿'},
+    B:{1:'Canada 🇨🇦',2:'Switzerland 🇨🇭',3:'Bosnia 🇧🇦'},
+    C:{1:'Scotland 🏴',2:'Morocco 🇲🇦',3:'Brazil 🇧🇷'},
+    D:{1:'USA 🇺🇸',2:'Australia 🇦🇺',3:'Paraguay 🇵🇾'},
+    E:{1:'Germany 🇩🇪',2:'Ivory Coast 🇨🇮',3:'Ecuador 🇪🇨'},
+    F:{1:'Sweden 🇸🇪',2:'Japan 🇯🇵',3:'Netherlands 🇳🇱'},
+    G:{1:'Iran 🇮🇷',2:'New Zealand 🇳🇿',3:'Belgium 🇧🇪'},
+    H:{1:'Spain 🇪🇸',2:'Uruguay 🇺🇾',3:'Saudi Arabia 🇸🇦'},
+    I:{1:'Norway 🇳🇴',2:'France 🇫🇷',3:'Senegal 🇸🇳'},
+    J:{1:'Argentina 🇦🇷',2:'Austria 🇦🇹',3:'Jordan 🇯🇴'},
+    K:{1:'Portugal 🇵🇹',2:'Colombia 🇨🇴',3:'Uzbekistan 🇺🇿'},
+    L:{1:'England 🏴',2:'Croatia 🇭🇷',3:'Ghana 🇬🇭'},
+  };
+
+  // Best 3rd ranked MD1: pts desc, GD desc, GF desc
+  const best3rd = [
+    {team:'Netherlands 🇳🇱',grp:'F',pts:1,gd:0,gf:2},
+    {team:'Bosnia 🇧🇦',grp:'B',pts:1,gd:0,gf:1},
+    {team:'Brazil 🇧🇷',grp:'C',pts:1,gd:0,gf:1},
+    {team:'Belgium 🇧🇪',grp:'G',pts:1,gd:0,gf:1},
+    {team:'Uruguay 🇺🇾',grp:'H',pts:1,gd:0,gf:1},
+    {team:'Czech Rep. 🇨🇿',grp:'A',pts:0,gd:-1,gf:1},
+    {team:'Ecuador 🇪🇨',grp:'E',pts:0,gd:-1,gf:0},
+    {team:'Jordan 🇯🇴',grp:'J',pts:0,gd:-2,gf:1},
+    {team:'Senegal 🇸🇳',grp:'I',pts:0,gd:-2,gf:1},
+    {team:'Paraguay 🇵🇾',grp:'D',pts:0,gd:-2,gf:0},
+    {team:'TBD (Grp K)',grp:'K',pts:0,gd:0,gf:0},
+    {team:'TBD (Grp L)',grp:'L',pts:0,gd:0,gf:0},
+  ];
+
+  const pools = {
+    M74:['A','B','C','D','F'],
+    M77:['C','D','F','G','H'],
+    M79:['C','E','F','H','I'],
+    M80:['E','H','I','J','K'],
+    M81:['B','E','F','I','J'],
+    M82:['A','E','H','I','J'],
+    M85:['E','F','G','I','J'],
+    M87:['D','E','I','J','L'],
+  };
+
+  function getBest3rd(pool){
+    for(let t of best3rd){
+      if(pool.includes(t.grp)) return t.team;
+    }
+    return 'Best 3rd TBD';
+  }
+
+  function projTeam(slot){
+    const g = slot[0], p = parseInt(slot[1]);
+    return (proj[g] && proj[g][p]) ? proj[g][p] : slot;
+  }
+
+  const matchData = [
+    {id:'M73',home:'A2',away:'B2',venue:'Los Angeles',date:'Jun 28'},
+    {id:'M74',home:'E1',away:'B3rd',pool:'M74',venue:'Boston',date:'Jun 29'},
+    {id:'M75',home:'F1',away:'C2',venue:'Guadalupe, MX',date:'Jun 29'},
+    {id:'M76',home:'C1',away:'F2',venue:'Houston',date:'Jun 29'},
+    {id:'M77',home:'I1',away:'B3rd',pool:'M77',venue:'New York-NJ',date:'Jun 30'},
+    {id:'M78',home:'E2',away:'I2',venue:'Dallas',date:'Jun 30'},
+    {id:'M79',home:'A1',away:'B3rd',pool:'M79',venue:'Mexico City',date:'Jun 30'},
+    {id:'M80',home:'L1',away:'B3rd',pool:'M80',venue:'Atlanta',date:'Jul 1'},
+    {id:'M81',home:'D1',away:'B3rd',pool:'M81',venue:'San Francisco',date:'Jul 1'},
+    {id:'M82',home:'G1',away:'B3rd',pool:'M82',venue:'Seattle',date:'Jul 1'},
+    {id:'M83',home:'K2',away:'L2',venue:'Toronto',date:'Jul 2'},
+    {id:'M84',home:'H1',away:'J2',venue:'Los Angeles',date:'Jul 2'},
+    {id:'M85',home:'B1',away:'B3rd',pool:'M85',venue:'Vancouver',date:'Jul 2'},
+    {id:'M86',home:'J1',away:'H2',venue:'Miami',date:'Jul 2'},
+    {id:'M87',home:'K1',away:'B3rd',pool:'M87',venue:'Kansas City',date:'Jul 2'},
+    {id:'M88',home:'D2',away:'G2',venue:'Dallas',date:'Jul 3'},
+  ];
+
+  const cards = matchData.map(function(m){
+    const isBest3rd = m.away === 'B3rd';
+    const homeTeam = projTeam(m.home);
+    const awayTeam = isBest3rd ? getBest3rd(pools[m.id]) : projTeam(m.away);
+    const isTBD = homeTeam.indexOf('TBD') > -1 || awayTeam.indexOf('TBD') > -1;
+    const borderCol = isTBD ? 'var(--muted)' : isBest3rd ? 'var(--amber)' : 'var(--football)';
+    const officialSlot = isBest3rd
+      ? m.home + ' vs Best 3rd (' + pools[m.id].join('/') + ')'
+      : m.home + ' vs ' + m.away;
+    const homeColor = isTBD ? 'var(--muted)' : 'var(--text)';
+    const awayColor = isTBD ? 'var(--muted)' : isBest3rd ? 'var(--amber)' : 'var(--text)';
+
+    return '<div class="bracket-match" style="border-left:3px solid ' + borderCol + '">'
+      + '<div class="bracket-match-hd"><span style="font-weight:800">' + m.id + '</span><span>' + m.date + ' · ' + m.venue + '</span></div>'
+      + '<div style="font-size:10px;color:var(--muted);margin-bottom:6px;font-style:italic">' + officialSlot + '</div>'
+      + '<div style="padding:5px 0;border-bottom:1px solid var(--border);font-weight:600;font-size:13px;color:' + homeColor + '">' + homeTeam + '</div>'
+      + '<div style="text-align:center;font-size:10px;color:var(--muted);padding:2px 0">vs</div>'
+      + '<div style="padding:5px 0;font-weight:600;font-size:13px;color:' + awayColor + '">' + awayTeam + '</div>'
+      + (isBest3rd ? '<div style="font-size:10px;color:var(--amber);margin-top:5px">⚠️ Best 3rd confirmed Jun 27</div>' : '')
+      + '</div>';
+  }).join('');
+
+  el.innerHTML = '<div style="background:var(--bg3);border:1px solid var(--amber);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:12px;display:flex;align-items:flex-start;gap:8px">'
+    + '<span style="font-size:15px;flex-shrink:0">⚠️</span>'
+    + '<span style="color:var(--text)"><strong>Projected matchups — Matchday 1 snapshot.</strong> Not the confirmed bracket. Groups B/G/H all level. K &amp; L not yet complete. Best 3rd (amber) confirmed Jun 27.</span>'
+    + '</div>'
+    + '<div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:12px;font-size:11px;color:var(--muted)">'
+    + '<span><span style="display:inline-block;width:10px;height:10px;background:var(--football);border-radius:2px;vertical-align:middle;margin-right:4px"></span>Projected direct</span>'
+    + '<span><span style="display:inline-block;width:10px;height:10px;background:var(--amber);border-radius:2px;vertical-align:middle;margin-right:4px"></span>Best 3rd (projected)</span>'
+    + '<span><span style="display:inline-block;width:10px;height:10px;background:var(--muted);border-radius:2px;vertical-align:middle;margin-right:4px"></span>TBD</span>'
+    + '</div>'
+    + '<div class="bracket-grid">' + cards + '</div>';
+}
+
+
+function renderPathway(){
+  const el = document.getElementById('fb-pathway-content');
+  const stages = [
+    {name:'GROUP STAGE', sub:'Jun 11-27', slots:['12 groups · 48 teams','Top 2 each group + 8 best 3rd = 32 qualify']},
+    {name:'ROUND OF 32', sub:'Jun 28-Jul 3', slots:['16 matches','32 → 16 teams']},
+    {name:'ROUND OF 16', sub:'Jul 4-7', slots:['8 matches','16 → 8 teams']},
+    {name:'QUARTER-FINALS', sub:'Jul 9-11', slots:['4 matches','8 → 4 teams']},
+    {name:'SEMI-FINALS', sub:'Jul 14-15', slots:['2 matches','4 → 2 teams']},
+    {name:'FINAL', sub:'Jul 19 · New York', slots:['MetLife Stadium','Winner lifts trophy']},
+  ];
+  const colors = ['#1d4ed8','#7c3aed','#0891b2','#15803d','#b45309','#b91c1c'];
+
+  el.innerHTML = `
+  <div class="info" style="margin-bottom:16px">
+    <strong>To win the World Cup</strong> a team must play <strong>8 matches total</strong> — 3 group stage + 5 knockout rounds.
+    No draws allowed from Round of 32 onwards — extra time then penalties if level after 90 mins.
+  </div>
+  <div class="pathway-visual">
+    <div class="pathway-row">
+      ${stages.map((s,i) => `
+        <div class="pathway-stage">
+          <div class="pathway-stage-hd" style="background:${colors[i]}">${s.name}<br><span style="font-size:9px;opacity:.8">${s.sub}</span></div>
+          <div class="pathway-slots">
+            ${s.slots.map(slot => `<div class="pathway-slot filled" style="white-space:pre-wrap;font-size:10px;text-align:center;line-height:1.5">${slot}</div>`).join('')}
+          </div>
+        </div>
+        ${i < stages.length-1 ? '<div class="pathway-arrow">→</div>' : ''}
+      `).join('')}
+    </div>
+  </div>
+  <div style="margin-top:20px">
+    <div class="sec-hd"><h2>Who Can Still Win?</h2><span class="chip chip-fb">AFTER MD1</span></div>
+    <div class="info">
+      After Matchday 1, <strong>no team is eliminated yet</strong> — every team has 2 matches remaining and a mathematical path to qualify.
+      Elimination becomes possible from <strong>Matchday 2</strong> onwards (teams with 0 pts from 2 games in difficult groups).
+      The table below shows the progression status based on current points.
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px;margin-top:10px" id="status-grid"></div>
+  </div>`;
+
+  // Status grid
+  const statusGrid = document.getElementById('status-grid');
+  if(!statusGrid) return;
+  let html = '';
+  Object.keys(fbGroups).forEach(key => {
+    const g = fbGroups[key];
+    const sorted = [...g.teams].sort((a,b) => b.pts-a.pts || b.gd-a.gd || b.gf-a.gf || (b.tcs||0)-(a.tcs||0) || (a.so||99)-(b.so||99));
+    sorted.forEach((t,i) => {
+      let status, label;
+      if(t.pts===3 && i===0){ status='fb-alive'; label='LEADING GROUP'; }
+      else if(t.pts===3){ status='fb-alive'; label='STRONG POSITION'; }
+      else if(t.pts===1){ status='fb-alive'; label='IN CONTENTION'; }
+      else if(t.pts===0 && t.p===1){ status='fb-danger'; label='MUST WIN'; }
+      else { status='fb-alive'; label='IN CONTENTION'; }
+      html += `<div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:10px 12px;box-shadow:var(--shadow)">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+          <span style="font-weight:600;font-size:13px">${t.flag} ${t.name}</span>
+          <span style="font-size:10px;color:var(--muted)">Grp ${key}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:12px;color:var(--muted)">${t.pts} pts · ${t.p} played</span>
+          <span class="fb-pill ${status}">${label}</span>
+        </div>
+      </div>`;
+    });
+  });
+  statusGrid.innerHTML = html;
+}
+
+
+// ═══════════════════════════════════════════
+// TENNIS RACE DATA
+// ═══════════════════════════════════════════
+const atpRace = [
+  {pos:1, name:'Jannik Sinner',           flag:'🇮🇹', pts:5950, status:'safe',   note:'Lost R64 RG to Cerundolo — still leads comfortably'},
+  {pos:2, name:'Alexander Zverev',        flag:'🇩🇪', pts:5040, status:'safe',   note:'Roland Garros champion — first Grand Slam title'},
+  {pos:3, name:'Carlos Alcaraz',          flag:'🇪🇸', pts:3650, status:'safe',   note:'Missed Roland Garros — wrist injury, returns Wimbledon'},
+  {pos:4, name:'Daniil Medvedev',         flag:'🇷🇺', pts:2220, status:'safe',   note:'Lost R128 RG — 2 titles this season keeps him safe'},
+  {pos:5, name:'Flavio Cobolli',          flag:'🇮🇹', pts:2620, status:'safe',   note:'RG finalist — career breakthrough at 24'},
+  {pos:6, name:'Arthur Fils',             flag:'🇫🇷', pts:1890, status:'safe',   note:'Injured, missed RG — season form keeps him in zone'},
+  {pos:7, name:'Jakub Mensik',            flag:'🇨🇿', pts:1855, status:'safe',   note:'RG SF at 20 — targeting first Turin appearance'},
+  {pos:8, name:'Ben Shelton',             flag:'🇺🇸', pts:1680, status:'zone',   note:'Only 5 pts ahead of FAA — Wimbledon is decisive'},
+  {pos:9, name:'Felix Auger-Aliassime',   flag:'🇨🇦', pts:1675, status:'chase',  note:'RG QF — just 5 pts behind, needs Wimbledon run'},
+  {pos:10,name:'Casper Ruud',             flag:'🇳🇴', pts:1665, status:'chase',  note:'Lost RG R16 to Fonseca — 15 pts off the line'},
+  {pos:11,name:'Alex de Minaur',          flag:'🇦🇺', pts:1615, status:'chase',  note:'Lost RG R32 to Mensik — 65 pts off'},
+  {pos:12,name:'Rafael Jódar',            flag:'🇪🇸', pts:1569, status:'chase',  note:'19yr old — RG QF, career-high ranking'},
+  {pos:13,name:'Novak Djokovic',          flag:'🇷🇸', pts:1510, status:'outside',note:'Lost RG R32 to Fonseca — outside zone for first time'},
+  {pos:14,name:'Tommy Paul',              flag:'🇺🇸', pts:1505, status:'outside',note:'Lost RG R32 to Ruud'},
+  {pos:15,name:'Luciano Darderi',         flag:'🇮🇹', pts:1435, status:'outside',note:'Lost RG R64 — Italian contingent growing'},
+  {pos:16,name:'Andrey Rublev',           flag:'🇷🇺', pts:1410, status:'outside',note:'Lost RG R16 to Mensik'},
+  {pos:17,name:'Jiri Lehecka',            flag:'🇨🇿', pts:1255, status:'outside',note:'Lost RG R128 — needs grass form'},
+  {pos:18,name:'Frances Tiafoe',          flag:'🇺🇸', pts:1255, status:'outside',note:'Lost RG R16 to Arnaldi — level with Lehecka'},
+  {pos:19,name:'Francisco Cerundolo',     flag:'🇦🇷', pts:1250, status:'outside',note:'Lost RG R32 to Svajda'},
+  {pos:20,name:'Learner Tien',            flag:'🇺🇸', pts:1245, status:'outside',note:'20yr old American — lost RG R32 to Cobolli'},
+];
+
+const wtaRace = [
+  {pos:1, name:'Mirra Andreeva',       flag:'🇷🇺', pts:4928, status:'safe',   note:'Roland Garros champion at 19 — 12 tournaments played'},
+  {pos:2, name:'Aryna Sabalenka',      flag:'🇧🇾', pts:4510, status:'safe',   note:'World No.1, multiple titles — 9 tournaments'},
+  {pos:3, name:'Elena Rybakina',       flag:'🇰🇿', pts:4496, status:'safe',   note:'AO champion, defending Finals winner — 4,496 not 4,389'},
+  {pos:4, name:'Elina Svitolina',      flag:'🇺🇦', pts:3890, status:'safe',   note:'RG QF — strong clay swing, 10 tournaments'},
+  {pos:5, name:'Jessica Pegula',       flag:'🇺🇸', pts:3195, status:'safe',   note:'Consistent all-surface performer — 10 tournaments'},
+  {pos:6, name:'Coco Gauff',           flag:'🇺🇸', pts:2703, status:'safe',   note:'RG R3 exit — needs Wimbledon results'},
+  {pos:7, name:'Marta Kostyuk',        flag:'🇺🇦', pts:2495, status:'safe',   note:'RG semi-final — career best, 10 tournaments'},
+  {pos:8, name:'Karolina Muchova',     flag:'🇨🇿', pts:2410, status:'zone',   note:'17 pts ahead of Mboko — 10 tournaments'},
+  {pos:9, name:'Victoria Mboko',       flag:'🇨🇦', pts:2393, status:'chase',  note:'19yr old — 17 pts behind, 13 tournaments'},
+  {pos:10,name:'Sorana Cirstea',       flag:'🇷🇴', pts:1915, status:'chase',  note:'RG QF boost — 1,915 not 1,856 — retiring end 2026'},
+  {pos:11,name:'Iga Swiatek',          flag:'🇵🇱', pts:1823, status:'chase',  note:'4× RG champion but only 11th in Race — 10 tournaments'},
+  {pos:12,name:'Iva Jovic',            flag:'🇺🇸', pts:1622, status:'outside',note:'18yr old — jumped 3 places, 14 tournaments'},
+  {pos:13,name:'Diana Shnaider',       flag:'🇷🇺', pts:1613, status:'outside',note:'Dropped 1 place — 12 tournaments'},
+  {pos:14,name:'Belinda Bencic',       flag:'🇨🇭', pts:1612, status:'outside',note:'Dropped 1 place — 10 tournaments'},
+  {pos:15,name:'Maja Chwalinska',      flag:'🇵🇱', pts:1454, status:'outside',note:'RG finalist — only 4 tournaments played'},
+  {pos:16,name:'Anastasia Potapova',   flag:'🇷🇺', pts:1422, status:'outside',note:'13 tournaments — 1,422 not 1,392'},
+  {pos:17,name:'Amanda Anisimova',     flag:'🇺🇸', pts:1368, status:'outside',note:'Jumped 1 place — 8 tournaments only'},
+  {pos:18,name:'Anna Kalinskaya',      flag:'🇷🇺', pts:1299, status:'outside',note:'Dropped 1 place — 12 tournaments'},
+  {pos:19,name:'Jelena Ostapenko',     flag:'🇱🇻', pts:1176, status:'outside',note:'2017 Wimbledon champ — grass specialist ahead'},
+  {pos:20,name:'Linda Noskova',        flag:'🇨🇿', pts:1173, status:'outside',note:'21yr old Czech — 10 tournaments'},
+];
+
+const raceStatusMap = {
+  safe:   {cls:'s-contend', label:'✅ SAFE'},
+  zone:   {cls:'s-watch',   label:'⚠️ IN ZONE'},
+  chase:  {cls:'s-math',    label:'🔴 CHASING'},
+  outside:{cls:'s-out',     label:'❌ OUTSIDE'},
+};
+
+function renderRace(data, bodyId, qual8pts){
+  const body = document.getElementById(bodyId);
+  if(!body) return;
+  body.innerHTML = data.map((p,i) => {
+    const s = raceStatusMap[p.status];
+    const gap = i===7 ? '— (line)' : i<7 ? '—' : '-'+(p.pts - qual8pts < 0 ? Math.abs(p.pts - qual8pts) : p.pts - qual8pts);
+    const gapColor = i<8 ? 'var(--text-3)' : 'var(--status-red-text)';
+    const rowBg = i===7 ? 'background:var(--surface2)' : i===8 ? 'background:#fff8f8' : '';
+    const divider = i===7 ? '<tr><td colspan="5" style="padding:0;height:2px;background:var(--tennis);opacity:.3"></td></tr>' : '';
+    return `${divider}<tr style="${rowBg}">
+      <td><span class="pos${i===0?' p1':''}">${p.pos}</span></td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div>
+            <div style="font-weight:600;font-size:13px;color:var(--text)">${p.flag} ${p.name}</div>
+            <div style="font-size:11px;color:var(--text-3);margin-top:1px">${p.note}</div>
+          </div>
+        </div>
+      </td>
+      <td class="r"><span style="font-weight:700;font-size:14px;color:var(--text)">${p.pts.toLocaleString()}</span></td>
+      <td class="r"><span style="color:${gapColor};font-size:12px">${i<8 ? '—' : '-'+(qual8pts - p.pts)}</span></td>
+      <td><span class="spill ${s.cls}">${s.label}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+function initTennisRace(){
+  const atpQ8 = atpRace[7].pts;
+  const wtaQ8 = wtaRace[7].pts;
+  renderRace(atpRace, 'atp-race-body', atpQ8);
+  renderRace(wtaRace, 'wta-race-body', wtaQ8);
+}
+
+
+// ═══════════════════════════════════════════
+function toggleTheme(){
+  const isDark = document.documentElement.getAttribute('data-theme')==='dark';
+  document.documentElement.setAttribute('data-theme', isDark?'':'dark');
+  document.getElementById('themeBtn').textContent = isDark ? '🌙 Dark' : '☀️ Light';
+}
+
+// ═══════════════════════════════════════════
+// NAV
+// ═══════════════════════════════════════════
+function sw(sport){
+  document.querySelectorAll('.snav').forEach(n=>n.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelector('.snav.'+sport).classList.add('active');
+  document.getElementById('p-'+sport).classList.add('active');
+  document.getElementById('f1-subnav').classList.toggle('visible', sport==='f1');
+  document.getElementById('fb-subnav').classList.toggle('visible', sport==='football');
+  if(sport==='football') initFootball();
+  if(sport==='f1') initF1();
+  if(sport==='tennis') initTennisRace();
+}
+
+function initFootball(){
+  if(document.getElementById('fb-groups-content').innerHTML === '') {
+    renderFbGroups('A');
+    renderR32();
+    renderPathway();
+  }
+}
+
+function scrollToFbSection(id){
+  const el = document.getElementById(id);
+  if(!el) return;
+  const y = el.getBoundingClientRect().top + window.scrollY - 150;
+  window.scrollTo({top:y, behavior:'smooth'});
+}
+
+function scrollToSection(id){
+  const el = document.getElementById(id);
+  if(!el) return;
+  // offset for sticky header (54px) + sub-nav (36px) + small gap
+  const y = el.getBoundingClientRect().top + window.scrollY - 140;
+  window.scrollTo({top:y, behavior:'smooth'});
+}
+
+// Scroll spy — highlight active sub-nav item
+window.addEventListener('scroll', ()=>{
+  const rounds = document.getElementById('f1-rounds');
+  const champs = document.getElementById('f1-champs');
+  if(!rounds||!champs) return;
+  const champsTop = champs.getBoundingClientRect().top;
+  const items = document.querySelectorAll('.f1-subnav-item');
+  if(champsTop <= 150){
+    items[0].classList.remove('active'); items[1].classList.add('active');
+  } else {
+    items[0].classList.add('active');    items[1].classList.remove('active');
+  }
+}, {passive:true});
+
+function sf(el, id){
+  el.closest('.panel').querySelectorAll('.ftab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  el.closest('.panel').querySelectorAll('.fpanel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('fp-'+id).classList.add('active');
+}
+
+// ═══════════════════════════════════════════
+// AI
+// ═══════════════════════════════════════════
+async function aiGo(prompt){
+  const out = document.getElementById('aiOut');
+  const load = document.getElementById('aiLoad');
+  out.classList.remove('on'); load.classList.add('on');
+  try {
+    const r = await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-6', max_tokens:1000,
+        system:'You are a sports data analyst. Use web search to fetch up-to-date information. Provide concise, structured answers focused on standings, gaps, and race status. Today is June 16 2026.',
+        messages:[{role:'user',content:prompt}],
+        tools:[{type:'web_search_20250305',name:'web_search'}]
+      })
+    });
+    const data = await r.json();
+    const text = data.content.filter(b=>b.type==='text').map(b=>b.text).join('\n');
+    out.textContent = text || '(No response)';
+    out.classList.add('on');
+    document.getElementById('hdrDate').textContent = 'Updated '+new Date().toLocaleTimeString();
+  } catch(e){ out.textContent='Error: '+e.message; out.classList.add('on'); }
+  load.classList.remove('on');
+}
+
+function customQ(){
+  const q = prompt('Enter your question:');
+  if(q) aiGo(q);
+}
+
+// ── PAGE INIT — runs after ALL data & functions defined ──
+// Football is default tab
+initFootball();
+document.getElementById('fb-subnav').classList.add('visible');
+</script>
+</body>
+</html>
