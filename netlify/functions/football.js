@@ -74,22 +74,43 @@ function normaliseFDMatches(matches) {
   }));
 }
 
+// Team → group lookup derived from seed data
+const TEAM_TO_GROUP = {
+  'Mexico':'GROUP_A','South Korea':'GROUP_A','Czechia':'GROUP_A','South Africa':'GROUP_A',
+  'Canada':'GROUP_B','Switzerland':'GROUP_B','Bosnia-Herzegovina':'GROUP_B','Qatar':'GROUP_B',
+  'Scotland':'GROUP_C','Morocco':'GROUP_C','Brazil':'GROUP_C','Haiti':'GROUP_C',
+  'United States':'GROUP_D','Australia':'GROUP_D','Turkey':'GROUP_D','Paraguay':'GROUP_D',
+  'Germany':'GROUP_E','Ivory Coast':'GROUP_E','Ecuador':'GROUP_E','Curaçao':'GROUP_E',
+  'Sweden':'GROUP_F','Japan':'GROUP_F','Netherlands':'GROUP_F','Tunisia':'GROUP_F',
+  'Iran':'GROUP_G','New Zealand':'GROUP_G','Belgium':'GROUP_G','Egypt':'GROUP_G',
+  'Spain':'GROUP_H','Cape Verde Islands':'GROUP_H','Uruguay':'GROUP_H','Saudi Arabia':'GROUP_H',
+  'France':'GROUP_I','Senegal':'GROUP_I','Norway':'GROUP_I','Iraq':'GROUP_I',
+  'Argentina':'GROUP_J','Austria':'GROUP_J','Algeria':'GROUP_J','Jordan':'GROUP_J',
+  'Portugal':'GROUP_K','Colombia':'GROUP_K','Uzbekistan':'GROUP_K','Congo DR':'GROUP_K',
+  'England':'GROUP_L','Croatia':'GROUP_L','Ghana':'GROUP_L','Panama':'GROUP_L',
+};
+
 function normaliseFDStandings(standings) {
-  return (standings || []).map(s => ({
-    group: s.table?.[0]?.group || s.group,
-    teams: (s.table || []).map(t => ({
-      name:   t.team?.name,
-      crest:  t.team?.crest,
-      played: t.playedGames,
-      won:    t.won,
-      drawn:  t.draw,
-      lost:   t.lost,
-      gf:     t.goalsFor,
-      ga:     t.goalsAgainst,
-      gd:     t.goalDifference,
-      points: t.points,
-    }))
-  }));
+  return (standings || []).map(s => {
+    // API returns group:null — derive from first team name instead
+    const firstTeam = s.table?.[0]?.team?.name;
+    const group = s.table?.[0]?.group || s.group || TEAM_TO_GROUP[firstTeam] || null;
+    return {
+      group,
+      teams: (s.table || []).map(t => ({
+        name:   t.team?.name,
+        crest:  t.team?.crest,
+        played: t.playedGames,
+        won:    t.won,
+        drawn:  t.draw,
+        lost:   t.lost,
+        gf:     t.goalsFor,
+        ga:     t.goalsAgainst,
+        gd:     t.goalDifference,
+        points: t.points,
+      }))
+    };
+  });
 }
 
 function normaliseAFMatches(fixtures) {
