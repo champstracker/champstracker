@@ -1926,8 +1926,10 @@ renderWTC(); renderODI();
 
 
 // ═══════════════════════════════════════════
-// FOOTBALL / FIFA 2026 DATA
+// FOOTBALL / FIFA 2026 — LIVE API WIRING
 // ═══════════════════════════════════════════
+
+// Seed data (last-known state — overwritten by API on every fetch)
 const fbGroups = {
   A:{ name:'Group A', teams:[
     {flag:'🇲🇽',name:'Mexico',     p:1,w:1,d:0,l:0,gf:2,ga:0,gd:2,pts:3,tcs:-1,status:'alive'},
@@ -2087,6 +2089,144 @@ const fbGroups = {
   ]},
 };
 
+// ── Live API fetch + merge ──────────────────────────────────────
+let fbDataLoaded = false;
+let fbFetchTimer = null;
+
+// Normalise group key returned by API (e.g. "GROUP_A" → "A")
+function normaliseGroupKey(raw){
+  if(!raw) return null;
+  const m = raw.match(/([A-L])$/);
+  return m ? m[1] : null;
+}
+
+// Map API status → done / live flags used by renderFbGroups
+function matchFlags(status){
+  const s = (status||'').toUpperCase();
+  if(['FINISHED','FT'].includes(s))          return {done:true,  live:false};
+  if(['IN_PLAY','PAUSED','HALFTIME'].includes(s)) return {done:false, live:true};
+  return {done:false, live:false};
+}
+
+// Merge API matches data into fbGroups fixtures (preserves existing if API misses a match)
+function mergeMatches(matches){
+  if(!Array.isArray(matches)||!matches.length) return;
+
+  // Index existing fixtures by "home vs away" for fast lookup
+  const fxIndex = {};
+  Object.keys(fbGroups).forEach(gk => {
+    fbGroups[gk].fixtures.forEach(f => {
+      fxIndex[gk+'|'+f.home+'|'+f.away] = f;
+    });
+  });
+
+  matches.forEach(m => {
+    const gk = normaliseGroupKey(m.group);
+    if(!gk || !fbGroups[gk]) return;
+
+    const key = gk+'|'+m.homeTeam+'|'+m.awayTeam;
+    const flags = matchFlags(m.status);
+    const hs = (m.homeScore !== null && m.homeScore !== undefined) ? m.homeScore : null;
+    const as_ = (m.awayScore !== null && m.awayScore !== undefined) ? m.awayScore : null;
+
+    if(fxIndex[key]){
+      Object.assign(fxIndex[key], flags, {hs, as: as_});
+    } else {
+      // New fixture not in seed — append it
+      const dt = m.date ? new Date(m.date) : null;
+      const dateStr = dt ? dt.toLocaleDateString('en-GB',{month:'short',day:'numeric'}) : '';
+      fbGroups[gk].fixtures.push({
+        home: m.homeTeam, away: m.awayTeam,
+        hs, as: as_, date: dateStr, ...flags
+      });
+    }
+  });
+}
+
+// Merge API standings data into fbGroups teams
+function mergeStandings(standings){
+  if(!Array.isArray(standings)||!standings.length) return;
+
+  standings.forEach(gs => {
+    const gk = normaliseGroupKey(gs.group);
+    if(!gk || !fbGroups[gk] || !Array.isArray(gs.teams)) return;
+
+    // Build lookup by name for existing seed teams
+    const teamIndex = {};
+    fbGroups[gk].teams.forEach(t => { teamIndex[t.name] = t; });
+
+    gs.teams.forEach(at => {
+      if(teamIndex[at.name]){
+        Object.assign(teamIndex[at.name], {
+          p: at.played, w: at.won, d: at.drawn, l: at.lost,
+          gf: at.gf, ga: at.ga, gd: at.gd, pts: at.points
+        });
+      }
+    });
+  });
+}
+
+// Show/hide the loading banner inside the groups container
+function setFbLoading(on){
+  let banner = document.getElementById('fb-loading-banner');
+  if(on){
+    if(!banner){
+      banner = document.createElement('div');
+      banner.id = 'fb-loading-banner';
+      banner.style.cssText = 'padding:10px 16px;font-size:12px;color:var(--text-3);display:flex;align-items:center;gap:8px';
+      banner.innerHTML = '<div class="live-dot" style="width:6px;height:6px"></div> Fetching live data…';
+      const c = document.getElementById('fb-groups-content');
+      if(c) c.parentNode.insertBefore(banner, c);
+    }
+    banner.style.display = 'flex';
+  } else {
+    if(banner) banner.style.display = 'none';
+  }
+}
+
+async function fetchFbData(silent){
+  if(!silent) setFbLoading(true);
+  try {
+    const BASE = '/.netlify/functions/football';
+    const [mRes, sRes] = await Promise.all([
+      fetch(BASE + '?type=matches'),
+      fetch(BASE + '?type=standings')
+    ]);
+
+    if(mRes.ok){
+      const mJson = await mRes.json();
+      mergeMatches(Array.isArray(mJson) ? mJson : mJson.matches || []);
+    }
+    if(sRes.ok){
+      const sJson = await sRes.json();
+      mergeStandings(Array.isArray(sJson) ? sJson : sJson.standings || []);
+    }
+
+    fbDataLoaded = true;
+    document.getElementById('hdrDate').textContent = 'Updated ' + new Date().toLocaleTimeString();
+  } catch(e){
+    console.warn('Football API fetch failed:', e);
+    // Graceful degradation — seed data still renders
+  } finally {
+    setFbLoading(false);
+  }
+
+  // Re-render whichever group tab is currently active
+  const activeTab = document.querySelector('.grp-tab.active');
+  const activeGroup = activeTab ? activeTab.textContent.trim() : 'A';
+  renderFbGroups(activeGroup);
+  renderR32();
+}
+
+// Schedule polling — every 60 s during group stage, 5 min after
+function scheduleFbPoll(){
+  if(fbFetchTimer) clearInterval(fbFetchTimer);
+  const now = new Date();
+  const groupStageEnd = new Date('2026-06-28T00:00:00Z');
+  const interval = now < groupStageEnd ? 60000 : 300000;
+  fbFetchTimer = setInterval(() => fetchFbData(true), interval);
+}
+
 const r32Matches = [
   {id:'M73',home:'A2',away:'B2',venue:'Los Angeles',date:'Jun 28',done:false},
   {id:'M74',home:'E1',away:'Best 3rd (A/B/C/D/F)',venue:'Boston',date:'Jun 29',done:false},
@@ -2142,7 +2282,7 @@ function renderFbGroups(filter){
 
     const fixtures = g.fixtures.map(f => {
       let scoreHtml;
-      if(f.live) scoreHtml = `<span class="fix-score upcoming" style="color:#dc2626;font-weight:700">Jun 17</span>`;
+      if(f.live) scoreHtml = `<span class="fix-score upcoming" style="color:#dc2626;font-weight:700;animation:pulse 1.4s infinite">🔴 ${f.hs ?? 0}–${f.as ?? 0} LIVE</span>`;
       else if(f.done) scoreHtml = `<span class="fix-score done">${f.hs} – ${f.as}</span>`;
       else scoreHtml = `<span class="fix-score upcoming">${f.date}</span>`;
       return `<div class="fix-row">
@@ -2484,10 +2624,17 @@ function sw(sport){
 }
 
 function initFootball(){
-  if(document.getElementById('fb-groups-content').innerHTML === '') {
+  const el = document.getElementById('fb-groups-content');
+  if(el.innerHTML === ''){
+    // Render seed data immediately so the page isn't blank
     renderFbGroups('A');
     renderR32();
     renderPathway();
+  }
+  // Always try to fetch fresh data (first call or returning to tab)
+  if(!fbFetchTimer){
+    fetchFbData(false);
+    scheduleFbPoll();
   }
 }
 
