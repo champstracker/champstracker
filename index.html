@@ -2190,29 +2190,47 @@ function mergeMatches(matches){
   });
 }
 
-// Merge API standings data into fbGroups teams
-function mergeStandings(standings){
-  if(!Array.isArray(standings)||!standings.length) return;
+// Compute standings from match results — drop unreliable standings API entirely
+function computeStandingsFromMatches(matches){
+  if(!Array.isArray(matches)||!matches.length) return;
 
-  standings.forEach(gs => {
-    const gk = normaliseGroupKey(gs.group);
-    if(!gk || !fbGroups[gk] || !Array.isArray(gs.teams)) return;
-
-    // Build lookup by name for existing seed teams
-    const teamIndex = {};
-    fbGroups[gk].teams.forEach(t => { teamIndex[t.name] = t; });
-
-    gs.teams.forEach(at => {
-      const canonName = canonicalTeam(at.name);
-      if(teamIndex[canonName]){
-        const seedFlag = teamIndex[canonName].flag; // preserve emoji — never let API overwrite
-        Object.assign(teamIndex[canonName], {
-          p: at.played, w: at.won, d: at.drawn, l: at.lost,
-          gf: at.gf, ga: at.ga, gd: at.gd, pts: at.points
-        });
-        teamIndex[canonName].flag = seedFlag; // restore in case API bled a flag field through
-      }
+  // Reset all team stats to zero before recomputing
+  Object.keys(fbGroups).forEach(gk => {
+    fbGroups[gk].teams.forEach(t => {
+      t.p=0; t.w=0; t.d=0; t.l=0; t.gf=0; t.ga=0; t.gd=0; t.pts=0;
     });
+  });
+
+  // Build team lookup: canonicalName → team object
+  const teamIndex = {};
+  Object.keys(fbGroups).forEach(gk => {
+    fbGroups[gk].teams.forEach(t => { teamIndex[t.name] = t; });
+  });
+
+  matches.forEach(m => {
+    if(m.status !== 'FINISHED') return;
+    if(m.homeScore === null || m.awayScore === null) return;
+
+    const home = canonicalTeam(m.homeTeam);
+    const away = canonicalTeam(m.awayTeam);
+    const ht = teamIndex[home];
+    const at = teamIndex[away];
+    if(!ht || !at) return;
+
+    const hs = m.homeScore, as_ = m.awayScore;
+
+    // Home team
+    ht.p++; ht.gf += hs; ht.ga += as_; ht.gd = ht.gf - ht.ga;
+    // Away team
+    at.p++; at.gf += as_; at.ga += hs; at.gd = at.gf - at.ga;
+
+    if(hs > as_){
+      ht.w++; ht.pts+=3; at.l++;
+    } else if(hs < as_){
+      at.w++; at.pts+=3; ht.l++;
+    } else {
+      ht.d++; ht.pts++; at.d++; at.pts++;
+    }
   });
 }
 
@@ -2238,25 +2256,19 @@ async function fetchFbData(silent){
   if(!silent) setFbLoading(true);
   try {
     const BASE = '/.netlify/functions/football';
-    const [mRes, sRes] = await Promise.all([
-      fetch(BASE + '?type=matches'),
-      fetch(BASE + '?type=standings')
-    ]);
+    const mRes = await fetch(BASE + '?type=matches');
 
     if(mRes.ok){
       const mJson = await mRes.json();
-      mergeMatches(Array.isArray(mJson) ? mJson : mJson.matches || []);
-    }
-    if(sRes.ok){
-      const sJson = await sRes.json();
-      mergeStandings(Array.isArray(sJson) ? sJson : sJson.standings || []);
+      const matches = Array.isArray(mJson) ? mJson : mJson.data || mJson.matches || [];
+      mergeMatches(matches);
+      computeStandingsFromMatches(matches);
     }
 
     fbDataLoaded = true;
     document.getElementById('hdrDate').textContent = 'Updated ' + new Date().toLocaleTimeString();
   } catch(e){
     console.warn('Football API fetch failed:', e);
-    // Graceful degradation — seed data still renders
   } finally {
     setFbLoading(false);
   }
