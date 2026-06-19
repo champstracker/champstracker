@@ -2,24 +2,18 @@
 // Champs Tracker — Football Netlify Function
 // Primary:  football-data.org (FOOTBALL_DATA_API_KEY)
 // Backup:   api-football.com  (API_SPORTS_KEY)
-// Fallback: cached data
 // ═══════════════════════════════════════════════════════════
 
 const cache = {};
 const CACHE_TTL = {
-  live:  60 * 1000,
-  today: 5 * 60 * 1000,
-  idle:  60 * 60 * 1000,
+  live:  30 * 1000,        // 30s when matches are live
+  today: 60 * 1000,        // 60s on match days
+  idle:  60 * 60 * 1000,   // 1hr when no matches today
 };
 
 function isCached(key) {
   const entry = cache[key];
   if (!entry) return false;
-  // Invalidate standings cache if it contains the old group:null bug
-  if (key === 'standings' && Array.isArray(entry.data) && entry.data[0]?.group === null) {
-    delete cache[key];
-    return false;
-  }
   return (Date.now() - entry.time) < entry.ttl;
 }
 
@@ -27,6 +21,7 @@ function setCache(key, data, ttl) {
   cache[key] = { data, time: Date.now(), ttl };
 }
 
+// ── PRIMARY: football-data.org ───────────────────────────
 async function fetchFD(endpoint) {
   const key = process.env.FOOTBALL_DATA_API_KEY;
   if (!key) throw new Error('No FOOTBALL_DATA_API_KEY');
@@ -37,6 +32,7 @@ async function fetchFD(endpoint) {
   return res.json();
 }
 
+// ── BACKUP: api-football.com (api-sports) ────────────────
 async function fetchAF(endpoint) {
   const key = process.env.API_SPORTS_KEY;
   if (!key) throw new Error('No API_SPORTS_KEY');
@@ -47,6 +43,7 @@ async function fetchAF(endpoint) {
   return res.json();
 }
 
+// ── Cache TTL logic ──────────────────────────────────────
 function getTTL(matches) {
   if (!matches || !matches.length) return CACHE_TTL.idle;
   const now = Date.now();
@@ -59,6 +56,7 @@ function getTTL(matches) {
   return isToday ? CACHE_TTL.today : CACHE_TTL.idle;
 }
 
+// ── Normalise football-data.org matches ──────────────────
 function normaliseFDMatches(matches) {
   return (matches || []).map(m => ({
     id:        m.id,
@@ -74,45 +72,7 @@ function normaliseFDMatches(matches) {
   }));
 }
 
-// Team → group lookup derived from seed data
-const TEAM_TO_GROUP = {
-  'Mexico':'GROUP_A','South Korea':'GROUP_A','Czechia':'GROUP_A','South Africa':'GROUP_A',
-  'Canada':'GROUP_B','Switzerland':'GROUP_B','Bosnia-Herzegovina':'GROUP_B','Qatar':'GROUP_B',
-  'Scotland':'GROUP_C','Morocco':'GROUP_C','Brazil':'GROUP_C','Haiti':'GROUP_C',
-  'United States':'GROUP_D','Australia':'GROUP_D','Turkey':'GROUP_D','Paraguay':'GROUP_D',
-  'Germany':'GROUP_E','Ivory Coast':'GROUP_E','Ecuador':'GROUP_E','Curaçao':'GROUP_E',
-  'Sweden':'GROUP_F','Japan':'GROUP_F','Netherlands':'GROUP_F','Tunisia':'GROUP_F',
-  'Iran':'GROUP_G','New Zealand':'GROUP_G','Belgium':'GROUP_G','Egypt':'GROUP_G',
-  'Spain':'GROUP_H','Cape Verde Islands':'GROUP_H','Uruguay':'GROUP_H','Saudi Arabia':'GROUP_H',
-  'France':'GROUP_I','Senegal':'GROUP_I','Norway':'GROUP_I','Iraq':'GROUP_I',
-  'Argentina':'GROUP_J','Austria':'GROUP_J','Algeria':'GROUP_J','Jordan':'GROUP_J',
-  'Portugal':'GROUP_K','Colombia':'GROUP_K','Uzbekistan':'GROUP_K','Congo DR':'GROUP_K',
-  'England':'GROUP_L','Croatia':'GROUP_L','Ghana':'GROUP_L','Panama':'GROUP_L',
-};
-
-function normaliseFDStandings(standings) {
-  return (standings || []).map(s => {
-    // API returns group:null — derive from first team name instead
-    const firstTeam = s.table?.[0]?.team?.name;
-    const group = s.table?.[0]?.group || s.group || TEAM_TO_GROUP[firstTeam] || null;
-    return {
-      group,
-      teams: (s.table || []).map(t => ({
-        name:   t.team?.name,
-        crest:  t.team?.crest,
-        played: t.playedGames,
-        won:    t.won,
-        drawn:  t.draw,
-        lost:   t.lost,
-        gf:     t.goalsFor,
-        ga:     t.goalsAgainst,
-        gd:     t.goalDifference,
-        points: t.points,
-      }))
-    };
-  });
-}
-
+// ── Normalise api-sports matches ─────────────────────────
 function normaliseAFMatches(fixtures) {
   return (fixtures || []).map(f => ({
     id:        f.fixture?.id,
@@ -120,35 +80,17 @@ function normaliseAFMatches(fixtures) {
     awayTeam:  f.teams?.away?.name,
     homeScore: f.goals?.home ?? null,
     awayScore: f.goals?.away ?? null,
-    status:    f.fixture?.status?.short === 'FT' ? 'FINISHED'
-               : f.fixture?.status?.short === '1H' || f.fixture?.status?.short === '2H' ? 'IN_PLAY'
-               : f.fixture?.status?.short === 'HT' ? 'PAUSED'
-               : 'TIMED',
+    status:    f.fixture?.status?.short === 'FT'  ? 'FINISHED'
+             : f.fixture?.status?.short === '1H' || f.fixture?.status?.short === '2H' ? 'IN_PLAY'
+             : f.fixture?.status?.short === 'HT'  ? 'PAUSED'
+             : 'TIMED',
     date:      f.fixture?.date,
     group:     f.league?.round || null,
     stage:     'GROUP_STAGE',
   }));
 }
 
-function normaliseAFStandings(response) {
-  if (!response || !response[0]) return [];
-  const league = response[0];
-  return (league.league?.standings || []).map((group, i) => ({
-    group: `GROUP_${String.fromCharCode(65 + i)}`,
-    teams: group.map(t => ({
-      name:   t.team?.name,
-      played: t.all?.played,
-      won:    t.all?.win,
-      drawn:  t.all?.draw,
-      lost:   t.all?.lose,
-      gf:     t.all?.goals?.for,
-      ga:     t.all?.goals?.against,
-      gd:     t.goalsDiff,
-      points: t.points,
-    }))
-  }));
-}
-
+// ── Main handler ─────────────────────────────────────────
 export async function handler(event) {
   const headers = {
     'Content-Type': 'application/json',
@@ -156,6 +98,10 @@ export async function handler(event) {
   };
 
   const type = event.queryStringParameters?.type || 'matches';
+
+  if (!['matches', 'live'].includes(type)) {
+    return { statusCode: 400, headers, body: JSON.stringify({ error: `Unknown type: ${type}` }) };
+  }
 
   if (isCached(type)) {
     return {
@@ -169,7 +115,20 @@ export async function handler(event) {
     let data;
     let source = 'football-data';
 
-    if (type === 'matches') {
+    if (type === 'live') {
+      try {
+        const raw = await fetchFD('competitions/WC/matches?season=2026&status=LIVE');
+        data = normaliseFDMatches(raw?.matches);
+      } catch (e) {
+        console.log('football-data live failed:', e.message, '— trying api-sports');
+        const raw = await fetchAF('fixtures?league=1&season=2026&live=all');
+        data = normaliseAFMatches(raw?.response);
+        source = 'api-sports';
+      }
+      setCache(type, data, CACHE_TTL.live);
+
+    } else {
+      // type === 'matches' — full tournament, all 104
       try {
         const raw = await fetchFD('competitions/WC/matches?season=2026');
         data = normaliseFDMatches(raw?.matches);
@@ -180,37 +139,6 @@ export async function handler(event) {
         source = 'api-sports';
       }
       setCache(type, data, getTTL(data));
-
-    } else if (type === 'standings') {
-      try {
-        const raw = await fetchFD('competitions/WC/standings?season=2026');
-        data = normaliseFDStandings(raw?.standings);
-      } catch (e) {
-        console.log('football-data failed:', e.message, '— trying api-sports');
-        const raw = await fetchAF('standings?league=1&season=2026');
-        data = normaliseAFStandings(raw?.response);
-        source = 'api-sports';
-      }
-      setCache(type, data, CACHE_TTL.today);
-
-    } else if (type === 'live') {
-      try {
-        const raw = await fetchFD('competitions/WC/matches?season=2026&status=LIVE');
-        data = normaliseFDMatches(raw?.matches);
-      } catch (e) {
-        console.log('football-data failed:', e.message, '— trying api-sports');
-        const raw = await fetchAF('fixtures?league=1&season=2026&live=all');
-        data = normaliseAFMatches(raw?.response);
-        source = 'api-sports';
-      }
-      setCache(type, data, CACHE_TTL.live);
-
-    } else {
-      return {
-        statusCode: 400,
-        headers,
-        body: JSON.stringify({ error: `Unknown type: ${type}` }),
-      };
     }
 
     return {
