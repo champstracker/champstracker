@@ -22,7 +22,6 @@ function setCache(key, data, ttl) {
   cache[key] = { data, time: Date.now(), ttl };
 }
 
-// ── PRIMARY: football-data.org ───────────────────────────
 async function fetchFD(endpoint) {
   const key = process.env.FOOTBALL_DATA_API_KEY;
   if (!key) throw new Error('No FOOTBALL_DATA_API_KEY');
@@ -33,7 +32,6 @@ async function fetchFD(endpoint) {
   return res.json();
 }
 
-// ── BACKUP: api-football.com (api-sports) ────────────────
 async function fetchAF(endpoint) {
   const key = process.env.API_SPORTS_KEY;
   if (!key) throw new Error('No API_SPORTS_KEY');
@@ -44,7 +42,6 @@ async function fetchAF(endpoint) {
   return res.json();
 }
 
-// ── Cache TTL logic ──────────────────────────────────────
 function getTTL(matches) {
   if (!matches || !matches.length) return CACHE_TTL.idle;
   const now = Date.now();
@@ -57,7 +54,6 @@ function getTTL(matches) {
   return isToday ? CACHE_TTL.today : CACHE_TTL.idle;
 }
 
-// ── Normalise football-data.org matches ──────────────────
 function normaliseFDMatches(matches) {
   return (matches || []).map(m => ({
     id:        m.id,
@@ -73,10 +69,9 @@ function normaliseFDMatches(matches) {
   }));
 }
 
-// ── Normalise football-data.org standings ────────────────
 function normaliseFDStandings(standings) {
   return (standings || []).map(s => ({
-    group: s.group,
+    group: s.table?.[0]?.group || s.group,
     teams: (s.table || []).map(t => ({
       name:   t.team?.name,
       crest:  t.team?.crest,
@@ -92,7 +87,6 @@ function normaliseFDStandings(standings) {
   }));
 }
 
-// ── Normalise api-sports matches ─────────────────────────
 function normaliseAFMatches(fixtures) {
   return (fixtures || []).map(f => ({
     id:        f.fixture?.id,
@@ -110,7 +104,6 @@ function normaliseAFMatches(fixtures) {
   }));
 }
 
-// ── Normalise api-sports standings ───────────────────────
 function normaliseAFStandings(response) {
   if (!response || !response[0]) return [];
   const league = response[0];
@@ -130,7 +123,6 @@ function normaliseAFStandings(response) {
   }));
 }
 
-// ── Main handler ─────────────────────────────────────────
 export async function handler(event) {
   const headers = {
     'Content-Type': 'application/json',
@@ -202,7 +194,6 @@ export async function handler(event) {
     };
 
   } catch (err) {
-    // Both APIs failed — return cached data if available
     const cached = cache[type];
     if (cached) {
       return {
