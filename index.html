@@ -2108,11 +2108,51 @@ function matchFlags(status){
   return {done:false, live:false};
 }
 
+// ── Team name aliases: API name → seed name ────────────────────
+// Covers football-data.org, api-sports.io, and common variants
+const TEAM_ALIAS = {
+  // Group A
+  'Czechia':'Czech Rep.','Czech Republic':'Czech Rep.',
+  'Korea Republic':'S. Korea','South Korea':'S. Korea',
+  'Republic of Korea':'S. Korea',
+  'South Africa':'S. Africa',
+  // Group B  (names match well but guard common variants)
+  'Bosnia and Herzegovina':'Bosnia','Bosnia & Herzegovina':'Bosnia',
+  // Group C
+  // Brazil, Morocco, Haiti, Scotland — fine as-is
+  // Group D
+  'United States':'USA','United States of America':'USA',
+  // Group E
+  "Côte d'Ivoire":'Ivory Coast',"Cote d'Ivoire":'Ivory Coast',
+  'Ivory Coast':'Ivory Coast',
+  // Group F
+  'Netherlands':'Netherlands',  // already matches
+  // Group G
+  'IR Iran':'Iran','Islamic Republic of Iran':'Iran',
+  // Group H
+  'Saudi Arabia':'Saudi Arabia',
+  'Cabo Verde':'Cape Verde',
+  // Group I
+  // France, Norway, Senegal, Iraq — fine
+  // Group J
+  'Austria':'Austria','Algeria':'Algeria','Jordan':'Jordan',
+  // Group K
+  'Uzbekistan':'Uzbekistan',
+  'DR Congo':'DR Congo','Congo DR':'DR Congo',
+  'Democratic Republic of the Congo':'DR Congo',
+  // Group L
+  'England':'England','Croatia':'Croatia','Ghana':'Ghana','Panama':'Panama',
+};
+
+function canonicalTeam(raw){
+  return TEAM_ALIAS[raw] || raw;
+}
+
 // Merge API matches data into fbGroups fixtures (preserves existing if API misses a match)
 function mergeMatches(matches){
   if(!Array.isArray(matches)||!matches.length) return;
 
-  // Index existing fixtures by "home vs away" for fast lookup
+  // Index existing fixtures by "groupKey|home|away" for fast lookup
   const fxIndex = {};
   Object.keys(fbGroups).forEach(gk => {
     fbGroups[gk].fixtures.forEach(f => {
@@ -2124,20 +2164,27 @@ function mergeMatches(matches){
     const gk = normaliseGroupKey(m.group);
     if(!gk || !fbGroups[gk]) return;
 
-    const key = gk+'|'+m.homeTeam+'|'+m.awayTeam;
+    const home = canonicalTeam(m.homeTeam);
+    const away = canonicalTeam(m.awayTeam);
     const flags = matchFlags(m.status);
-    const hs = (m.homeScore !== null && m.homeScore !== undefined) ? m.homeScore : null;
+    const hs  = (m.homeScore !== null && m.homeScore !== undefined) ? m.homeScore : null;
     const as_ = (m.awayScore !== null && m.awayScore !== undefined) ? m.awayScore : null;
+
+    // Try exact key, then swapped home/away (some APIs list teams differently)
+    const key        = gk+'|'+home+'|'+away;
+    const keySwapped = gk+'|'+away+'|'+home;
 
     if(fxIndex[key]){
       Object.assign(fxIndex[key], flags, {hs, as: as_});
+    } else if(fxIndex[keySwapped]){
+      // Home/away order is reversed — swap scores accordingly
+      Object.assign(fxIndex[keySwapped], flags, {hs: as_, as: hs});
     } else {
-      // New fixture not in seed — append it
+      // Fixture not in seed — append it with canonical names
       const dt = m.date ? new Date(m.date) : null;
       const dateStr = dt ? dt.toLocaleDateString('en-GB',{month:'short',day:'numeric'}) : '';
       fbGroups[gk].fixtures.push({
-        home: m.homeTeam, away: m.awayTeam,
-        hs, as: as_, date: dateStr, ...flags
+        home, away, hs, as: as_, date: dateStr, ...flags
       });
     }
   });
@@ -2156,11 +2203,14 @@ function mergeStandings(standings){
     fbGroups[gk].teams.forEach(t => { teamIndex[t.name] = t; });
 
     gs.teams.forEach(at => {
-      if(teamIndex[at.name]){
-        Object.assign(teamIndex[at.name], {
+      const canonName = canonicalTeam(at.name);
+      if(teamIndex[canonName]){
+        const seedFlag = teamIndex[canonName].flag; // preserve emoji — never let API overwrite
+        Object.assign(teamIndex[canonName], {
           p: at.played, w: at.won, d: at.drawn, l: at.lost,
           gf: at.gf, ga: at.ga, gd: at.gd, pts: at.points
         });
+        teamIndex[canonName].flag = seedFlag; // restore in case API bled a flag field through
       }
     });
   });
