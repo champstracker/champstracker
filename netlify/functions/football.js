@@ -1,15 +1,15 @@
 // ═══════════════════════════════════════════════════════════
 // Champs Tracker — Football Netlify Function
-// Fetches live World Cup data with smart caching
-// Primary: football-data.org (reliable, structured, team names)
-// Backup:  worldcup26.ir (free, no key)
+// Primary:  football-data.org (FOOTBALL_DATA_API_KEY)
+// Backup:   api-football.com  (API_SPORTS_KEY)
+// Fallback: cached data
 // ═══════════════════════════════════════════════════════════
 
 const cache = {};
 const CACHE_TTL = {
-  live:  60 * 1000,       // 60 seconds during live match
-  today: 5 * 60 * 1000,  // 5 minutes on match day
-  idle:  60 * 60 * 1000, // 1 hour on non-match day
+  live:  60 * 1000,
+  today: 5 * 60 * 1000,
+  idle:  60 * 60 * 1000,
 };
 
 function isCached(key) {
@@ -22,34 +22,36 @@ function setCache(key, data, ttl) {
   cache[key] = { data, time: Date.now(), ttl };
 }
 
-// ── Fetch from football-data.org (PRIMARY) ───────────────
+// ── PRIMARY: football-data.org ───────────────────────────
 async function fetchFD(endpoint) {
   const key = process.env.FOOTBALL_DATA_API_KEY;
-  if (!key) throw new Error('No FOOTBALL_DATA_API_KEY set');
+  if (!key) throw new Error('No FOOTBALL_DATA_API_KEY');
   const res = await fetch(`https://api.football-data.org/v4/${endpoint}`, {
     headers: { 'X-Auth-Token': key }
   });
-  if (!res.ok) throw new Error(`football-data.org error: ${res.status}`);
+  if (!res.ok) throw new Error(`football-data.org ${res.status}`);
   return res.json();
 }
 
-// ── Fetch from worldcup26.ir (BACKUP) ────────────────────
-async function fetchWC26(endpoint) {
-  const res = await fetch(`https://worldcup26.ir/get/${endpoint}`, {
-    headers: { 'Accept': 'application/json' }
+// ── BACKUP: api-football.com (api-sports) ────────────────
+async function fetchAF(endpoint) {
+  const key = process.env.API_SPORTS_KEY;
+  if (!key) throw new Error('No API_SPORTS_KEY');
+  const res = await fetch(`https://v3.football.api-sports.io/${endpoint}`, {
+    headers: { 'x-apisports-key': key }
   });
-  if (!res.ok) throw new Error(`worldcup26.ir error: ${res.status}`);
+  if (!res.ok) throw new Error(`api-sports ${res.status}`);
   return res.json();
 }
 
-// ── Determine cache TTL ───────────────────────────────────
+// ── Cache TTL logic ──────────────────────────────────────
 function getTTL(matches) {
   if (!matches || !matches.length) return CACHE_TTL.idle;
   const now = Date.now();
   const isLive = matches.some(m => m.status === 'IN_PLAY' || m.status === 'PAUSED');
   if (isLive) return CACHE_TTL.live;
   const isToday = matches.some(m => {
-    const d = new Date(m.utcDate || m.date);
+    const d = new Date(m.date);
     return Math.abs(d - now) < 24 * 60 * 60 * 1000;
   });
   return isToday ? CACHE_TTL.today : CACHE_TTL.idle;
@@ -67,6 +69,7 @@ function normaliseFDMatches(matches) {
     date:      m.utcDate,
     group:     m.group || null,
     stage:     m.stage,
+    matchday:  m.matchday || null,
   }));
 }
 
@@ -89,36 +92,40 @@ function normaliseFDStandings(standings) {
   }));
 }
 
-// ── Normalise worldcup26.ir matches (backup) ─────────────
-function normaliseWC26Games(games) {
-  return (games || []).map(g => ({
-    id:        g.id,
-    homeTeam:  g.home_team_en || g.home_team,
-    awayTeam:  g.away_team_en || g.away_team,
-    homeScore: g.home_score ?? null,
-    awayScore: g.away_score ?? null,
-    status:    g.status || 'SCHEDULED',
-    date:      g.datetime || g.date,
-    group:     g.group || null,
-    stage:     g.stage || 'GROUP_STAGE',
+// ── Normalise api-sports matches ─────────────────────────
+function normaliseAFMatches(fixtures) {
+  return (fixtures || []).map(f => ({
+    id:        f.fixture?.id,
+    homeTeam:  f.teams?.home?.name,
+    awayTeam:  f.teams?.away?.name,
+    homeScore: f.goals?.home ?? null,
+    awayScore: f.goals?.away ?? null,
+    status:    f.fixture?.status?.short === 'FT' ? 'FINISHED'
+               : f.fixture?.status?.short === '1H' || f.fixture?.status?.short === '2H' ? 'IN_PLAY'
+               : f.fixture?.status?.short === 'HT' ? 'PAUSED'
+               : 'TIMED',
+    date:      f.fixture?.date,
+    group:     f.league?.round || null,
+    stage:     'GROUP_STAGE',
   }));
 }
 
-// ── Normalise worldcup26.ir standings (backup) ───────────
-function normaliseWC26Groups(groups) {
-  if (!groups) return [];
-  return Object.entries(groups).map(([groupName, teams]) => ({
-    group: groupName,
-    teams: (teams || []).map(t => ({
-      name:   t.team_name_en || t.team_name,
-      played: t.mp ?? t.played ?? 0,
-      won:    t.w ?? t.won ?? 0,
-      drawn:  t.d ?? t.drawn ?? 0,
-      lost:   t.l ?? t.lost ?? 0,
-      gf:     t.gf ?? 0,
-      ga:     t.ga ?? 0,
-      gd:     t.gd ?? 0,
-      points: t.pts ?? t.points ?? 0,
+// ── Normalise api-sports standings ───────────────────────
+function normaliseAFStandings(response) {
+  if (!response || !response[0]) return [];
+  const league = response[0];
+  return (league.league?.standings || []).map((group, i) => ({
+    group: `GROUP_${String.fromCharCode(65 + i)}`,
+    teams: group.map(t => ({
+      name:   t.team?.name,
+      played: t.all?.played,
+      won:    t.all?.win,
+      drawn:  t.all?.draw,
+      lost:   t.all?.lose,
+      gf:     t.all?.goals?.for,
+      ga:     t.all?.goals?.against,
+      gd:     t.goalsDiff,
+      points: t.points,
     }))
   }));
 }
@@ -132,7 +139,6 @@ export async function handler(event) {
 
   const type = event.queryStringParameters?.type || 'matches';
 
-  // Return cached data if fresh
   if (isCached(type)) {
     return {
       statusCode: 200,
@@ -147,43 +153,37 @@ export async function handler(event) {
 
     if (type === 'matches') {
       try {
-        // PRIMARY: football-data.org
         const raw = await fetchFD('competitions/WC/matches?season=2026');
         data = normaliseFDMatches(raw?.matches);
       } catch (e) {
-        // BACKUP: worldcup26.ir
-        console.log('football-data failed, trying worldcup26.ir:', e.message);
-        const raw = await fetchWC26('games');
-        data = normaliseWC26Games(raw?.games || raw);
-        source = 'worldcup26';
+        console.log('football-data failed:', e.message, '— trying api-sports');
+        const raw = await fetchAF('fixtures?league=1&season=2026');
+        data = normaliseAFMatches(raw?.response);
+        source = 'api-sports';
       }
       setCache(type, data, getTTL(data));
 
     } else if (type === 'standings') {
       try {
-        // PRIMARY: football-data.org
         const raw = await fetchFD('competitions/WC/standings?season=2026');
         data = normaliseFDStandings(raw?.standings);
       } catch (e) {
-        // BACKUP: worldcup26.ir
-        console.log('football-data failed, trying worldcup26.ir:', e.message);
-        const raw = await fetchWC26('groups');
-        data = normaliseWC26Groups(raw?.groups || raw);
-        source = 'worldcup26';
+        console.log('football-data failed:', e.message, '— trying api-sports');
+        const raw = await fetchAF('standings?league=1&season=2026');
+        data = normaliseAFStandings(raw?.response);
+        source = 'api-sports';
       }
       setCache(type, data, CACHE_TTL.today);
 
     } else if (type === 'live') {
       try {
-        // PRIMARY: football-data.org live matches
         const raw = await fetchFD('competitions/WC/matches?season=2026&status=LIVE');
         data = normaliseFDMatches(raw?.matches);
       } catch (e) {
-        // BACKUP: worldcup26.ir filter live
-        const raw = await fetchWC26('games');
-        const all = normaliseWC26Games(raw?.games || raw);
-        data = all.filter(m => ['IN_PLAY','PAUSED','HT'].includes(m.status));
-        source = 'worldcup26';
+        console.log('football-data failed:', e.message, '— trying api-sports');
+        const raw = await fetchAF('fixtures?league=1&season=2026&live=all');
+        data = normaliseAFMatches(raw?.response);
+        source = 'api-sports';
       }
       setCache(type, data, CACHE_TTL.live);
 
@@ -191,7 +191,7 @@ export async function handler(event) {
       return {
         statusCode: 400,
         headers,
-        body: JSON.stringify({ error: `Unknown type: ${type}. Use matches, standings, or live.` }),
+        body: JSON.stringify({ error: `Unknown type: ${type}` }),
       };
     }
 
@@ -202,7 +202,15 @@ export async function handler(event) {
     };
 
   } catch (err) {
-    console.error('Football function error:', err);
+    // Both APIs failed — return cached data if available
+    const cached = cache[type];
+    if (cached) {
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({ source: 'stale-cache', data: cached.data, timestamp: new Date().toISOString() }),
+      };
+    }
     return {
       statusCode: 500,
       headers,
