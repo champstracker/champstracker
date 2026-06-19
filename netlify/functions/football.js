@@ -15,6 +15,11 @@ const CACHE_TTL = {
 function isCached(key) {
   const entry = cache[key];
   if (!entry) return false;
+  // Invalidate standings cache if it contains the old group:null bug
+  if (key === 'standings' && Array.isArray(entry.data) && entry.data[0]?.group === null) {
+    delete cache[key];
+    return false;
+  }
   return (Date.now() - entry.time) < entry.ttl;
 }
 
