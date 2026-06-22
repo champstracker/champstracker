@@ -690,6 +690,7 @@ tr:hover td{background:var(--surface2)}
   <div class="hdr-meta">
     <div class="live-dot"></div>
     <span class="hdr-date" id="hdrDate"></span>
+    <span class="hdr-date" id="hdrUpdated" style="color:var(--status-green-text)"></span>
     <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">🌙 Dark</button>
     <button class="ai-refresh" onclick="aiGo('Give a brief update on F1 2026 standings, ICC WTC standings, and tennis Grand Slam news as of June 2026. Be structured and concise.')">⟳ Refresh</button>
   </div>
@@ -854,14 +855,14 @@ tr:hover td{background:var(--surface2)}
     </div>
   </div>
 
-  <!-- Progress bar -->
-  <div class="rounds-bar" style="margin-bottom:16px">
-    <div class="rb-stat"><div class="n" style="color:var(--football)">24</div><div class="l">Played</div></div>
+  <!-- Progress bar — dynamic -->
+  <div class="rounds-bar" style="margin-bottom:16px" id="fb-progress-bar">
+    <div class="rb-stat"><div class="n" id="fb-played-count" style="color:var(--football)">—</div><div class="l">Played</div></div>
     <div style="display:flex;flex-direction:column;gap:6px;flex:1;min-width:160px">
-      <div class="rb-label">Matchday <strong>1</strong> complete · MD2 underway · Updated Jun 18</div>
-      <div class="rb-track"><div class="rb-fill" style="width:23%;background:var(--football)"></div></div>
+      <div class="rb-label" id="fb-progress-label">Loading…</div>
+      <div class="rb-track"><div class="rb-fill" id="fb-progress-fill" style="width:0%;background:var(--football)"></div></div>
     </div>
-    <div class="rb-stat"><div class="n" style="color:var(--green)">80</div><div class="l">Remaining</div></div>
+    <div class="rb-stat"><div class="n" id="fb-remaining-count" style="color:var(--green)">—</div><div class="l">Remaining</div></div>
     <div class="rb-stat"><div class="n" style="color:var(--amber)">104</div><div class="l">Total</div></div>
   </div>
 
@@ -2239,7 +2240,7 @@ async function fetchFbData(silent){
     }
 
     fbDataLoaded = true;
-    document.getElementById('hdrDate').textContent = 'Updated ' + new Date().toLocaleTimeString();
+    const upEl = document.getElementById('hdrUpdated'); if(upEl) upEl.textContent = '· Updated ' + new Date().toLocaleTimeString();
   } catch(e){
     console.warn('Football API fetch failed:', e);
   } finally {
@@ -2249,9 +2250,11 @@ async function fetchFbData(silent){
   // Re-render whichever group tab is currently active
   const activeTab = document.querySelector('.grp-tab.active');
   const activeGroup = activeTab ? activeTab.textContent.trim() : 'A';
+  updateProgressBar();
   renderFbGroups(activeGroup);
   renderBest3rd();
   renderR32();
+  renderPathway();
 }
 
 // Schedule polling — every 60 s during group stage, 5 min after
@@ -2260,7 +2263,7 @@ function scheduleFbPoll(){
   const now = new Date();
   const groupStageEnd = new Date('2026-06-28T00:00:00Z');
   const interval = now < groupStageEnd ? 60000 : 300000;
-  fbFetchTimer = setInterval(() => fetchFbData(true), interval);
+  fbFetchTimer = setInterval(() => { fetchFbData(true); scheduleFbPoll(); }, interval);
 }
 
 const r32Matches = [
@@ -2292,13 +2295,45 @@ const fbQualStatus = {
 // ═══════════════════════════════════════════
 // RENDER FOOTBALL
 // ═══════════════════════════════════════════
+function buildH2H(teams, fixtures){
+  const h2h = {};
+  teams.forEach(t => { h2h[t.name] = {pts:0, gd:0, gf:0}; });
+  fixtures.forEach(f => {
+    if(!f.done || f.hs === null || f.as === null) return;
+    const ht = h2h[f.home], at = h2h[f.away];
+    if(!ht || !at) return;
+    ht.gf += f.hs; ht.gd += f.hs - f.as;
+    at.gf += f.as; at.gd += f.as - f.hs;
+    if(f.hs > f.as){ ht.pts += 3; }
+    else if(f.hs < f.as){ at.pts += 3; }
+    else { ht.pts += 1; at.pts += 1; }
+  });
+  return h2h;
+}
+
+function sortGroup(teams, fixtures){
+  const h2h = buildH2H(teams, fixtures);
+  return [...teams].sort((a,b) => {
+    if(b.pts !== a.pts) return b.pts - a.pts;
+    // H2H between tied teams
+    const ah = h2h[a.name], bh = h2h[b.name];
+    if(bh.pts !== ah.pts) return bh.pts - ah.pts;
+    if(bh.gd !== ah.gd) return bh.gd - ah.gd;
+    if(bh.gf !== ah.gf) return bh.gf - ah.gf;
+    // Overall GD, GF
+    if(b.gd !== a.gd) return b.gd - a.gd;
+    if(b.gf !== a.gf) return b.gf - a.gf;
+    return (a.so||99) - (b.so||99);
+  });
+}
+
 function renderFbGroups(filter){
   const el = document.getElementById('fb-groups-content');
   const groups = filter === 'ALL' ? Object.keys(fbGroups) : [filter];
 
   el.innerHTML = groups.map(key => {
     const g = fbGroups[key];
-    const sorted = [...g.teams].sort((a,b) => b.pts-a.pts || b.gd-a.gd || b.gf-a.gf || (b.tcs||0)-(a.tcs||0) || (a.so||99)-(b.so||99));
+    const sorted = sortGroup(g.teams, g.fixtures);
 
     const standing = sorted.map((t,i) => {
       const dotCls = i<2 ? 'q-auto' : i===2 ? 'q-poss' : 'q-out';
@@ -2371,9 +2406,7 @@ function renderR32(){
 
   // ── Sort each group live ──────────────────────────────────
   function sortedGroup(gk){
-    return [...fbGroups[gk].teams].sort((a,b)=>
-      b.pts-a.pts || b.gd-a.gd || b.gf-a.gf || b.w-a.w
-    );
+    return sortGroup(fbGroups[gk].teams, fbGroups[gk].fixtures);
   }
   function teamStr(gk, pos){
     const t = sortedGroup(gk)[pos];
@@ -3019,11 +3052,9 @@ function renderPathway(){
     </div>
   </div>
   <div style="margin-top:20px">
-    <div class="sec-hd"><h2>Who Can Still Win?</h2><span class="chip chip-fb">AFTER MD1</span></div>
-    <div class="info">
-      After Matchday 1, <strong>no team is eliminated yet</strong> — every team has 2 matches remaining and a mathematical path to qualify.
-      Elimination becomes possible from <strong>Matchday 2</strong> onwards (teams with 0 pts from 2 games in difficult groups).
-      The table below shows the progression status based on current points.
+    <div class="sec-hd" id="wcsw-hd"><h2>Who Can Still Win?</h2><span class="chip chip-fb" id="wcsw-chip">LIVE</span></div>
+    <div class="info" id="wcsw-info">
+      The table below shows each team's current qualification status based on live standings.
     </div>
     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px;margin-top:10px" id="status-grid"></div>
   </div>`;
@@ -3034,7 +3065,7 @@ function renderPathway(){
   let html = '';
   Object.keys(fbGroups).forEach(key => {
     const g = fbGroups[key];
-    const sorted = [...g.teams].sort((a,b) => b.pts-a.pts || b.gd-a.gd || b.gf-a.gf || (b.tcs||0)-(a.tcs||0) || (a.so||99)-(b.so||99));
+    const sorted = sortGroup(g.teams, g.fixtures);
     sorted.forEach((t,i) => {
       let status, label;
       if(t.pts===3 && i===0){ status='fb-alive'; label='LEADING GROUP'; }
@@ -3065,9 +3096,7 @@ function renderBest3rd(){
   // Get 3rd-placed team from each group
   const thirds = Object.keys(fbGroups).map(gk => {
     const g = fbGroups[gk];
-    const sorted = [...g.teams].sort((a,b) =>
-      b.pts-a.pts || b.gd-a.gd || b.gf-a.gf || b.w-a.w
-    );
+    const sorted = sortGroup(g.teams, g.fixtures);
     const t = sorted[2]; // 3rd place
     return { ...t, grp: gk };
   });
@@ -3296,6 +3325,37 @@ async function aiGo(prompt){
     document.getElementById('hdrDate').textContent = 'Updated '+new Date().toLocaleTimeString();
   } catch(e){ out.textContent='Error: '+e.message; out.classList.add('on'); }
   load.classList.remove('on');
+}
+
+function updateProgressBar(){
+  let played = 0;
+  Object.values(fbGroups).forEach(g => {
+    g.fixtures.forEach(f => { if(f.done || f.live) played++; });
+  });
+  const remaining = 104 - played;
+  const pct = Math.round((played / 104) * 100);
+  const md = played <= 12 ? 1 : played <= 24 ? 2 : 3;
+  const nextMd = md < 3 ? ` · MD${md+1} ${md===2?'upcoming':'underway'}` : ' · Group stage complete';
+  const pc = document.getElementById('fb-played-count');
+  const rc = document.getElementById('fb-remaining-count');
+  const pf = document.getElementById('fb-progress-fill');
+  const pl = document.getElementById('fb-progress-label');
+  if(pc) pc.textContent = played;
+  if(rc) rc.textContent = remaining;
+  if(pf) pf.style.width = pct + '%';
+  if(pl) pl.innerHTML = `Matchday <strong>${md}</strong>${nextMd}`;
+  // Update Who Can Still Win chip
+  const chip = document.getElementById('wcsw-chip');
+  const info = document.getElementById('wcsw-info');
+  if(chip) chip.textContent = `AFTER MD${md}`;
+  if(info){
+    const eliminated = Object.values(fbGroups).some(g => g.teams.some(t => t.pts === 0 && t.p >= 2));
+    info.innerHTML = md === 1
+      ? 'After Matchday 1, <strong>no team is eliminated yet</strong> — every team has 2 matches remaining and a mathematical path to qualify. Elimination becomes possible from <strong>Matchday 2</strong> onwards.'
+      : md === 2
+      ? 'After Matchday 2, teams with <strong>0 pts from 2 games</strong> in strong groups are effectively eliminated. MD3 is the final group stage round — all matches simultaneous.'
+      : 'Group stage complete. All qualification places are decided. See Round of 32 below.';
+  }
 }
 
 function customQ(){
