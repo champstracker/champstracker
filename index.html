@@ -868,7 +868,8 @@ tr:hover td{background:var(--surface2)}
 
   <!-- Group selector tabs -->
   <div class="grp-tabs" id="grp-tabs">
-    <button class="grp-tab active" onclick="showGroup('A')">A</button>
+    <button class="grp-tab active" onclick="showGroup('ALL')">All</button>
+    <button class="grp-tab" onclick="showGroup('A')">A</button>
     <button class="grp-tab" onclick="showGroup('B')">B</button>
     <button class="grp-tab" onclick="showGroup('C')">C</button>
     <button class="grp-tab" onclick="showGroup('D')">D</button>
@@ -880,7 +881,6 @@ tr:hover td{background:var(--surface2)}
     <button class="grp-tab" onclick="showGroup('J')">J</button>
     <button class="grp-tab" onclick="showGroup('K')">K</button>
     <button class="grp-tab" onclick="showGroup('L')">L</button>
-    <button class="grp-tab" style="background:var(--bg3);color:var(--muted);border-color:var(--border)" onclick="showGroup('ALL')">All</button>
   </div>
   <div id="fb-groups-content"></div>
 
@@ -2244,7 +2244,7 @@ async function fetchFbData(silent){
 
   // Re-render whichever group tab is currently active
   const activeTab = document.querySelector('.grp-tab.active');
-  const activeGroup = activeTab ? activeTab.textContent.trim() : 'A';
+  const activeGroup = activeTab ? activeTab.textContent.trim() : 'ALL';
   updateProgressBar();
   renderFbGroups(activeGroup);
   renderBest3rd();
@@ -3247,7 +3247,7 @@ function sw(sport){
 function initFootball(){
   const el = document.getElementById('fb-groups-content');
   if(el.innerHTML === ''){
-    renderFbGroups('A');
+    renderFbGroups('ALL');
     renderBest3rd();
     renderR32();
     renderPathway();
