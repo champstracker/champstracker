@@ -2153,14 +2153,9 @@ function mergeMatches(matches){
     } else if(fxIndex[keySwapped]){
       // Home/away order is reversed — swap scores accordingly
       Object.assign(fxIndex[keySwapped], flags, {hs: as_, as: hs});
-    } else {
-      // Fixture not in seed — append it with canonical names
-      const dt = m.date ? new Date(m.date) : null;
-      const dateStr = dt ? dt.toLocaleDateString('en-GB',{month:'short',day:'numeric'}) : '';
-      fbGroups[gk].fixtures.push({
-        home, away, hs, as: as_, date: dateStr, ...flags
-      });
     }
+    // Note: unrecognised fixtures are intentionally ignored.
+    // All 72 fixtures are pre-seeded; API only updates existing ones.
   });
 }
 
