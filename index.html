@@ -7,6 +7,16 @@
 <meta name="theme-color" content="#0d0f14" media="(prefers-color-scheme: dark)">
 <title>Champs Tracker</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700;800&display=swap" rel="stylesheet">
+<!-- Prevent flash of wrong theme: apply before first paint -->
+<script>
+(function(){
+  try{
+    // Only apply dark if user explicitly chose it — light is always the default
+    if(localStorage.getItem('ct-theme')==='dark')
+      document.documentElement.setAttribute('data-theme','dark');
+  }catch(e){}
+})();
+</script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 
@@ -64,6 +74,18 @@
   --r:8px;
   --r-lg:12px;
   --r-xl:16px;
+
+  /* ── Shorthand aliases (used in inline JS templates) ── */
+  --green:#16a34a;
+  --red:#dc2626;
+  --amber:#d97706;
+  --muted:#6b7280;
+  --dim:#9ca3af;
+  --bg2:#f2f4f7;
+  --blue:#1d4ed8;
+  --pip-race:#1d4ed8;
+  --pip-future-bg:#e5e7eb;
+  --pip-next-border:#16a34a;
 }
 
 [data-theme="dark"]{
@@ -93,6 +115,17 @@
   --pip-next:#22c55e;
   --pip-future:#1e2028;
   --pip-future-text:#4a5168;
+  /* Shorthand aliases — dark overrides */
+  --green:#4ade80;
+  --red:#f87171;
+  --amber:#fbbf24;
+  --muted:#7b8494;
+  --dim:#4a5168;
+  --bg2:#1e2028;
+  --blue:#60a5fa;
+  --pip-race:#3b82f6;
+  --pip-future-bg:#1e2028;
+  --pip-next-border:#22c55e;
 }
 
 /* ═══ BASE ═════════════════════════════════════════════ */
@@ -458,6 +491,7 @@ tr:hover td{background:var(--surface2)}
 .q-dot{display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:5px;vertical-align:middle;flex-shrink:0}
 .q-auto{background:var(--pip-done)}
 .q-poss{background:var(--status-amber-text)}
+.q-out{background:var(--status-gray-border)}
 .q-out2{background:var(--status-gray-border)}
 .pts-bold{font-weight:700;color:var(--text) !important}
 .grp-fixtures{padding:10px 14px;border-top:1px solid var(--border);background:var(--surface2)}
@@ -476,8 +510,8 @@ tr:hover td{background:var(--surface2)}
 .bracket-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px}
 .bracket-match{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--border);border-radius:var(--r);padding:12px 14px;box-shadow:var(--shadow)}
 .bracket-match-hd{font-size:10px;font-weight:700;color:var(--text-3);letter-spacing:.07em;text-transform:uppercase;margin-bottom:8px;display:flex;justify-content:space-between}
-.bracket-team{display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border);font-size:13px;color:var(--text-2)}
-.bracket-team:last-of-type{border-bottom:none}
+.bracket-slot-team{display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border);font-size:13px;color:var(--text-2)}
+.bracket-slot-team:last-of-type{border-bottom:none}
 .bracket-venue{font-size:10px;color:var(--text-3);margin-top:5px}
 
 /* Pathway */
@@ -492,10 +526,10 @@ tr:hover td{background:var(--surface2)}
 
 /* Football status pills */
 .fb-pill{display:inline-block;font-size:10px;font-weight:700;padding:3px 8px;border-radius:5px;letter-spacing:.04em;white-space:nowrap;border:1px solid transparent}
-.fb-alive{background:var(--status-green-bg);color:var(--status-green-text);border-color:var(--status-green-border)}
+.fb-alive{background:var(--status-blue-bg);color:var(--status-blue-text);border-color:var(--status-blue-border)}
 .fb-danger{background:var(--status-amber-bg);color:var(--status-amber-text);border-color:var(--status-amber-border)}
 .fb-out{background:var(--status-red-bg);color:var(--status-red-text);border-color:var(--status-red-border)}
-.fb-qualified{background:var(--status-blue-bg);color:var(--status-blue-text);border-color:var(--status-blue-border)}
+.fb-qualified{background:var(--status-green-bg);color:var(--status-green-text);border-color:var(--status-green-border)}
 
 /* ═══ CRICKET ════════════════════════════════════════════ */
 .fmt-tabs{display:flex;gap:6px;margin-bottom:18px;flex-wrap:wrap}
@@ -585,13 +619,6 @@ tr:hover td{background:var(--surface2)}
 [data-theme="dark"] .grp-tbl tr.row-qualified td{background:rgba(74,222,128,0.07)!important}
 [data-theme="dark"] .grp-tbl tr.row-out td{background:rgba(248,113,113,0.07)!important}
 [data-theme="dark"] .grp-tbl tr.row-danger td{background:rgba(251,191,36,0.07)!important}
-
-/* Qual status pill next to team in group table */
-.fb-pill{display:inline-block;font-size:9px;font-weight:700;padding:2px 7px;border-radius:4px;letter-spacing:.05em;white-space:nowrap;border:1px solid transparent}
-.fb-qualified{background:var(--status-green-bg);color:var(--status-green-text);border-color:var(--status-green-border)}
-.fb-alive{background:var(--status-blue-bg);color:var(--status-blue-text);border-color:var(--status-blue-border)}
-.fb-danger{background:var(--status-amber-bg);color:var(--status-amber-text);border-color:var(--status-amber-border)}
-.fb-out{background:var(--status-red-bg);color:var(--status-red-text);border-color:var(--status-red-border)}
 
 /* ═══ VISUAL BRACKET TREE ════════════════════════════════ */
 .bracket-tree{overflow-x:auto;padding:8px 0 16px;margin:0 -4px}
@@ -1714,8 +1741,4 @@ function renderUpcomingRounds(){
       <div style="font-size:11px;color:var(--muted);margin-bottom:2px">Total points still available for drivers</div>
       <div style="display:flex;align-items:baseline;gap:8px">
         <span class="big">${total}</span>
-        <span style="font-size:12px;color:var(--muted)">across ${upcomingRounds.length} rounds</span>
-      </div>
-    </div>
-    <div style="font-size:11px;color:var(--muted);text-align:right;line-height:1.8">
-      Normal max: <strong style="color
+        <span style="font-size:12p
