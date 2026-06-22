@@ -575,49 +575,12 @@ tr:hover td{background:var(--surface2)}
 
 /* ═══ RESPONSIVE ════════════════════════════════════════ */
 
-/* ═══ FOOTBALL QUAL HIGHLIGHT ═══════════════════════════ */
-.grp-tbl tr.row-qualified td{background:rgba(22,101,52,0.08)!important}
-.grp-tbl tr.row-qualified td:first-child{border-left:3px solid var(--football)}
-.grp-tbl tr.row-out td{background:rgba(185,28,28,0.07)!important}
-.grp-tbl tr.row-out td:first-child{border-left:3px solid var(--status-red-border)}
-.grp-tbl tr.row-danger td{background:rgba(217,119,6,0.07)!important}
-.grp-tbl tr.row-danger td:first-child{border-left:3px solid var(--status-amber-border)}
-[data-theme="dark"] .grp-tbl tr.row-qualified td{background:rgba(74,222,128,0.07)!important}
-[data-theme="dark"] .grp-tbl tr.row-out td{background:rgba(248,113,113,0.07)!important}
-[data-theme="dark"] .grp-tbl tr.row-danger td{background:rgba(251,191,36,0.07)!important}
-
-/* Qual status pill next to team in group table */
-.fb-pill{display:inline-block;font-size:9px;font-weight:700;padding:2px 7px;border-radius:4px;letter-spacing:.05em;white-space:nowrap;border:1px solid transparent}
-.fb-qualified{background:var(--status-green-bg);color:var(--status-green-text);border-color:var(--status-green-border)}
-.fb-alive{background:var(--status-blue-bg);color:var(--status-blue-text);border-color:var(--status-blue-border)}
-.fb-danger{background:var(--status-amber-bg);color:var(--status-amber-text);border-color:var(--status-amber-border)}
-.fb-out{background:var(--status-red-bg);color:var(--status-red-text);border-color:var(--status-red-border)}
-
+/* ── Tablet (≤ 860px) ── */
 @media(max-width:860px){
   .champ-cols{grid-template-columns:1fr}
   .rounds-toggle{grid-template-columns:1fr}
   .rank-cols{grid-template-columns:1fr}
   .bracket-grid{grid-template-columns:1fr 1fr}
-/* ═══ VISUAL BRACKET TREE ════════════════════════════════ */
-.bracket-tree{overflow-x:auto;padding:8px 0 16px;margin:0 -4px}
-.bracket-rounds{display:flex;gap:0;min-width:max-content;align-items:stretch}
-.bracket-col{display:flex;flex-direction:column;min-width:150px;flex-shrink:0}
-.bracket-col-hd{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--football);text-align:center;padding:8px 10px 8px;border-bottom:2px solid var(--football);margin-bottom:4px;white-space:nowrap}
-.bracket-col-sub{font-size:9px;font-weight:500;color:var(--text-3);letter-spacing:0;display:block;margin-top:1px}
-.bracket-slots{display:flex;flex-direction:column;flex:1;justify-content:space-around;padding:4px 0}
-.bracket-match-wrap{display:flex;flex-direction:column;margin:4px 0}
-.bracket-team{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-size:11px;font-weight:600;color:var(--text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin:1px 8px;max-width:134px;transition:border-color .15s}
-.bracket-team.tbd{color:var(--text-4);font-style:italic;font-weight:400}
-.bracket-team.qualified{border-color:var(--football);color:var(--football);background:var(--football-light)}
-.bracket-versus{font-size:9px;color:var(--text-4);text-align:center;padding:1px 0;letter-spacing:.04em}
-.bracket-conn{min-width:20px;flex-shrink:0;position:relative;display:flex;flex-direction:column;justify-content:space-around;align-self:stretch}
-.bracket-final-col{min-width:172px;flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
-.bracket-final-col .bracket-col-hd{color:#d97706;border-color:#d97706;width:100%;margin-bottom:12px}
-.bracket-trophy{font-size:34px;text-align:center;margin-bottom:8px}
-.bracket-final-team{background:var(--surface);border:2px solid #d97706;border-radius:8px;padding:9px 14px;font-size:13px;font-weight:700;color:var(--text);text-align:center;width:152px;margin:3px 0}
-.bracket-final-team.tbd{color:var(--text-4);font-style:italic;font-weight:400;border-color:var(--border)}
-.bracket-date-note{font-size:10px;color:var(--text-3);text-align:center;margin-top:6px}
-
 }
 
 /* ── Mobile (≤ 640px) ── */
@@ -1718,4 +1681,63 @@ function renderUpcomingRounds(){
       </div>
     </div>
     <div style="font-size:11px;color:var(--muted);text-align:right;line-height:1.8">
-      Normal max: <strong style="color
+      Normal max: <strong style="color:var(--text)">25 pts</strong><br>
+      Sprint weekend max: <strong style="color:var(--text)">33 pts</strong>
+    </div>
+  </div>
+  <div class="upc-grid">
+    ${upcomingRounds.map((r,i)=>`
+    <div class="upc-card${i===0?' next':''}">
+      <div class="upc-rnum" style="position:relative">ROUND ${r.round}${i===0?' · NEXT UP':''}</div>
+      <div class="upc-gp" style="position:relative">${r.gp}</div>
+      <div class="upc-circuit" style="position:relative">${r.circuit}</div>
+      <div class="upc-date" style="position:relative">${r.date}</div>
+      <div class="upc-pts-row" style="position:relative">
+        <span class="big">${r.maxPts}</span>
+        <span class="lbl">max pts</span>
+      </div>
+      ${r.sprint?'<div class="upc-sprint-flag" style="position:relative">⚡ Sprint Weekend</div>':''}
+    </div>`).join('')}
+  </div>`;
+}
+
+function showRounds(which){
+  document.getElementById('rtgl-done').classList.toggle('active', which==='done');
+  document.getElementById('rtgl-upcoming').classList.toggle('active', which==='upcoming');
+  document.getElementById('rounds-done').style.display = which==='done'?'block':'none';
+  document.getElementById('rounds-upcoming').style.display = which==='upcoming'?'block':'none';
+}
+
+function initF1(){
+  if(document.getElementById('drv-body').innerHTML === '') {
+    renderPips();
+    renderCompletedRounds();
+    renderUpcomingRounds();
+    renderDrivers();
+    renderConstructors();
+  }
+}
+
+
+
+// 15 rounds left: 12 normal (25 pts each) + 3 sprint weekends (33 pts each = 25 race + 8 sprint)
+const REMAINING = (12 * 25) + (3 * 33); // = 399 (drivers)
+// Constructors max: best possible is P1+P2 every race
+// Normal weekend: 25+18 = 43. Sprint weekend: 25+18+8+7 = 58
+const CREM = (12 * 43) + (3 * 58); // = 516 + 174 = 690
+
+const drivers = [
+  {pos:1, name:'Kimi Antonelli',    team:'Mercedes',    flag:'🇮🇹',pts:156,gap:0,   color:'#00d2be',status:'title',   slabel:'LEADER'},
+  {pos:2, name:'Lewis Hamilton',    team:'Ferrari',     flag:'🇬🇧',pts:115,gap:41,  color:'#dc0000',status:'title',   slabel:'TITLE FIGHT'},
+  {pos:3, name:'George Russell',    team:'Mercedes',    flag:'🇬🇧',pts:106,gap:50,  color:'#00d2be',status:'title',   slabel:'TITLE FIGHT'},
+  {pos:4, name:'Charles Leclerc',   team:'Ferrari',     flag:'🇲🇨',pts:75, gap:81,  color:'#dc0000',status:'contend', slabel:'CONTENDER'},
+  {pos:5, name:'Lando Norris',      team:'McLaren',     flag:'🇬🇧',pts:73, gap:83,  color:'#ff8000',status:'contend', slabel:'CONTENDER'},
+  {pos:6, name:'Oscar Piastri',     team:'McLaren',     flag:'🇦🇺',pts:68, gap:88,  color:'#ff8000',status:'contend', slabel:'CONTENDER'},
+  {pos:7, name:'Max Verstappen',    team:'Red Bull',    flag:'🇳🇱',pts:55, gap:101, color:'#0600ef',status:'contend', slabel:'CONTENDER'},
+  {pos:8, name:'Pierre Gasly',      team:'Alpine',      flag:'🇫🇷',pts:41, gap:115, color:'#0090ff',status:'watch',   slabel:'IN HUNT'},
+  {pos:9, name:'Isack Hadjar',      team:'Red Bull',    flag:'🇫🇷',pts:34, gap:122, color:'#0600ef',status:'watch',   slabel:'IN HUNT'},
+  {pos:10,name:'Liam Lawson',       team:'Racing Bulls',flag:'🇳🇿',pts:28, gap:128, color:'#6692ff',status:'watch',   slabel:'IN HUNT'},
+  {pos:11,name:'Oliver Bearman',    team:'Haas',        flag:'🇬🇧',pts:18, gap:138, color:'#b6babd',status:'watch',   slabel:'IN HUNT'},
+  {pos:12,name:'Franco Colapinto',  team:'Alpine',      flag:'🇦🇷',pts:16, gap:140, color:'#0090ff',status:'watch',   slabel:'IN HUNT'},
+  {pos:13,name:'Arvid Lindblad',    team:'Racing Bulls',flag:'🇸🇪',pts:13, gap:143, color:'#6692ff',status:'math',    slabel:'MATH ONLY'},
+  {pos:14,name:'Carlos Sainz',      team:'Williams',    flag:'🇪🇸',pts:
