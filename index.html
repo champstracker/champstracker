@@ -2287,7 +2287,8 @@ async function fetchFbData(silent){
 
   // Re-render whichever group tab is currently active
   const activeTab = document.querySelector('.grp-tab.active');
-  const activeGroup = activeTab ? activeTab.textContent.trim() : 'ALL';
+  const activeGroupRaw = activeTab ? activeTab.textContent.trim() : 'ALL';
+  const activeGroup = activeGroupRaw === 'All' ? 'ALL' : activeGroupRaw;
   updateProgressBar();
   renderFbGroups(activeGroup);
   renderBest3rd();
@@ -2415,7 +2416,7 @@ function renderFbGroups(filter){
   const el = document.getElementById('fb-groups-content');
   const groups = filter === 'ALL' ? Object.keys(fbGroups) : [filter];
 
-  el.innerHTML = groups.map(key => {
+  el.innerHTML = groups.filter(key => fbGroups[key]).map(key => {
     const g = fbGroups[key];
     const sorted = sortGroup(g.teams, g.fixtures);
 
