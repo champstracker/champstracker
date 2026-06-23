@@ -3215,7 +3215,7 @@ function renderPathway(){
     const t = sorted[pos];
     if(!t) return 'TBD';
     const qs = computeQualStatus(t, pos, g.teams, g.fixtures);
-    return qs.qual === 'qualified' ? `${t.flag} ${t.name}` : 'TBD';
+    return (qs.qual === 'qualified' || qs.qual === 'winner') ? `${t.flag} ${t.name}` : 'TBD';
   }
 
   const r32 = [
