@@ -1970,128 +1970,162 @@ function renderODI(){
 // ═══════════════════════════════════════════
 
 // Seed data (last-known state — overwritten by API on every fetch)
-const _t=(flag,name,so)=>({flag,name,p:0,w:0,d:0,l:0,gf:0,ga:0,gd:0,pts:0,so,status:'alive'});
-const _f=(home,away,date,kt)=>({home,away,hs:null,as:null,date,kt,done:false});
 const fbGroups = {
   A:{ name:'Group A', teams:[
-    _t('🇲🇽','Mexico',1),_t('🇨🇿','Czech Rep.',2),_t('🇰🇷','S. Korea',3),_t('🇿🇦','S. Africa',4),
+    {flag:'🇲🇽',name:'Mexico',     p:2,w:2,d:0,l:0,gf:3,ga:0,gd:3,pts:6,so:1,status:'alive'},
+    {flag:'🇨🇿',name:'Czech Rep.',  p:2,w:0,d:1,l:1,gf:2,ga:3,gd:-1,pts:1,so:3,status:'alive'},
+    {flag:'🇰🇷',name:'S. Korea',   p:2,w:1,d:0,l:1,gf:2,ga:2,gd:0,pts:3,so:2,status:'alive'},
+    {flag:'🇿🇦',name:'S. Africa',   p:2,w:0,d:1,l:1,gf:1,ga:3,gd:-2,pts:1,so:4,status:'alive'},
   ], fixtures:[
-    _f('Mexico','S. Africa','Jun 11','2026-06-11T20:00:00Z'),
-    _f('S. Korea','Czech Rep.','Jun 11','2026-06-11T23:00:00Z'),
-    _f('Czech Rep.','S. Africa','Jun 18','2026-06-18T17:00:00Z'),
-    _f('Mexico','S. Korea','Jun 18','2026-06-18T20:00:00Z'),
-    _f('Czech Rep.','Mexico','Jun 24','2026-06-24T17:00:00Z'),
-    _f('S. Africa','S. Korea','Jun 24','2026-06-24T17:00:00Z'),
+    {home:'Mexico',away:'S. Africa',hs:2,as:0,date:'Jun 11',done:true},
+    {home:'S. Korea',away:'Czech Rep.',hs:2,as:1,date:'Jun 11',done:true},
+    {home:'Czech Rep.',away:'S. Africa',hs:1,as:1,date:'Jun 18',done:true},
+    {home:'Mexico',away:'S. Korea',hs:1,as:0,date:'Jun 18',done:true},
+    {home:'Czech Rep.',away:'Mexico',hs:null,as:null,date:'Jun 24',kt:'2026-06-24T17:00:00Z',done:false},
+    {home:'S. Africa',away:'S. Korea',hs:null,as:null,date:'Jun 24',kt:'2026-06-24T17:00:00Z',done:false},
   ]},
   B:{ name:'Group B', teams:[
-    _t('🇨🇦','Canada',1),_t('🇨🇭','Switzerland',2),_t('🇧🇦','Bosnia',3),_t('🇶🇦','Qatar',4),
+    {flag:'🇨🇦',name:'Canada',      p:2,w:1,d:1,l:0,gf:7,ga:1,gd:6,pts:4,so:1,status:'alive'},
+    {flag:'🇨🇭',name:'Switzerland', p:2,w:1,d:1,l:0,gf:5,ga:2,gd:3,pts:4,so:2,status:'alive'},
+    {flag:'🇧🇦',name:'Bosnia',      p:2,w:0,d:1,l:1,gf:2,ga:5,gd:-3,pts:1,so:3,status:'alive'},
+    {flag:'🇶🇦',name:'Qatar',       p:2,w:0,d:1,l:1,gf:1,ga:7,gd:-6,pts:1,so:4,status:'alive'},
   ], fixtures:[
-    _f('Canada','Bosnia','Jun 12','2026-06-12T20:00:00Z'),
-    _f('Switzerland','Qatar','Jun 12','2026-06-12T23:00:00Z'),
-    _f('Switzerland','Bosnia','Jun 18','2026-06-18T23:00:00Z'),
-    _f('Canada','Qatar','Jun 18','2026-06-18T20:00:00Z'),
-    _f('Switzerland','Canada','Jun 24','2026-06-24T23:00:00Z'),
-    _f('Bosnia','Qatar','Jun 24','2026-06-24T23:00:00Z'),
+    {home:'Canada',away:'Bosnia',hs:1,as:1,date:'Jun 12',done:true},
+    {home:'Switzerland',away:'Qatar',hs:1,as:1,date:'Jun 12',done:true},
+    {home:'Switzerland',away:'Bosnia',hs:4,as:1,date:'Jun 18',done:true},
+    {home:'Canada',away:'Qatar',hs:6,as:0,date:'Jun 18',done:true},
+    {home:'Switzerland',away:'Canada',hs:null,as:null,date:'Jun 24',kt:'2026-06-24T23:00:00Z',done:false},
+    {home:'Bosnia',away:'Qatar',hs:null,as:null,date:'Jun 24',kt:'2026-06-24T23:00:00Z',done:false},
   ]},
   C:{ name:'Group C', teams:[
-    _t('🇲🇦','Morocco',1),_t('🇧🇷','Brazil',2),_t('🏴󠁧󠁢󠁳󠁣󠁴󠁿','Scotland',3),_t('🇭🇹','Haiti',4),
+    {flag:'🇲🇦',name:'Morocco',    p:2,w:1,d:1,l:0,gf:2,ga:1,gd:1,pts:4,so:1,status:'alive'},
+    {flag:'🇧🇷',name:'Brazil',     p:2,w:1,d:1,l:0,gf:4,ga:1,gd:3,pts:4,so:2,status:'alive'},
+    {flag:'🏴󠁧󠁢󠁳󠁣󠁴󠁿',name:'Scotland',   p:2,w:1,d:0,l:1,gf:1,ga:1,gd:0,pts:3,so:3,status:'alive'},
+    {flag:'🇭🇹',name:'Haiti',      p:2,w:0,d:0,l:2,gf:0,ga:4,gd:-4,pts:0,so:4,status:'alive'},
   ], fixtures:[
-    _f('Brazil','Morocco','Jun 13','2026-06-13T20:00:00Z'),
-    _f('Scotland','Haiti','Jun 13','2026-06-13T23:00:00Z'),
-    _f('Scotland','Morocco','Jun 19','2026-06-19T17:00:00Z'),
-    _f('Brazil','Haiti','Jun 19','2026-06-19T20:00:00Z'),
-    _f('Scotland','Brazil','Jun 24','2026-06-24T20:00:00Z'),
-    _f('Morocco','Haiti','Jun 24','2026-06-24T20:00:00Z'),
+    {home:'Brazil',away:'Morocco',hs:1,as:1,date:'Jun 13',done:true},
+    {home:'Scotland',away:'Haiti',hs:1,as:0,date:'Jun 13',done:true},
+    {home:'Scotland',away:'Morocco',hs:0,as:1,date:'Jun 19',done:true},
+    {home:'Brazil',away:'Haiti',hs:3,as:0,date:'Jun 19',done:true},
+    {home:'Scotland',away:'Brazil',hs:null,as:null,date:'Jun 24',kt:'2026-06-24T20:00:00Z',done:false},
+    {home:'Morocco',away:'Haiti',hs:null,as:null,date:'Jun 24',kt:'2026-06-24T20:00:00Z',done:false},
   ]},
   D:{ name:'Group D', teams:[
-    _t('🇺🇸','USA',1),_t('🇦🇺','Australia',2),_t('🇵🇾','Paraguay',3),_t('🇹🇷','Turkey',4),
+    {flag:'🇺🇸',name:'USA',        p:2,w:2,d:0,l:0,gf:6,ga:1,gd:5,pts:6,so:1,status:'alive'},
+    {flag:'🇦🇺',name:'Australia',  p:2,w:1,d:0,l:1,gf:2,ga:2,gd:0,pts:3,so:2,status:'alive'},
+    {flag:'🇵🇾',name:'Paraguay',   p:2,w:1,d:0,l:1,gf:3,ga:2,gd:1,pts:3,so:3,status:'alive'},
+    {flag:'🇹🇷',name:'Turkey',     p:2,w:0,d:0,l:2,gf:0,ga:6,gd:-6,pts:0,so:4,status:'alive'},
   ], fixtures:[
-    _f('USA','Paraguay','Jun 13','2026-06-13T17:00:00Z'),
-    _f('Australia','Turkey','Jun 13','2026-06-13T20:00:00Z'),
-    _f('USA','Australia','Jun 19','2026-06-19T20:00:00Z'),
-    _f('Paraguay','Turkey','Jun 19','2026-06-19T23:00:00Z'),
-    _f('Turkey','USA','Jun 25','2026-06-25T17:00:00Z'),
-    _f('Paraguay','Australia','Jun 25','2026-06-25T17:00:00Z'),
+    {home:'USA',away:'Paraguay',hs:4,as:1,date:'Jun 13',done:true},
+    {home:'Australia',away:'Turkey',hs:2,as:0,date:'Jun 13',done:true},
+    {home:'USA',away:'Australia',hs:2,as:0,date:'Jun 19',done:true},
+    {home:'Paraguay',away:'Turkey',hs:2,as:0,date:'Jun 19',done:true},
+    {home:'Turkey',away:'USA',hs:null,as:null,date:'Jun 25',kt:'2026-06-25T17:00:00Z',done:false},
+    {home:'Paraguay',away:'Australia',hs:null,as:null,date:'Jun 25',kt:'2026-06-25T17:00:00Z',done:false},
   ]},
   E:{ name:'Group E', teams:[
-    _t('🇩🇪','Germany',1),_t('🇨🇮','Ivory Coast',2),_t('🇪🇨','Ecuador',3),_t('🇨🇼','Curaçao',4),
+    {flag:'🇩🇪',name:'Germany',    p:2,w:2,d:0,l:0,gf:9,ga:2,gd:7,pts:6,so:1,status:'alive'},
+    {flag:'🇨🇮',name:'Ivory Coast',p:2,w:1,d:0,l:1,gf:2,ga:2,gd:0,pts:3,so:2,status:'alive'},
+    {flag:'🇪🇨',name:'Ecuador',    p:2,w:0,d:1,l:1,gf:0,ga:1,gd:-1,pts:1,so:3,status:'alive'},
+    {flag:'🇨🇼',name:'Curaçao',    p:2,w:0,d:1,l:1,gf:1,ga:7,gd:-6,pts:1,so:4,status:'alive'},
   ], fixtures:[
-    _f('Germany','Curaçao','Jun 14','2026-06-14T20:00:00Z'),
-    _f('Ivory Coast','Ecuador','Jun 14','2026-06-14T17:00:00Z'),
-    _f('Germany','Ivory Coast','Jun 20','2026-06-20T20:00:00Z'),
-    _f('Ecuador','Curaçao','Jun 20','2026-06-20T17:00:00Z'),
-    _f('Ecuador','Germany','Jun 25','2026-06-25T20:00:00Z'),
-    _f('Curaçao','Ivory Coast','Jun 25','2026-06-25T20:00:00Z'),
+    {home:'Germany',away:'Curaçao',hs:7,as:1,date:'Jun 14',done:true},
+    {home:'Ivory Coast',away:'Ecuador',hs:1,as:0,date:'Jun 14',done:true},
+    {home:'Germany',away:'Ivory Coast',hs:2,as:1,date:'Jun 20',done:true},
+    {home:'Ecuador',away:'Curaçao',hs:0,as:0,date:'Jun 20',done:true},
+    {home:'Ecuador',away:'Germany',hs:null,as:null,date:'Jun 25',kt:'2026-06-25T20:00:00Z',done:false},
+    {home:'Curaçao',away:'Ivory Coast',hs:null,as:null,date:'Jun 25',kt:'2026-06-25T20:00:00Z',done:false},
   ]},
   F:{ name:'Group F', teams:[
-    _t('🇳🇱','Netherlands',1),_t('🇯🇵','Japan',2),_t('🇸🇪','Sweden',3),_t('🇹🇳','Tunisia',4),
+    {flag:'🇳🇱',name:'Netherlands',p:2,w:1,d:1,l:0,gf:7,ga:3,gd:4,pts:4,so:1,status:'alive'},
+    {flag:'🇯🇵',name:'Japan',      p:2,w:1,d:1,l:0,gf:6,ga:2,gd:4,pts:4,so:2,status:'alive'},
+    {flag:'🇸🇪',name:'Sweden',     p:2,w:1,d:0,l:1,gf:6,ga:6,gd:0,pts:3,so:3,status:'alive'},
+    {flag:'🇹🇳',name:'Tunisia',    p:2,w:0,d:0,l:2,gf:1,ga:9,gd:-8,pts:0,so:4,status:'alive'},
   ], fixtures:[
-    _f('Sweden','Tunisia','Jun 14','2026-06-14T23:00:00Z'),
-    _f('Netherlands','Japan','Jun 14','2026-06-14T20:00:00Z'),
-    _f('Netherlands','Sweden','Jun 20','2026-06-20T23:00:00Z'),
-    _f('Japan','Tunisia','Jun 20','2026-06-20T20:00:00Z'),
-    _f('Japan','Sweden','Jun 25','2026-06-25T23:00:00Z'),
-    _f('Tunisia','Netherlands','Jun 25','2026-06-25T23:00:00Z'),
+    {home:'Sweden',away:'Tunisia',hs:5,as:1,date:'Jun 14',done:true},
+    {home:'Netherlands',away:'Japan',hs:2,as:2,date:'Jun 14',done:true},
+    {home:'Netherlands',away:'Sweden',hs:5,as:1,date:'Jun 20',done:true},
+    {home:'Japan',away:'Tunisia',hs:4,as:0,date:'Jun 20',done:true},
+    {home:'Japan',away:'Sweden',hs:null,as:null,date:'Jun 25',kt:'2026-06-25T23:00:00Z',done:false},
+    {home:'Tunisia',away:'Netherlands',hs:null,as:null,date:'Jun 25',kt:'2026-06-25T23:00:00Z',done:false},
   ]},
   G:{ name:'Group G', teams:[
-    _t('🇪🇬','Egypt',1),_t('🇮🇷','Iran',2),_t('🇧🇪','Belgium',3),_t('🇳🇿','New Zealand',4),
+    {flag:'🇪🇬',name:'Egypt',      p:2,w:1,d:1,l:0,gf:4,ga:2,gd:2,pts:4,so:1,status:'alive'},
+    {flag:'🇮🇷',name:'Iran',       p:2,w:0,d:2,l:0,gf:2,ga:2,gd:0,pts:2,so:2,status:'alive'},
+    {flag:'🇧🇪',name:'Belgium',    p:2,w:0,d:2,l:0,gf:1,ga:1,gd:0,pts:2,so:3,status:'alive'},
+    {flag:'🇳🇿',name:'New Zealand',p:2,w:0,d:1,l:1,gf:3,ga:5,gd:-2,pts:1,so:4,status:'alive'},
   ], fixtures:[
-    _f('Iran','New Zealand','Jun 15','2026-06-15T20:00:00Z'),
-    _f('Belgium','Egypt','Jun 15','2026-06-15T23:00:00Z'),
-    _f('Belgium','Iran','Jun 21','2026-06-21T17:00:00Z'),
-    _f('New Zealand','Egypt','Jun 21','2026-06-21T20:00:00Z'),
-    _f('New Zealand','Belgium','Jun 26','2026-06-26T17:00:00Z'),
-    _f('Egypt','Iran','Jun 26','2026-06-26T17:00:00Z'),
+    {home:'Iran',away:'New Zealand',hs:2,as:2,date:'Jun 15',done:true},
+    {home:'Belgium',away:'Egypt',hs:1,as:1,date:'Jun 15',done:true},
+    {home:'Belgium',away:'Iran',hs:0,as:0,date:'Jun 21',done:true},
+    {home:'New Zealand',away:'Egypt',hs:1,as:3,date:'Jun 21',done:true},
+    {home:'New Zealand',away:'Belgium',hs:null,as:null,date:'Jun 26',kt:'2026-06-26T17:00:00Z',done:false},
+    {home:'Egypt',away:'Iran',hs:null,as:null,date:'Jun 26',kt:'2026-06-26T17:00:00Z',done:false},
   ]},
   H:{ name:'Group H', teams:[
-    _t('🇪🇸','Spain',1),_t('🇨🇻','Cape Verde',2),_t('🇺🇾','Uruguay',3),_t('🇸🇦','Saudi Arabia',4),
+    {flag:'🇪🇸',name:'Spain',      p:2,w:1,d:1,l:0,gf:4,ga:0,gd:4,pts:4,so:1,status:'alive'},
+    {flag:'🇨🇻',name:'Cape Verde', p:2,w:0,d:2,l:0,gf:2,ga:2,gd:0,pts:2,so:2,status:'alive'},
+    {flag:'🇺🇾',name:'Uruguay',    p:2,w:0,d:2,l:0,gf:3,ga:3,gd:0,pts:2,so:3,status:'alive'},
+    {flag:'🇸🇦',name:'Saudi Arabia',p:2,w:0,d:1,l:1,gf:1,ga:5,gd:-4,pts:1,so:4,status:'alive'},
   ], fixtures:[
-    _f('Spain','Cape Verde','Jun 15','2026-06-15T17:00:00Z'),
-    _f('Uruguay','Saudi Arabia','Jun 15','2026-06-15T20:00:00Z'),
-    _f('Spain','Saudi Arabia','Jun 21','2026-06-21T20:00:00Z'),
-    _f('Uruguay','Cape Verde','Jun 21','2026-06-21T23:00:00Z'),
-    _f('Cape Verde','Saudi Arabia','Jun 26','2026-06-26T20:00:00Z'),
-    _f('Uruguay','Spain','Jun 26','2026-06-26T20:00:00Z'),
+    {home:'Spain',away:'Cape Verde',hs:0,as:0,date:'Jun 15',done:true},
+    {home:'Uruguay',away:'Saudi Arabia',hs:1,as:1,date:'Jun 15',done:true},
+    {home:'Spain',away:'Saudi Arabia',hs:4,as:0,date:'Jun 21',done:true},
+    {home:'Uruguay',away:'Cape Verde',hs:2,as:2,date:'Jun 21',done:true},
+    {home:'Cape Verde',away:'Saudi Arabia',hs:null,as:null,date:'Jun 26',kt:'2026-06-26T20:00:00Z',done:false},
+    {home:'Uruguay',away:'Spain',hs:null,as:null,date:'Jun 26',kt:'2026-06-26T20:00:00Z',done:false},
   ]},
   I:{ name:'Group I', teams:[
-    _t('🇳🇴','Norway',1),_t('🇫🇷','France',2),_t('🇸🇳','Senegal',3),_t('🇮🇶','Iraq',4),
+    {flag:'🇳🇴',name:'Norway',     p:1,w:1,d:0,l:0,gf:4,ga:1,gd:3,pts:3,so:1,status:'alive'},
+    {flag:'🇫🇷',name:'France',     p:1,w:1,d:0,l:0,gf:3,ga:1,gd:2,pts:3,so:2,status:'alive'},
+    {flag:'🇸🇳',name:'Senegal',    p:1,w:0,d:0,l:1,gf:1,ga:3,gd:-2,pts:0,so:3,status:'alive'},
+    {flag:'🇮🇶',name:'Iraq',       p:1,w:0,d:0,l:1,gf:1,ga:4,gd:-3,pts:0,so:4,status:'alive'},
   ], fixtures:[
-    _f('France','Senegal','Jun 16','2026-06-16T20:00:00Z'),
-    _f('Norway','Iraq','Jun 16','2026-06-16T23:00:00Z'),
-    _f('France','Iraq','Jun 22','2026-06-22T21:00:00Z'),
-    _f('Norway','Senegal','Jun 22','2026-06-23T00:00:00Z'),
-    _f('Norway','France','Jun 26','2026-06-26T19:00:00Z'),
-    _f('Senegal','Iraq','Jun 26','2026-06-26T19:00:00Z'),
+    {home:'France',away:'Senegal',hs:3,as:1,date:'Jun 16',done:true},
+    {home:'Norway',away:'Iraq',hs:4,as:1,date:'Jun 16',done:true},
+    {home:'France',away:'Iraq',hs:null,as:null,date:'Jun 22',kt:'2026-06-22T21:00:00Z',done:false},
+    {home:'Norway',away:'Senegal',hs:null,as:null,date:'Jun 22',kt:'2026-06-23T00:00:00Z',done:false},
+    {home:'Norway',away:'France',hs:null,as:null,date:'Jun 26',kt:'2026-06-26T19:00:00Z',done:false},
+    {home:'Senegal',away:'Iraq',hs:null,as:null,date:'Jun 26',kt:'2026-06-26T19:00:00Z',done:false},
   ]},
   J:{ name:'Group J', teams:[
-    _t('🇦🇷','Argentina',1),_t('🇦🇹','Austria',2),_t('🇩🇿','Algeria',3),_t('🇯🇴','Jordan',4),
+    {flag:'🇦🇷',name:'Argentina',  p:1,w:1,d:0,l:0,gf:3,ga:0,gd:3,pts:3,so:1,status:'alive'},
+    {flag:'🇦🇹',name:'Austria',    p:1,w:1,d:0,l:0,gf:3,ga:1,gd:2,pts:3,so:2,status:'alive'},
+    {flag:'🇩🇿',name:'Algeria',    p:1,w:0,d:0,l:1,gf:0,ga:3,gd:-3,pts:0,so:3,status:'alive'},
+    {flag:'🇯🇴',name:'Jordan',     p:1,w:0,d:0,l:1,gf:1,ga:3,gd:-2,pts:0,so:4,status:'alive'},
   ], fixtures:[
-    _f('Argentina','Algeria','Jun 16','2026-06-16T17:00:00Z'),
-    _f('Austria','Jordan','Jun 17','2026-06-17T20:00:00Z'),
-    _f('Argentina','Austria','Jun 22','2026-06-22T17:00:00Z'),
-    _f('Jordan','Algeria','Jun 22','2026-06-23T03:00:00Z'),
-    _f('Algeria','Austria','Jun 27','2026-06-28T02:00:00Z'),
-    _f('Jordan','Argentina','Jun 27','2026-06-28T02:00:00Z'),
+    {home:'Argentina',away:'Algeria',hs:3,as:0,date:'Jun 16',done:true},
+    {home:'Austria',away:'Jordan',hs:3,as:1,date:'Jun 17',done:true},
+    {home:'Argentina',away:'Austria',hs:1,as:0,date:'Jun 22',kt:'2026-06-22T17:00:00Z',done:false},
+    {home:'Jordan',away:'Algeria',hs:null,as:null,date:'Jun 22',kt:'2026-06-23T03:00:00Z',done:false},
+    {home:'Algeria',away:'Austria',hs:null,as:null,date:'Jun 27',kt:'2026-06-28T02:00:00Z',done:false},
+    {home:'Jordan',away:'Argentina',hs:null,as:null,date:'Jun 27',kt:'2026-06-28T02:00:00Z',done:false},
   ]},
   K:{ name:'Group K', teams:[
-    _t('🇵🇹','Portugal',1),_t('🇨🇴','Colombia',2),_t('🇺🇿','Uzbekistan',3),_t('🇨🇩','DR Congo',4),
+    {flag:'🇵🇹',name:'Portugal',   p:1,w:0,d:1,l:0,gf:1,ga:1,gd:0,pts:1,tcs:-1,so:3,status:'alive'},
+    {flag:'🇨🇴',name:'Colombia',   p:1,w:1,d:0,l:0,gf:3,ga:1,gd:2,pts:3,so:1,status:'alive'},
+    {flag:'🇺🇿',name:'Uzbekistan', p:1,w:0,d:0,l:1,gf:1,ga:3,gd:-2,pts:0,so:4,status:'alive'},
+    {flag:'🇨🇩',name:'DR Congo',   p:1,w:0,d:1,l:0,gf:1,ga:1,gd:0,pts:1,tcs:0,so:2,status:'alive'},
   ], fixtures:[
-    _f('Portugal','DR Congo','Jun 17','2026-06-17T20:00:00Z'),
-    _f('Uzbekistan','Colombia','Jun 17','2026-06-17T17:00:00Z'),
-    _f('Portugal','Uzbekistan','Jun 23','2026-06-23T17:00:00Z'),
-    _f('Colombia','DR Congo','Jun 23','2026-06-23T20:00:00Z'),
-    _f('Colombia','Portugal','Jun 27','2026-06-27T23:30:00Z'),
-    _f('DR Congo','Uzbekistan','Jun 27','2026-06-27T23:30:00Z'),
+    {home:'Portugal',away:'DR Congo',hs:1,as:1,date:'Jun 17',done:true},
+    {home:'Uzbekistan',away:'Colombia',hs:1,as:3,date:'Jun 17',done:true},
+    {home:'Portugal',away:'Uzbekistan',hs:null,as:null,date:'Jun 23',kt:'2026-06-23T17:00:00Z',done:false},
+    {home:'Colombia',away:'DR Congo',hs:null,as:null,date:'Jun 23',done:false},
+    {home:'Colombia',away:'Portugal',hs:null,as:null,date:'Jun 27',kt:'2026-06-27T23:30:00Z',done:false},
+    {home:'DR Congo',away:'Uzbekistan',hs:null,as:null,date:'Jun 27',kt:'2026-06-27T23:30:00Z',done:false},
   ]},
   L:{ name:'Group L', teams:[
-    _t('🏴󠁧󠁢󠁥󠁮󠁧󠁿','England',1),_t('🇭🇷','Croatia',2),_t('🇬🇭','Ghana',3),_t('🇵🇦','Panama',4),
+    {flag:'🏴󠁧󠁢󠁥󠁮󠁧󠁿',name:'England',    p:1,w:1,d:0,l:0,gf:4,ga:2,gd:2,pts:3,so:1,status:'alive'},
+    {flag:'🇭🇷',name:'Croatia',    p:1,w:0,d:0,l:1,gf:2,ga:4,gd:-2,pts:0,so:3,status:'alive'},
+    {flag:'🇬🇭',name:'Ghana',      p:1,w:1,d:0,l:0,gf:1,ga:0,gd:1,pts:3,so:2,status:'alive'},
+    {flag:'🇵🇦',name:'Panama',     p:1,w:0,d:0,l:1,gf:0,ga:1,gd:-1,pts:0,so:4,status:'alive'},
   ], fixtures:[
-    _f('England','Croatia','Jun 17','2026-06-17T17:00:00Z'),
-    _f('Ghana','Panama','Jun 17','2026-06-17T20:00:00Z'),
-    _f('England','Ghana','Jun 23','2026-06-23T20:00:00Z'),
-    _f('Panama','Croatia','Jun 23','2026-06-23T23:00:00Z'),
-    _f('Panama','England','Jun 27','2026-06-27T21:00:00Z'),
-    _f('Croatia','Ghana','Jun 27','2026-06-27T21:00:00Z'),
+    {home:'England',away:'Croatia',hs:4,as:2,date:'Jun 17',done:true},
+    {home:'Ghana',away:'Panama',hs:1,as:0,date:'Jun 17',done:true},
+    {home:'England',away:'Ghana',hs:null,as:null,date:'Jun 23',kt:'2026-06-23T20:00:00Z',done:false},
+    {home:'Panama',away:'Croatia',hs:null,as:null,date:'Jun 23',kt:'2026-06-23T23:00:00Z',done:false},
+    {home:'Panama',away:'England',hs:null,as:null,date:'Jun 27',kt:'2026-06-27T21:00:00Z',done:false},
+    {home:'Croatia',away:'Ghana',hs:null,as:null,date:'Jun 27',kt:'2026-06-27T21:00:00Z',done:false},
   ]},
 };
 
@@ -2197,8 +2231,7 @@ function computeStandingsFromMatches(matches){
 
   // Only recompute from API if we get enough finished matches to be trustworthy
   // (guards against partial/empty API responses wiping seed data)
-  const DONE_STATUSES = ['FINISHED','FT','FULL_TIME','ft','finished'];
-  const finishedCount = matches.filter(m => DONE_STATUSES.includes(m.status)).length;
+  const finishedCount = matches.filter(m => m.status === 'FINISHED').length;
   if(finishedCount < 1) return;
 
   // Reset all team stats to zero before recomputing
@@ -2218,7 +2251,7 @@ function computeStandingsFromMatches(matches){
 
   matches.forEach(m => {
     const s = (m.status||'').toUpperCase();
-    const isFinished = ['FINISHED','FT','FULL_TIME'].includes(s);
+    const isFinished = s === 'FINISHED' || s === 'FT';
     const isLive     = LIVE_STATUSES.includes(s);
     if(!isFinished && !isLive) return;
     if(m.homeScore === null || m.awayScore === null) return;
@@ -2287,8 +2320,7 @@ async function fetchFbData(silent){
 
   // Re-render whichever group tab is currently active
   const activeTab = document.querySelector('.grp-tab.active');
-  const activeGroupRaw = activeTab ? activeTab.textContent.trim() : 'ALL';
-  const activeGroup = activeGroupRaw === 'All' ? 'ALL' : activeGroupRaw;
+  const activeGroup = activeTab ? activeTab.textContent.trim() : 'ALL';
   updateProgressBar();
   renderFbGroups(activeGroup);
   renderBest3rd();
@@ -2416,7 +2448,7 @@ function renderFbGroups(filter){
   const el = document.getElementById('fb-groups-content');
   const groups = filter === 'ALL' ? Object.keys(fbGroups) : [filter];
 
-  el.innerHTML = groups.filter(key => fbGroups[key]).map(key => {
+  el.innerHTML = groups.map(key => {
     const g = fbGroups[key];
     const sorted = sortGroup(g.teams, g.fixtures);
 
@@ -3489,7 +3521,7 @@ async function aiGo(prompt){
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
         model:'claude-sonnet-4-6', max_tokens:1000,
-        system:`You are a sports data analyst. Use web search to fetch up-to-date information. Provide concise, structured answers focused on standings, gaps, and race status. Today is ${new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})}.`,
+        system:'You are a sports data analyst. Use web search to fetch up-to-date information. Provide concise, structured answers focused on standings, gaps, and race status. Today is June 16 2026.',
         messages:[{role:'user',content:prompt}],
         tools:[{type:'web_search_20250305',name:'web_search'}]
       })
