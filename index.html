@@ -530,6 +530,8 @@ tr:hover td{background:var(--surface2)}
 .fb-danger{background:var(--status-amber-bg);color:var(--status-amber-text);border-color:var(--status-amber-border)}
 .fb-out{background:var(--status-red-bg);color:var(--status-red-text);border-color:var(--status-red-border)}
 .fb-qualified{background:var(--status-green-bg);color:var(--status-green-text);border-color:var(--status-green-border)}
+.fb-winner{background:#fef9c3;color:#854d0e;border-color:#fde047}
+[data-theme="dark"] .fb-winner{background:#422006;color:#fde047;border-color:#854d0e}
 
 /* ═══ CRICKET ════════════════════════════════════════════ */
 .fmt-tabs{display:flex;gap:6px;margin-bottom:18px;flex-wrap:wrap}
@@ -1972,10 +1974,10 @@ function renderODI(){
 // Seed data (last-known state — overwritten by API on every fetch)
 const fbGroups = {
   A:{ name:'Group A', teams:[
-    {flag:'🇲🇽',name:'Mexico',     p:2,w:2,d:0,l:0,gf:3,ga:0,gd:3,pts:6,so:1,status:'alive'},
-    {flag:'🇨🇿',name:'Czech Rep.',  p:2,w:0,d:1,l:1,gf:2,ga:3,gd:-1,pts:1,so:3,status:'alive'},
-    {flag:'🇰🇷',name:'S. Korea',   p:2,w:1,d:0,l:1,gf:2,ga:2,gd:0,pts:3,so:2,status:'alive'},
-    {flag:'🇿🇦',name:'S. Africa',   p:2,w:0,d:1,l:1,gf:1,ga:3,gd:-2,pts:1,so:4,status:'alive'},
+    {flag:'🇲🇽',name:'Mexico',     p:2,w:2,d:0,l:0,gf:3,ga:0,gd:3,pts:6,so:1,fp:0,status:'alive'},
+    {flag:'🇨🇿',name:'Czech Rep.',  p:2,w:0,d:1,l:1,gf:2,ga:3,gd:-1,pts:1,so:3,fp:0,status:'alive'},
+    {flag:'🇰🇷',name:'S. Korea',   p:2,w:1,d:0,l:1,gf:2,ga:2,gd:0,pts:3,so:2,fp:0,status:'alive'},
+    {flag:'🇿🇦',name:'S. Africa',   p:2,w:0,d:1,l:1,gf:1,ga:3,gd:-2,pts:1,so:4,fp:0,status:'alive'},
   ], fixtures:[
     {home:'Mexico',away:'S. Africa',hs:2,as:0,date:'Jun 11',done:true},
     {home:'S. Korea',away:'Czech Rep.',hs:2,as:1,date:'Jun 11',done:true},
@@ -1985,10 +1987,10 @@ const fbGroups = {
     {home:'S. Africa',away:'S. Korea',hs:null,as:null,date:'Jun 24',kt:'2026-06-24T17:00:00Z',done:false},
   ]},
   B:{ name:'Group B', teams:[
-    {flag:'🇨🇦',name:'Canada',      p:2,w:1,d:1,l:0,gf:7,ga:1,gd:6,pts:4,so:1,status:'alive'},
-    {flag:'🇨🇭',name:'Switzerland', p:2,w:1,d:1,l:0,gf:5,ga:2,gd:3,pts:4,so:2,status:'alive'},
-    {flag:'🇧🇦',name:'Bosnia',      p:2,w:0,d:1,l:1,gf:2,ga:5,gd:-3,pts:1,so:3,status:'alive'},
-    {flag:'🇶🇦',name:'Qatar',       p:2,w:0,d:1,l:1,gf:1,ga:7,gd:-6,pts:1,so:4,status:'alive'},
+    {flag:'🇨🇦',name:'Canada',      p:2,w:1,d:1,l:0,gf:7,ga:1,gd:6,pts:4,so:1,fp:0,status:'alive'},
+    {flag:'🇨🇭',name:'Switzerland', p:2,w:1,d:1,l:0,gf:5,ga:2,gd:3,pts:4,so:2,fp:0,status:'alive'},
+    {flag:'🇧🇦',name:'Bosnia',      p:2,w:0,d:1,l:1,gf:2,ga:5,gd:-3,pts:1,so:3,fp:0,status:'alive'},
+    {flag:'🇶🇦',name:'Qatar',       p:2,w:0,d:1,l:1,gf:1,ga:7,gd:-6,pts:1,so:4,fp:0,status:'alive'},
   ], fixtures:[
     {home:'Canada',away:'Bosnia',hs:1,as:1,date:'Jun 12',done:true},
     {home:'Switzerland',away:'Qatar',hs:1,as:1,date:'Jun 12',done:true},
@@ -1998,10 +2000,10 @@ const fbGroups = {
     {home:'Bosnia',away:'Qatar',hs:null,as:null,date:'Jun 24',kt:'2026-06-24T23:00:00Z',done:false},
   ]},
   C:{ name:'Group C', teams:[
-    {flag:'🇲🇦',name:'Morocco',    p:2,w:1,d:1,l:0,gf:2,ga:1,gd:1,pts:4,so:1,status:'alive'},
-    {flag:'🇧🇷',name:'Brazil',     p:2,w:1,d:1,l:0,gf:4,ga:1,gd:3,pts:4,so:2,status:'alive'},
-    {flag:'🏴󠁧󠁢󠁳󠁣󠁴󠁿',name:'Scotland',   p:2,w:1,d:0,l:1,gf:1,ga:1,gd:0,pts:3,so:3,status:'alive'},
-    {flag:'🇭🇹',name:'Haiti',      p:2,w:0,d:0,l:2,gf:0,ga:4,gd:-4,pts:0,so:4,status:'alive'},
+    {flag:'🇲🇦',name:'Morocco',    p:2,w:1,d:1,l:0,gf:2,ga:1,gd:1,pts:4,so:1,fp:0,status:'alive'},
+    {flag:'🇧🇷',name:'Brazil',     p:2,w:1,d:1,l:0,gf:4,ga:1,gd:3,pts:4,so:2,fp:0,status:'alive'},
+    {flag:'🏴󠁧󠁢󠁳󠁣󠁴󠁿',name:'Scotland',   p:2,w:1,d:0,l:1,gf:1,ga:1,gd:0,pts:3,so:3,fp:0,status:'alive'},
+    {flag:'🇭🇹',name:'Haiti',      p:2,w:0,d:0,l:2,gf:0,ga:4,gd:-4,pts:0,so:4,fp:0,status:'alive'},
   ], fixtures:[
     {home:'Brazil',away:'Morocco',hs:1,as:1,date:'Jun 13',done:true},
     {home:'Scotland',away:'Haiti',hs:1,as:0,date:'Jun 13',done:true},
@@ -2011,10 +2013,10 @@ const fbGroups = {
     {home:'Morocco',away:'Haiti',hs:null,as:null,date:'Jun 24',kt:'2026-06-24T20:00:00Z',done:false},
   ]},
   D:{ name:'Group D', teams:[
-    {flag:'🇺🇸',name:'USA',        p:2,w:2,d:0,l:0,gf:6,ga:1,gd:5,pts:6,so:1,status:'alive'},
-    {flag:'🇦🇺',name:'Australia',  p:2,w:1,d:0,l:1,gf:2,ga:2,gd:0,pts:3,so:2,status:'alive'},
-    {flag:'🇵🇾',name:'Paraguay',   p:2,w:1,d:0,l:1,gf:3,ga:2,gd:1,pts:3,so:3,status:'alive'},
-    {flag:'🇹🇷',name:'Turkey',     p:2,w:0,d:0,l:2,gf:0,ga:6,gd:-6,pts:0,so:4,status:'alive'},
+    {flag:'🇺🇸',name:'USA',        p:2,w:2,d:0,l:0,gf:6,ga:1,gd:5,pts:6,so:1,fp:0,status:'alive'},
+    {flag:'🇦🇺',name:'Australia',  p:2,w:1,d:0,l:1,gf:2,ga:2,gd:0,pts:3,so:2,fp:0,status:'alive'},
+    {flag:'🇵🇾',name:'Paraguay',   p:2,w:1,d:0,l:1,gf:3,ga:2,gd:1,pts:3,so:3,fp:0,status:'alive'},
+    {flag:'🇹🇷',name:'Turkey',     p:2,w:0,d:0,l:2,gf:0,ga:6,gd:-6,pts:0,so:4,fp:0,status:'alive'},
   ], fixtures:[
     {home:'USA',away:'Paraguay',hs:4,as:1,date:'Jun 13',done:true},
     {home:'Australia',away:'Turkey',hs:2,as:0,date:'Jun 13',done:true},
@@ -2024,10 +2026,10 @@ const fbGroups = {
     {home:'Paraguay',away:'Australia',hs:null,as:null,date:'Jun 25',kt:'2026-06-25T17:00:00Z',done:false},
   ]},
   E:{ name:'Group E', teams:[
-    {flag:'🇩🇪',name:'Germany',    p:2,w:2,d:0,l:0,gf:9,ga:2,gd:7,pts:6,so:1,status:'alive'},
-    {flag:'🇨🇮',name:'Ivory Coast',p:2,w:1,d:0,l:1,gf:2,ga:2,gd:0,pts:3,so:2,status:'alive'},
-    {flag:'🇪🇨',name:'Ecuador',    p:2,w:0,d:1,l:1,gf:0,ga:1,gd:-1,pts:1,so:3,status:'alive'},
-    {flag:'🇨🇼',name:'Curaçao',    p:2,w:0,d:1,l:1,gf:1,ga:7,gd:-6,pts:1,so:4,status:'alive'},
+    {flag:'🇩🇪',name:'Germany',    p:2,w:2,d:0,l:0,gf:9,ga:2,gd:7,pts:6,so:1,fp:0,status:'alive'},
+    {flag:'🇨🇮',name:'Ivory Coast',p:2,w:1,d:0,l:1,gf:2,ga:2,gd:0,pts:3,so:2,fp:0,status:'alive'},
+    {flag:'🇪🇨',name:'Ecuador',    p:2,w:0,d:1,l:1,gf:0,ga:1,gd:-1,pts:1,so:3,fp:0,status:'alive'},
+    {flag:'🇨🇼',name:'Curaçao',    p:2,w:0,d:1,l:1,gf:1,ga:7,gd:-6,pts:1,so:4,fp:0,status:'alive'},
   ], fixtures:[
     {home:'Germany',away:'Curaçao',hs:7,as:1,date:'Jun 14',done:true},
     {home:'Ivory Coast',away:'Ecuador',hs:1,as:0,date:'Jun 14',done:true},
@@ -2037,10 +2039,10 @@ const fbGroups = {
     {home:'Curaçao',away:'Ivory Coast',hs:null,as:null,date:'Jun 25',kt:'2026-06-25T20:00:00Z',done:false},
   ]},
   F:{ name:'Group F', teams:[
-    {flag:'🇳🇱',name:'Netherlands',p:2,w:1,d:1,l:0,gf:7,ga:3,gd:4,pts:4,so:1,status:'alive'},
-    {flag:'🇯🇵',name:'Japan',      p:2,w:1,d:1,l:0,gf:6,ga:2,gd:4,pts:4,so:2,status:'alive'},
-    {flag:'🇸🇪',name:'Sweden',     p:2,w:1,d:0,l:1,gf:6,ga:6,gd:0,pts:3,so:3,status:'alive'},
-    {flag:'🇹🇳',name:'Tunisia',    p:2,w:0,d:0,l:2,gf:1,ga:9,gd:-8,pts:0,so:4,status:'alive'},
+    {flag:'🇳🇱',name:'Netherlands',p:2,w:1,d:1,l:0,gf:7,ga:3,gd:4,pts:4,so:1,fp:0,status:'alive'},
+    {flag:'🇯🇵',name:'Japan',      p:2,w:1,d:1,l:0,gf:6,ga:2,gd:4,pts:4,so:2,fp:0,status:'alive'},
+    {flag:'🇸🇪',name:'Sweden',     p:2,w:1,d:0,l:1,gf:6,ga:6,gd:0,pts:3,so:3,fp:0,status:'alive'},
+    {flag:'🇹🇳',name:'Tunisia',    p:2,w:0,d:0,l:2,gf:1,ga:9,gd:-8,pts:0,so:4,fp:0,status:'alive'},
   ], fixtures:[
     {home:'Sweden',away:'Tunisia',hs:5,as:1,date:'Jun 14',done:true},
     {home:'Netherlands',away:'Japan',hs:2,as:2,date:'Jun 14',done:true},
@@ -2050,10 +2052,10 @@ const fbGroups = {
     {home:'Tunisia',away:'Netherlands',hs:null,as:null,date:'Jun 25',kt:'2026-06-25T23:00:00Z',done:false},
   ]},
   G:{ name:'Group G', teams:[
-    {flag:'🇪🇬',name:'Egypt',      p:2,w:1,d:1,l:0,gf:4,ga:2,gd:2,pts:4,so:1,status:'alive'},
-    {flag:'🇮🇷',name:'Iran',       p:2,w:0,d:2,l:0,gf:2,ga:2,gd:0,pts:2,so:2,status:'alive'},
-    {flag:'🇧🇪',name:'Belgium',    p:2,w:0,d:2,l:0,gf:1,ga:1,gd:0,pts:2,so:3,status:'alive'},
-    {flag:'🇳🇿',name:'New Zealand',p:2,w:0,d:1,l:1,gf:3,ga:5,gd:-2,pts:1,so:4,status:'alive'},
+    {flag:'🇪🇬',name:'Egypt',      p:2,w:1,d:1,l:0,gf:4,ga:2,gd:2,pts:4,so:1,fp:0,status:'alive'},
+    {flag:'🇮🇷',name:'Iran',       p:2,w:0,d:2,l:0,gf:2,ga:2,gd:0,pts:2,so:2,fp:0,status:'alive'},
+    {flag:'🇧🇪',name:'Belgium',    p:2,w:0,d:2,l:0,gf:1,ga:1,gd:0,pts:2,so:3,fp:0,status:'alive'},
+    {flag:'🇳🇿',name:'New Zealand',p:2,w:0,d:1,l:1,gf:3,ga:5,gd:-2,pts:1,so:4,fp:0,status:'alive'},
   ], fixtures:[
     {home:'Iran',away:'New Zealand',hs:2,as:2,date:'Jun 15',done:true},
     {home:'Belgium',away:'Egypt',hs:1,as:1,date:'Jun 15',done:true},
@@ -2063,10 +2065,10 @@ const fbGroups = {
     {home:'Egypt',away:'Iran',hs:null,as:null,date:'Jun 26',kt:'2026-06-26T17:00:00Z',done:false},
   ]},
   H:{ name:'Group H', teams:[
-    {flag:'🇪🇸',name:'Spain',      p:2,w:1,d:1,l:0,gf:4,ga:0,gd:4,pts:4,so:1,status:'alive'},
-    {flag:'🇨🇻',name:'Cape Verde', p:2,w:0,d:2,l:0,gf:2,ga:2,gd:0,pts:2,so:2,status:'alive'},
-    {flag:'🇺🇾',name:'Uruguay',    p:2,w:0,d:2,l:0,gf:3,ga:3,gd:0,pts:2,so:3,status:'alive'},
-    {flag:'🇸🇦',name:'Saudi Arabia',p:2,w:0,d:1,l:1,gf:1,ga:5,gd:-4,pts:1,so:4,status:'alive'},
+    {flag:'🇪🇸',name:'Spain',      p:2,w:1,d:1,l:0,gf:4,ga:0,gd:4,pts:4,so:1,fp:0,status:'alive'},
+    {flag:'🇨🇻',name:'Cape Verde', p:2,w:0,d:2,l:0,gf:2,ga:2,gd:0,pts:2,so:2,fp:0,status:'alive'},
+    {flag:'🇺🇾',name:'Uruguay',    p:2,w:0,d:2,l:0,gf:3,ga:3,gd:0,pts:2,so:3,fp:0,status:'alive'},
+    {flag:'🇸🇦',name:'Saudi Arabia',p:2,w:0,d:1,l:1,gf:1,ga:5,gd:-4,pts:1,so:4,fp:0,status:'alive'},
   ], fixtures:[
     {home:'Spain',away:'Cape Verde',hs:0,as:0,date:'Jun 15',done:true},
     {home:'Uruguay',away:'Saudi Arabia',hs:1,as:1,date:'Jun 15',done:true},
@@ -2076,10 +2078,10 @@ const fbGroups = {
     {home:'Uruguay',away:'Spain',hs:null,as:null,date:'Jun 26',kt:'2026-06-26T20:00:00Z',done:false},
   ]},
   I:{ name:'Group I', teams:[
-    {flag:'🇳🇴',name:'Norway',     p:2,w:2,d:0,l:0,gf:7,ga:3,gd:4,pts:6,so:1,status:'alive'},
-    {flag:'🇫🇷',name:'France',     p:2,w:2,d:0,l:0,gf:6,ga:1,gd:5,pts:6,so:2,status:'alive'},
-    {flag:'🇸🇳',name:'Senegal',    p:2,w:0,d:0,l:2,gf:3,ga:6,gd:-3,pts:0,so:3,status:'alive'},
-    {flag:'🇮🇶',name:'Iraq',       p:2,w:0,d:0,l:2,gf:1,ga:7,gd:-6,pts:0,so:4,status:'alive'},
+    {flag:'🇳🇴',name:'Norway',     p:2,w:2,d:0,l:0,gf:7,ga:3,gd:4,pts:6,so:1,fp:0,status:'alive'},
+    {flag:'🇫🇷',name:'France',     p:2,w:2,d:0,l:0,gf:6,ga:1,gd:5,pts:6,so:2,fp:0,status:'alive'},
+    {flag:'🇸🇳',name:'Senegal',    p:2,w:0,d:0,l:2,gf:3,ga:6,gd:-3,pts:0,so:3,fp:0,status:'alive'},
+    {flag:'🇮🇶',name:'Iraq',       p:2,w:0,d:0,l:2,gf:1,ga:7,gd:-6,pts:0,so:4,fp:0,status:'alive'},
   ], fixtures:[
     {home:'France',away:'Senegal',hs:3,as:1,date:'Jun 16',done:true},
     {home:'Norway',away:'Iraq',hs:4,as:1,date:'Jun 16',done:true},
@@ -2089,10 +2091,10 @@ const fbGroups = {
     {home:'Senegal',away:'Iraq',hs:null,as:null,date:'Jun 26',kt:'2026-06-26T19:00:00Z',done:false},
   ]},
   J:{ name:'Group J', teams:[
-    {flag:'🇦🇷',name:'Argentina',  p:2,w:2,d:0,l:0,gf:5,ga:0,gd:5,pts:6,so:1,status:'alive'},
-    {flag:'🇦🇹',name:'Austria',    p:2,w:1,d:0,l:1,gf:3,ga:3,gd:0,pts:3,so:2,status:'alive'},
-    {flag:'🇩🇿',name:'Algeria',    p:1,w:0,d:0,l:1,gf:0,ga:3,gd:-3,pts:0,so:3,status:'alive'},
-    {flag:'🇯🇴',name:'Jordan',     p:1,w:0,d:0,l:1,gf:1,ga:3,gd:-2,pts:0,so:4,status:'alive'},
+    {flag:'🇦🇷',name:'Argentina',  p:2,w:2,d:0,l:0,gf:5,ga:0,gd:5,pts:6,so:1,fp:0,status:'alive'},
+    {flag:'🇦🇹',name:'Austria',    p:2,w:1,d:0,l:1,gf:3,ga:3,gd:0,pts:3,so:2,fp:0,status:'alive'},
+    {flag:'🇩🇿',name:'Algeria',    p:1,w:0,d:0,l:1,gf:0,ga:3,gd:-3,pts:0,so:3,fp:0,status:'alive'},
+    {flag:'🇯🇴',name:'Jordan',     p:1,w:0,d:0,l:1,gf:1,ga:3,gd:-2,pts:0,so:4,fp:0,status:'alive'},
   ], fixtures:[
     {home:'Argentina',away:'Algeria',hs:3,as:0,date:'Jun 16',done:true},
     {home:'Austria',away:'Jordan',hs:3,as:1,date:'Jun 17',done:true},
@@ -2102,10 +2104,10 @@ const fbGroups = {
     {home:'Jordan',away:'Argentina',hs:null,as:null,date:'Jun 27',kt:'2026-06-28T02:00:00Z',done:false},
   ]},
   K:{ name:'Group K', teams:[
-    {flag:'🇵🇹',name:'Portugal',   p:1,w:0,d:1,l:0,gf:1,ga:1,gd:0,pts:1,tcs:-1,so:3,status:'alive'},
-    {flag:'🇨🇴',name:'Colombia',   p:1,w:1,d:0,l:0,gf:3,ga:1,gd:2,pts:3,so:1,status:'alive'},
-    {flag:'🇺🇿',name:'Uzbekistan', p:1,w:0,d:0,l:1,gf:1,ga:3,gd:-2,pts:0,so:4,status:'alive'},
-    {flag:'🇨🇩',name:'DR Congo',   p:1,w:0,d:1,l:0,gf:1,ga:1,gd:0,pts:1,tcs:0,so:2,status:'alive'},
+    {flag:'🇵🇹',name:'Portugal',   p:1,w:0,d:1,l:0,gf:1,ga:1,gd:0,pts:1,tcs:-1,so:3,fp:0,status:'alive'},
+    {flag:'🇨🇴',name:'Colombia',   p:1,w:1,d:0,l:0,gf:3,ga:1,gd:2,pts:3,so:1,fp:0,status:'alive'},
+    {flag:'🇺🇿',name:'Uzbekistan', p:1,w:0,d:0,l:1,gf:1,ga:3,gd:-2,pts:0,so:4,fp:0,status:'alive'},
+    {flag:'🇨🇩',name:'DR Congo',   p:1,w:0,d:1,l:0,gf:1,ga:1,gd:0,pts:1,tcs:0,so:2,fp:0,status:'alive'},
   ], fixtures:[
     {home:'Portugal',away:'DR Congo',hs:1,as:1,date:'Jun 17',done:true},
     {home:'Uzbekistan',away:'Colombia',hs:1,as:3,date:'Jun 17',done:true},
@@ -2115,10 +2117,10 @@ const fbGroups = {
     {home:'DR Congo',away:'Uzbekistan',hs:null,as:null,date:'Jun 27',kt:'2026-06-27T23:30:00Z',done:false},
   ]},
   L:{ name:'Group L', teams:[
-    {flag:'🏴󠁧󠁢󠁥󠁮󠁧󠁿',name:'England',    p:1,w:1,d:0,l:0,gf:4,ga:2,gd:2,pts:3,so:1,status:'alive'},
-    {flag:'🇭🇷',name:'Croatia',    p:1,w:0,d:0,l:1,gf:2,ga:4,gd:-2,pts:0,so:3,status:'alive'},
-    {flag:'🇬🇭',name:'Ghana',      p:1,w:1,d:0,l:0,gf:1,ga:0,gd:1,pts:3,so:2,status:'alive'},
-    {flag:'🇵🇦',name:'Panama',     p:1,w:0,d:0,l:1,gf:0,ga:1,gd:-1,pts:0,so:4,status:'alive'},
+    {flag:'🏴󠁧󠁢󠁥󠁮󠁧󠁿',name:'England',    p:1,w:1,d:0,l:0,gf:4,ga:2,gd:2,pts:3,so:1,fp:0,status:'alive'},
+    {flag:'🇭🇷',name:'Croatia',    p:1,w:0,d:0,l:1,gf:2,ga:4,gd:-2,pts:0,so:3,fp:0,status:'alive'},
+    {flag:'🇬🇭',name:'Ghana',      p:1,w:1,d:0,l:0,gf:1,ga:0,gd:1,pts:3,so:2,fp:0,status:'alive'},
+    {flag:'🇵🇦',name:'Panama',     p:1,w:0,d:0,l:1,gf:0,ga:1,gd:-1,pts:0,so:4,fp:0,status:'alive'},
   ], fixtures:[
     {home:'England',away:'Croatia',hs:4,as:2,date:'Jun 17',done:true},
     {home:'Ghana',away:'Panama',hs:1,as:0,date:'Jun 17',done:true},
@@ -2237,7 +2239,7 @@ function computeStandingsFromMatches(matches){
   // Reset all team stats to zero before recomputing
   Object.keys(fbGroups).forEach(gk => {
     fbGroups[gk].teams.forEach(t => {
-      t.p=0; t.w=0; t.d=0; t.l=0; t.gf=0; t.ga=0; t.gd=0; t.pts=0;
+      t.p=0; t.w=0; t.d=0; t.l=0; t.gf=0; t.ga=0; t.gd=0; t.pts=0; t.fp=0;
     });
   });
 
@@ -2276,6 +2278,16 @@ function computeStandingsFromMatches(matches){
     } else {
       ht.d++; ht.pts++; at.d++; at.pts++;
     }
+
+    // Fair play: accumulate card deductions if API provides them
+    // FIFA scoring: yellow=-1, yellow+red=-3, direct red=-4, yellow+direct red=-5
+    // API fields: homeYellows, awayYellows, homeReds, awayReds, homeYellowReds, awayYellowReds
+    if(m.homeYellows != null) ht.fp += m.homeYellows * -1;
+    if(m.awayYellows != null) at.fp += m.awayYellows * -1;
+    if(m.homeReds    != null) ht.fp += m.homeReds    * -4;
+    if(m.awayReds    != null) at.fp += m.awayReds    * -4;
+    if(m.homeYellowReds != null) ht.fp += m.homeYellowReds * -3;
+    if(m.awayYellowReds != null) at.fp += m.awayYellowReds * -3;
   });
 }
 
@@ -2358,55 +2370,94 @@ const r32Matches = [
 ];
 
 const fbQualStatus = {
-  alive: {cls:'fb-alive', label:'IN CONTENTION'},
-  danger: {cls:'fb-danger', label:'DANGER ZONE'},
+  winner:    {cls:'fb-winner',    label:'GROUP WINNER ✓'},
   qualified: {cls:'fb-qualified', label:'QUALIFIED ✓'},
-  out: {cls:'fb-out', label:'ELIMINATED'},
+  alive:     {cls:'fb-alive',     label:'IN CONTENTION'},
+  danger:    {cls:'fb-danger',    label:'BEST 3RD ONLY'},
+  out:       {cls:'fb-out',       label:'ELIMINATED'},
 };
 
 // ── Dynamic qualification status engine ──────────────────────────
-// Returns {qual:'qualified'|'out'|'alive'|'danger', label:string} per team
+// Returns {qual:'qualified'|'alive'|'danger'|'out', label:string} per team.
+//
+// Two separate questions with different thresholds:
+//
+// QUALIFIED: Can fewer than 2 teams POSSIBLY finish above us?
+//   "Possibly above" = their max pts >= our current pts
+//                      AND (H2H not yet played OR H2H was a draw OR they beat us)
+//   If fewer than 2 teams can possibly finish above → confirmed top-2.
+//
+// ELIMINATED: Are 3 teams GUARANTEED to finish above us?
+//   "Guaranteed above" = their current pts > our max pts
+//                        OR (equal pts ceiling AND H2H done AND they beat us)
+//   If 3 teams guaranteed above → confirmed 4th, cannot advance.
+//
+// Everything in between is IN CONTENTION or BEST 3RD ONLY.
 function computeQualStatus(team, position, groupTeams, groupFixtures){
   const totalGames = 3;
-  const remaining = totalGames - team.p;
-  const maxPossiblePts = team.pts + remaining * 3;
-  const sorted = [...groupTeams].sort((a,b)=>b.pts-a.pts||b.gd-a.gd||b.gf-a.gf);
-  const second = sorted[1];
-  const BEST3RD_THRESHOLD = 4;
+  const myMax = team.pts + (totalGames - team.p) * 3;
 
-  // ── CONFIRMED QUALIFIED ──────────────────────────────────────
-  // In top-2. For each challenger (3rd/4th):
-  //   Safe if cMax < our pts (can never reach us)
-  //   If cMax == our pts: safe only if H2H already played AND we won
-  //   If cMax > our pts: not safe regardless
-  if(position < 2){
-    const challengers = sorted.slice(2);
-    const canBeOvertaken = challengers.some(c => {
-      const cMax = c.pts + (totalGames - c.p) * 3;
-      if(cMax < team.pts) return false;
-      if(cMax > team.pts) return true;
-      // Equal pts possible — need H2H already played and won by us
+  let possiblyAbove = 0;  // for QUALIFIED check
+  let guaranteedAbove = 0; // for ELIMINATED check
+
+  groupTeams.forEach(other => {
+    if(other.name === team.name) return;
+    const otherMax = other.pts + (totalGames - other.p) * 3;
+
+    // ── GUARANTEED above us ──────────────────────────────────────
+    // (a) Their current pts already exceed our maximum possible pts
+    if(other.pts > myMax){
+      guaranteedAbove++;
+      possiblyAbove++;
+      return;
+    }
+
+    // ── POSSIBLY above us ────────────────────────────────────────
+    // They can reach our current pts level
+    if(otherMax >= team.pts){
+      // Check H2H to see if it's already decided in our favour
       const fx = (groupFixtures||[]).find(f =>
-        (f.home===team.name && f.away===c.name) ||
-        (f.home===c.name   && f.away===team.name)
+        (f.home===team.name && f.away===other.name) ||
+        (f.home===other.name && f.away===team.name)
       );
-      if(!fx || !fx.done) return true; // H2H not played yet — unsafe
-      const weWon = (fx.home===team.name && fx.hs > fx.as) ||
-                    (fx.away===team.name && fx.as > fx.hs);
-      return !weWon; // drew or lost H2H — GD tiebreaker uncertain, mark unsafe
-    });
-    if(!canBeOvertaken) return {qual:'qualified', label:'QUALIFIED ✓'};
-    return {qual:'alive', label:'IN CONTENTION'};
-  }
+      const h2hDoneWeWon = fx && fx.done && (
+        (fx.home===team.name && fx.hs > fx.as) ||
+        (fx.away===team.name && fx.as > fx.hs)
+      );
+      const h2hDoneTheyWon = fx && fx.done && (
+        (fx.home===other.name && fx.hs > fx.as) ||
+        (fx.away===other.name && fx.as > fx.hs)
+      );
 
-  // ── CONFIRMED ELIMINATED ─────────────────────────────────────
-  if(maxPossiblePts < second.pts){
-    return maxPossiblePts < BEST3RD_THRESHOLD
-      ? {qual:'out', label:'ELIMINATED'}
-      : {qual:'danger', label:'BEST 3RD ONLY'};
-  }
-  if(team.pts === 0 && team.p >= 2) return {qual:'out', label:'ELIMINATED'};
-  return {qual:'alive', label:'IN CONTENTION'};
+      // H2H is only a tiebreaker when pts are equal.
+      // Only exclude from possiblyAbove if they can NEVER exceed our pts
+      // (otherMax exactly equals our current pts) AND we already beat them H2H.
+      // If they can exceed our pts outright, they're possibly above regardless of H2H.
+      const onlyCanTieUs = (otherMax === team.pts);
+      if(!(onlyCanTieUs && h2hDoneWeWon)){
+        possiblyAbove++;
+      }
+
+      // ── GUARANTEED above us (equal ceiling case) ─────────────
+      // They're guaranteed above if their CURRENT pts already reach our maximum,
+      // AND H2H is done and they beat us (so even if we win our remaining games,
+      // they still finish above us on H2H tiebreaker)
+      if(other.pts >= myMax && h2hDoneTheyWon){
+        guaranteedAbove++;
+      }
+    }
+  });
+
+  // Zero teams can possibly finish above → confirmed group winner (1st place locked)
+  if(possiblyAbove === 0)   return {qual:'winner',    label:'GROUP WINNER ✓'};
+  // Fewer than 2 can possibly finish above → confirmed top-2 but position uncertain
+  if(possiblyAbove < 2)     return {qual:'qualified', label:'QUALIFIED ✓'};
+  // 3 guaranteed above → confirmed 4th, cannot advance even as best-3rd
+  if(guaranteedAbove >= 3)  return {qual:'out',       label:'ELIMINATED'};
+  // 2 guaranteed above → confirmed out of top-2, but 3rd still possible
+  if(guaranteedAbove >= 2)  return {qual:'danger',    label:'BEST 3RD ONLY'};
+  // Still uncertain — could still finish in top-2
+  return                           {qual:'alive',     label:'IN CONTENTION'};
 }
 
 // ═══════════════════════════════════════════
@@ -2432,14 +2483,17 @@ function sortGroup(teams, fixtures){
   const h2h = buildH2H(teams, fixtures);
   return [...teams].sort((a,b) => {
     if(b.pts !== a.pts) return b.pts - a.pts;
-    // H2H between tied teams
+    // Step 1: H2H between tied teams (pts, GD, GF)
     const ah = h2h[a.name], bh = h2h[b.name];
     if(bh.pts !== ah.pts) return bh.pts - ah.pts;
-    if(bh.gd !== ah.gd) return bh.gd - ah.gd;
-    if(bh.gf !== ah.gf) return bh.gf - ah.gf;
-    // Overall GD, GF
+    if(bh.gd  !== ah.gd)  return bh.gd  - ah.gd;
+    if(bh.gf  !== ah.gf)  return bh.gf  - ah.gf;
+    // Step 2: Overall GD, GF
     if(b.gd !== a.gd) return b.gd - a.gd;
     if(b.gf !== a.gf) return b.gf - a.gf;
+    // Step 3: Fair play (higher = fewer cards = less negative; a.fp > b.fp means a is better)
+    if(a.fp !== b.fp) return b.fp - a.fp; // less negative wins → sort descending
+    // Step 4: FIFA ranking (lower seed order = better ranking)
     return (a.so||99) - (b.so||99);
   });
 }
@@ -2543,7 +2597,7 @@ function renderR32(){
   const thirds = Object.keys(fbGroups).map(gk=>{
     const t = sortedGroup(gk)[2];
     return {...t, grp:gk};
-  }).sort((a,b)=> b.pts-a.pts || b.gd-a.gd || b.gf-a.gf || b.w-a.w);
+  }).sort((a,b)=> b.pts-a.pts || b.gd-a.gd || b.gf-a.gf || (b.fp-a.fp) || (a.so||99)-(b.so||99));
   const top8 = thirds.slice(0,8);
   const qualKey = top8.map(t=>t.grp).sort().join('');
 
@@ -3296,8 +3350,15 @@ function renderBest3rd(){
     return { ...t, grp: gk };
   });
 
-  // Sort all 3rd-place teams by pts → gd → gf → w
-  thirds.sort((a,b) => b.pts-a.pts || b.gd-a.gd || b.gf-a.gf || b.w-a.w);
+  // Sort all 3rd-place teams by FIFA official best-3rd criteria:
+  // pts → GD → GF → fair play (less negative = better) → FIFA ranking (so)
+  thirds.sort((a,b) =>
+    b.pts-a.pts ||
+    b.gd-a.gd   ||
+    b.gf-a.gf   ||
+    (b.fp-a.fp) || // fair play: less negative = higher = better
+    (a.so||99)-(b.so||99)
+  );
 
   const gdColor = gd => gd > 0 ? 'var(--status-green-text)' : gd < 0 ? 'var(--status-red-text)' : 'var(--text-3)';
 
