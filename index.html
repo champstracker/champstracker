@@ -2094,6 +2094,7 @@ const fbGroups = {
     _f('Croatia','Ghana','Jun 27','2026-06-27T21:00:00Z'),
   ]},
 };
+
 // ── Live API fetch + merge ──────────────────────────────────────
 let fbDataLoaded = false;
 let fbFetchTimer = null;
@@ -2196,7 +2197,8 @@ function computeStandingsFromMatches(matches){
 
   // Only recompute from API if we get enough finished matches to be trustworthy
   // (guards against partial/empty API responses wiping seed data)
-  const finishedCount = matches.filter(m => m.status === 'FINISHED').length;
+  const DONE_STATUSES = ['FINISHED','FT','FULL_TIME','ft','finished'];
+  const finishedCount = matches.filter(m => DONE_STATUSES.includes(m.status)).length;
   if(finishedCount < 1) return;
 
   // Reset all team stats to zero before recomputing
@@ -2216,7 +2218,7 @@ function computeStandingsFromMatches(matches){
 
   matches.forEach(m => {
     const s = (m.status||'').toUpperCase();
-    const isFinished = s === 'FINISHED' || s === 'FT';
+    const isFinished = ['FINISHED','FT','FULL_TIME'].includes(s);
     const isLive     = LIVE_STATUSES.includes(s);
     if(!isFinished && !isLive) return;
     if(m.homeScore === null || m.awayScore === null) return;
