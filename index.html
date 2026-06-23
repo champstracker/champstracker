@@ -2332,7 +2332,7 @@ async function fetchFbData(silent){
 
   // Re-render whichever group tab is currently active
   const activeTab = document.querySelector('.grp-tab.active');
-  const activeGroup = activeTab ? activeTab.textContent.trim() : 'ALL';
+  const activeGroup = activeTab ? activeTab.textContent.trim().toUpperCase() : 'ALL';
   updateProgressBar();
   renderFbGroups(activeGroup);
   renderBest3rd();
@@ -2500,19 +2500,22 @@ function sortGroup(teams, fixtures){
 
 function renderFbGroups(filter){
   const el = document.getElementById('fb-groups-content');
-  const groups = filter === 'ALL' ? Object.keys(fbGroups) : [filter];
+  // Normalise filter — tab text 'All' must match 'ALL'
+  const f = (filter||'ALL').toUpperCase();
+  const groups = f === 'ALL' ? Object.keys(fbGroups) : [f];
 
   el.innerHTML = groups.map(key => {
     const g = fbGroups[key];
+    if(!g) return ''; // guard against unknown key
     const sorted = sortGroup(g.teams, g.fixtures);
 
     const standing = sorted.map((t,i) => {
       const qs = computeQualStatus(t, i, g.teams, g.fixtures);
-      const dotCls = qs.qual==='qualified' ? 'q-auto'
+      const dotCls = (qs.qual==='winner' || qs.qual==='qualified') ? 'q-auto'
                    : qs.qual==='out'       ? 'q-out2'
                    : qs.qual==='danger'    ? 'q-poss'
                    : i<2                  ? 'q-auto' : i===2 ? 'q-poss' : 'q-out';
-      const rowCls = qs.qual==='qualified' ? 'row-qualified'
+      const rowCls = (qs.qual==='winner' || qs.qual==='qualified') ? 'row-qualified'
                    : qs.qual==='out'       ? 'row-out'
                    : qs.qual==='danger'    ? 'row-danger' : '';
       const pillHtml = qs.qual!=='alive'
