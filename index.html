@@ -506,85 +506,83 @@ tr:hover td{background:var(--surface2)}
 .fix-score.upcoming{color:var(--text-3);font-size:11px;font-weight:600;font-family:'Inter',sans-serif;background:var(--surface3)}
 .fix-score.live{color:#dc2626;animation:pulse 1.5s infinite;background:#fee2e2}
 
-/* ═══ HYBRID KNOCKOUT BRACKET ══════════════════════════════ */
+/* ═══ HYBRID KNOCKOUT BRACKET ═══════════════════════════════ */
+/* Mobile: default, pods layout */
+.hkb-desktop{display:none}
+.hkb-mobile{display:block}
 
-/* ── Desktop: horizontal scrollable bracket tree ── */
-.hkb-desktop{display:block}
-.hkb-mobile{display:none}
+/* Desktop: two-sided mirrored bracket */
+@media(min-width:769px){
+  .hkb-desktop{display:block}
+  .hkb-mobile{display:none}
+}
 
-.hkb-scroll{overflow-x:auto;overflow-y:visible;padding:12px 0 20px;margin:0 -4px;position:relative}
-.hkb-scroll::-webkit-scrollbar{height:5px}
-.hkb-scroll::-webkit-scrollbar-track{background:var(--surface2);border-radius:3px}
-.hkb-scroll::-webkit-scrollbar-thumb{background:var(--border-strong);border-radius:3px}
+/* Legend */
+.hkb-legend{display:flex;gap:12px;flex-wrap:wrap;font-size:11px;color:var(--text-3);margin:0 0 12px;padding:8px 10px;background:var(--surface2);border-radius:var(--r);border:1px solid var(--border)}
+.hkb-leg-dot{display:inline-block;width:10px;height:10px;border-radius:2px;vertical-align:middle;margin-right:4px;flex-shrink:0}
 
-.hkb-tree{display:flex;align-items:stretch;gap:0;min-width:max-content;position:relative}
+/* ── Desktop two-sided bracket ── */
+.hkb-two-sided{display:flex;align-items:center;gap:0;overflow-x:auto;padding:8px 0 16px}
+.hkb-two-sided::-webkit-scrollbar{height:5px}
+.hkb-two-sided::-webkit-scrollbar-track{background:var(--surface2);border-radius:3px}
+.hkb-two-sided::-webkit-scrollbar-thumb{background:var(--border-strong);border-radius:3px}
+
+.hkb-half{display:flex;align-items:stretch;flex-shrink:0}
+.hkb-half.left{flex-direction:row}
+.hkb-half.right{flex-direction:row-reverse}
 
 /* Column */
-.hkb-col{display:flex;flex-direction:column;flex-shrink:0;position:relative}
-.hkb-col-hd{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--football);text-align:center;padding:7px 10px;border-bottom:2px solid var(--football);white-space:nowrap;margin-bottom:0}
-.hkb-col-hd.final{color:#d97706;border-color:#d97706}
-.hkb-col-sub{font-size:9px;font-weight:500;color:var(--text-3);letter-spacing:0;display:block;margin-top:2px}
+.hkb-col{display:flex;flex-direction:column;flex-shrink:0;width:148px}
+.hkb-col-hd{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--football);text-align:center;padding:6px 8px;border-bottom:2px solid var(--football);white-space:nowrap;margin-bottom:0}
+.hkb-col-hd.final-hd{color:#d97706;border-color:#d97706}
+.hkb-col-sub{font-size:8px;font-weight:500;color:var(--text-3);letter-spacing:0;display:block;margin-top:2px}
 .hkb-slots{display:flex;flex-direction:column;flex:1;justify-content:space-around;padding:6px 0}
 
-/* Connector column (SVG) */
-.hkb-conn{flex-shrink:0;position:relative}
-.hkb-conn svg{position:absolute;top:0;left:0;width:100%;height:100%;overflow:visible}
+/* Connector col */
+.hkb-conn{flex-shrink:0;width:24px;position:relative;align-self:stretch}
+.hkb-conn svg{position:absolute;top:0;left:0;width:100%;height:100%;overflow:visible;pointer-events:none}
 
-/* Match card within bracket */
-.hkb-match{display:flex;flex-direction:column;margin:3px 6px;width:148px;flex-shrink:0}
-.hkb-team{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:5px 9px;font-size:11px;font-weight:600;color:var(--text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:border-color .15s,background .15s;position:relative;line-height:1.4}
+/* Match card */
+.hkb-match{display:flex;flex-direction:column;margin:3px 4px;position:relative}
+.hkb-team{background:var(--surface);border:1px solid var(--border);border-radius:5px;padding:5px 8px;font-size:11px;font-weight:600;color:var(--text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:border-color .15s,background .15s;line-height:1.35}
 .hkb-team.tbd{color:var(--text-4);font-style:italic;font-weight:400;background:var(--surface2)}
-/* Confirmed slot — green */
-.hkb-team.confirmed{border-color:var(--football);border-width:2px;color:var(--football);background:var(--football-light)}
-/* Projected slot — amber dashed */
-.hkb-team.projected{border-color:var(--status-amber-border);border-style:dashed;border-width:2px;color:var(--status-amber-text);background:var(--status-amber-bg)}
-/* Best 3rd — amber solid */
-.hkb-team.third{border-color:var(--status-amber-text);border-width:2px;color:var(--status-amber-text);background:var(--status-amber-bg)}
-.hkb-badge{font-size:8px;font-weight:800;letter-spacing:.04em;padding:0 4px;border-radius:3px;margin-left:4px;vertical-align:middle;display:inline-block}
+.hkb-team.confirmed{border:2px solid var(--football);color:var(--football);background:var(--football-light)}
+.hkb-team.projected{border:2px dashed var(--status-amber-border);color:var(--status-amber-text);background:var(--status-amber-bg)}
+.hkb-team.third{border:2px solid var(--status-amber-text);color:var(--status-amber-text);background:var(--status-amber-bg)}
+.hkb-badge{font-size:8px;font-weight:800;padding:0 3px;border-radius:2px;margin-left:3px;vertical-align:middle;display:inline-block;line-height:1.4}
 .hkb-badge.ok{background:var(--football);color:#fff}
 .hkb-badge.proj{background:var(--status-amber-text);color:#fff}
 .hkb-badge.t3{background:var(--status-amber-text);color:#fff}
-.hkb-vs{font-size:9px;color:var(--text-4);text-align:center;padding:1px 0;letter-spacing:.03em}
-.hkb-meta{font-size:9px;color:var(--text-3);text-align:center;padding:2px 4px;white-space:nowrap}
+.hkb-vs{font-size:8px;color:var(--text-4);text-align:center;padding:1px 0;letter-spacing:.03em}
+.hkb-meta{font-size:8px;color:var(--text-3);text-align:center;padding:1px 2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
-/* Final column */
-.hkb-final-col{flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;width:172px;padding:0 8px}
-.hkb-final-col .hkb-col-hd{width:100%;margin-bottom:14px}
-.hkb-trophy{font-size:36px;text-align:center;margin-bottom:6px}
-.hkb-final-team{background:var(--surface);border:2px solid #d97706;border-radius:8px;padding:9px 14px;font-size:13px;font-weight:700;color:var(--text);text-align:center;width:152px;margin:3px 0}
+/* Center Final column */
+.hkb-final-center{flex-shrink:0;width:160px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 4px}
+.hkb-final-center .hkb-col-hd{width:100%;margin-bottom:10px;color:#d97706;border-color:#d97706}
+.hkb-trophy{font-size:30px;text-align:center;margin-bottom:6px}
+.hkb-final-team{background:var(--surface);border:2px solid #d97706;border-radius:7px;padding:8px 12px;font-size:12px;font-weight:700;color:var(--text);text-align:center;width:140px;margin:2px 0}
 .hkb-final-team.tbd{color:var(--text-4);font-style:italic;font-weight:400;border-color:var(--border)}
-.hkb-3rd-note{font-size:10px;color:var(--text-3);text-align:center;margin-top:10px}
-.hkb-date-note{font-size:10px;color:var(--text-3);text-align:center;margin-top:5px}
+.hkb-3rd-note{font-size:9px;color:var(--text-3);text-align:center;margin-top:8px;line-height:1.5}
 
-/* Legend */
-.hkb-legend{display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:var(--text-3);margin:10px 0 4px;padding:0 2px}
-.hkb-leg-dot{display:inline-block;width:10px;height:10px;border-radius:2px;vertical-align:middle;margin-right:4px}
-
-/* ── Mobile: vertical pod layout ── */
-@media(max-width:768px){
-  .hkb-desktop{display:none}
-  .hkb-mobile{display:block}
-}
+/* ── Mobile pods ── */
 .hkb-pod{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-lg);padding:12px;margin-bottom:10px}
-.hkb-pod-hd{font-size:10px;font-weight:800;color:var(--text-3);letter-spacing:.07em;text-transform:uppercase;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
+.hkb-pod-hd{font-size:10px;font-weight:800;color:var(--text-3);letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
 .hkb-pod-r32{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
 .hkb-pod-match{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:8px 10px}
 .hkb-pod-match-id{font-size:9px;font-weight:700;color:var(--text-3);letter-spacing:.05em;margin-bottom:4px}
 .hkb-pod-team{font-size:11px;font-weight:600;color:var(--text-2);padding:3px 0;border-bottom:1px solid var(--border);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .hkb-pod-team:last-of-type{border-bottom:none}
-.hkb-pod-team.confirmed{color:var(--football)}
+.hkb-pod-team.confirmed{color:var(--football);font-weight:700}
 .hkb-pod-team.projected{color:var(--status-amber-text)}
-.hkb-pod-team.tbd{color:var(--text-4);font-style:italic}
+.hkb-pod-team.tbd{color:var(--text-4);font-style:italic;font-weight:400}
 .hkb-pod-team.third{color:var(--status-amber-text)}
 .hkb-pod-venue{font-size:9px;color:var(--text-3);margin-top:3px}
 .hkb-pod-arrow{text-align:center;font-size:11px;color:var(--text-3);margin:4px 0;font-weight:600}
 .hkb-pod-r16{background:var(--surface);border:2px dashed var(--border-strong);border-radius:var(--r);padding:7px 10px;text-align:center;font-size:11px;color:var(--text-3);font-style:italic}
-.hkb-pod-r16.has-teams{border-style:solid;border-color:var(--football);color:var(--text);font-style:normal;font-weight:600}
-
 /* Mobile later rounds */
 .hkb-mob-later{margin-top:16px}
 .hkb-mob-round-hd{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--football);border-bottom:2px solid var(--football);padding-bottom:5px;margin-bottom:8px}
-.hkb-mob-matches{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.hkb-mob-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
 .hkb-mob-match{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:8px 10px}
 .hkb-mob-team{font-size:11px;font-weight:600;padding:3px 0;border-bottom:1px solid var(--border);color:var(--text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .hkb-mob-team:last-of-type{border-bottom:none}
@@ -597,8 +595,8 @@ tr:hover td{background:var(--surface2)}
 .fb-danger{background:var(--status-amber-bg);color:var(--status-amber-text);border-color:var(--status-amber-border)}
 .fb-out{background:var(--status-red-bg);color:var(--status-red-text);border-color:var(--status-red-border)}
 .fb-qualified{background:var(--status-green-bg);color:var(--status-green-text);border-color:var(--status-green-border)}
-.fb-winner{background:#fef9c3;color:#854d0e;border-color:#fde047}
-[data-theme="dark"] .fb-winner{background:#422006;color:#fde047;border-color:#854d0e}
+.fb-winner{background:#dcfce7;color:#14532d;border-color:#16a34a;font-weight:800}
+[data-theme="dark"] .fb-winner{background:#052e16;color:#4ade80;border-color:#16a34a}
 
 /* ═══ CRICKET ════════════════════════════════════════════ */
 .fmt-tabs{display:flex;gap:6px;margin-bottom:18px;flex-wrap:wrap}
@@ -689,7 +687,7 @@ tr:hover td{background:var(--surface2)}
 [data-theme="dark"] .grp-tbl tr.row-out td{background:rgba(248,113,113,0.07)!important}
 [data-theme="dark"] .grp-tbl tr.row-danger td{background:rgba(251,191,36,0.07)!important}
 
-/* old bracket-tree styles replaced by .hkb-* above */
+/* bracket-tree styles replaced by .hkb-* */
 
 @media(max-width:860px){
   .champ-cols{grid-template-columns:1fr}
@@ -757,13 +755,12 @@ tr:hover td{background:var(--surface2)}
   .grp-card{margin-bottom:12px}
   .grp-tbl th,.grp-tbl td{padding:6px 8px;font-size:11px}
 
-  /* Bracket — mobile pods handled by .hkb-mobile */
+  /* Bracket handled by .hkb-mobile */
+
   /* Tennis */
   .slam-grid{grid-template-columns:1fr 1fr}
   .rank-cols{grid-template-columns:1fr}
 
-  /* Pathway grid */
-  .pw-grid{grid-template-columns:1fr}
 
   /* AI panel */
   .ai-btns{flex-direction:column}
@@ -1008,7 +1005,7 @@ tr:hover td{background:var(--surface2)}
       </div>
     </div>
     <div id="fb-best3rd-content"></div>
-  <!-- Knockout Bracket (R32 → Final) -->
+  <!-- Knockout Bracket -->
   <div class="fb-section-hd" id="fb-bracket" style="margin-top:28px">
     <div class="fb-sec-label">
       <span class="fb-sec-num">03</span>
@@ -1016,8 +1013,7 @@ tr:hover td{background:var(--surface2)}
       <span class="chip chip-up">R32 → FINAL</span>
     </div>
     <div style="font-size:11px;color:var(--muted)">
-      32 teams · 5 rounds · Win every match to lift the trophy Jul 19 at MetLife Stadium, New Jersey.
-      No draws from R32 onwards — extra time then penalties if level after 90 mins.
+      32 teams · 5 rounds · Win every match to lift the trophy Jul 19 at MetLife Stadium, NJ.
     </div>
   </div>
   <div id="fb-bracket-content"></div>
@@ -2641,515 +2637,69 @@ function renderBracket(){
   const el = document.getElementById('fb-bracket-content');
   if(!el) return;
 
-  // ── Helpers ──────────────────────────────────────────────
-  function sortedGroup(gk){ return sortGroup(fbGroups[gk].teams, fbGroups[gk].fixtures); }
+  function sg(gk){ return sortGroup(fbGroups[gk].teams, fbGroups[gk].fixtures); }
 
-  // Resolve a slot to {text, state:'confirmed'|'projected'|'tbd'|'third', isThird}
-  // state drives the CSS class and badge shown on the card
-  function resolveSlot(slot, matchId, usedFallback, top8, mapping, SLOT_IDX){
+  // ── resolveSlot: correct confirmed logic ─────────────────
+  // confirmed = position specifically locked:
+  //   type:'winner' → only if computeQualStatus returns 'winner' (0 teams can finish above)
+  //   type:'runner' → only if computeQualStatus returns 'qualified' (only 1 can finish above, i.e. 2nd locked)
+  // projected = qualified for R32 but final position (1st/2nd) not mathematically decided yet
+  function resolveSlot(slot, matchId){
     if(slot.type==='winner' || slot.type==='runner'){
       const pos = slot.type==='winner' ? 0 : 1;
-      const g   = fbGroups[slot.grp];
-      const sorted = sortedGroup(slot.grp);
+      const g = fbGroups[slot.grp];
+      const sorted = sg(slot.grp);
       const t = sorted[pos];
-      if(!t) return {text: slot.type==='winner'?`W-${slot.grp}`:`2nd-${slot.grp}`, state:'tbd', isThird:false};
+      if(!t) return {text:`${slot.type==='winner'?'W':'2nd'}-${slot.grp}`, state:'tbd'};
       const qs = computeQualStatus(t, pos, g.teams, g.fixtures);
-      const confirmed = (qs.qual==='winner' || qs.qual==='qualified');
-      // If confirmed in the correct position
-      if(confirmed){
-        return {text:`${t.flag} ${t.name}`, state:'confirmed', isThird:false};
-      }
-      // Team has qualified for R32 but position not yet locked
-      const anyQual = (qs.qual==='winner'||qs.qual==='qualified'||qs.qual==='alive'||qs.qual==='danger');
-      if(anyQual && t.p > 0){
-        return {text:`${t.flag} ${t.name}`, state:'projected', isThird:false};
-      }
-      return {text: slot.type==='winner'?`W-${slot.grp}`:`2nd-${slot.grp}`, state:'tbd', isThird:false};
+      // Confirmed winner slot: only when no team can possibly finish above (qs.qual==='winner')
+      if(slot.type==='winner' && qs.qual==='winner')
+        return {text:`${t.flag} ${t.name}`, state:'confirmed'};
+      // Confirmed runner slot: only when exactly 1 can finish above (qs.qual==='qualified')
+      if(slot.type==='runner' && qs.qual==='qualified')
+        return {text:`${t.flag} ${t.name}`, state:'confirmed'};
+      // Projected: team has played at least 1 game and is still alive
+      if(t.p > 0 && qs.qual !== 'out')
+        return {text:`${t.flag} ${t.name}`, state:'projected'};
+      return {text:`${slot.type==='winner'?'W':'2nd'}-${slot.grp}`, state:'tbd'};
     }
-    // Best 3rd
-    if(mapping){
-      const grp = mapping[SLOT_IDX[matchId]];
-      const t = top8.find(t=>t.grp===grp);
-      if(t) return {text:`${t.flag} ${t.name}`, state:'third', isThird:true};
-      return {text:`Best 3rd (${slot.pool.split('').join('/')})`, state:'tbd', isThird:true};
-    }
-    // Fallback pool-based
-    for(const t of top8){
-      if(slot.pool.includes(t.grp) && !usedFallback.has(t.grp)){
-        usedFallback.add(t.grp);
-        return {text:`${t.flag} ${t.name}`, state:'third', isThird:true};
-      }
-    }
-    return {text:`Best 3rd (${slot.pool.split('').join('/')})`, state:'tbd', isThird:true};
+    // Best 3rd slot
+    const r = getThirdSlot(matchId, slot.pool);
+    return {...r, state: r.isTBD ? 'tbd' : 'third'};
   }
 
-  // ── Best 8 thirds (live) ─────────────────────────────────
+  // ── Best 8 thirds ─────────────────────────────────────────
   const thirds = Object.keys(fbGroups).map(gk=>{
-    const t = sortedGroup(gk)[2];
-    return {...t, grp:gk};
-  }).sort((a,b)=> b.pts-a.pts || b.gd-a.gd || b.gf-a.gf || (b.fp-a.fp) || (a.so||99)-(b.so||99));
+    const t = sg(gk)[2]; return {...t, grp:gk};
+  }).sort((a,b)=> b.pts-a.pts||b.gd-a.gd||b.gf-a.gf||(b.fp-a.fp)||(a.so||99)-(b.so||99));
   const top8 = thirds.slice(0,8);
   const qualKey = top8.map(t=>t.grp).sort().join('');
 
-  // ── Full Annex C (495 combos) ────────────────────────────
-  // Columns map: [M74,M77,M79,M80,M81,M82,M85,M87]
-  const AC={
-    'EFGHIJKL':['F','G','E','K','I','H','J','L'],
-    'DFGHIJKL':['D','F','H','K','I','J','G','L'],
-    'DEGHIJKL':['D','G','E','K','I','H','J','L'],
-    'DEFHIJKL':['D','F','E','K','I','H','J','L'],
-    'DEFGIJKL':['D','F','E','K','I','J','G','L'],
-    'DEFGHJKL':['D','F','E','K','J','H','G','L'],
-    'DEFGHIKL':['D','F','E','K','I','H','G','L'],
-    'DEFGHIJL':['D','F','E','I','J','H','G','L'],
-    'DEFGHIJK':['D','F','E','K','J','H','G','I'],
-    'CFGHIJKL':['C','F','H','K','I','J','G','L'],
-    'CEGHIJKL':['C','G','E','K','I','H','J','L'],
-    'CEFHIJKL':['C','F','E','K','I','H','J','L'],
-    'CEFGIJKL':['C','F','E','K','I','J','G','L'],
-    'CEFGHJKL':['C','F','E','K','J','H','G','L'],
-    'CEFGHIKL':['C','F','E','K','I','H','G','L'],
-    'CEFGHIJL':['C','F','E','I','J','H','G','L'],
-    'CEFGHIJK':['C','F','E','K','J','H','G','I'],
-    'CDGHIJKL':['C','D','H','K','I','J','G','L'],
-    'CDFHIJKL':['D','F','C','K','I','H','J','L'],
-    'CDFGIJKL':['D','F','C','K','I','J','G','L'],
-    'CDFGHJKL':['D','F','C','K','J','H','G','L'],
-    'CDFGHIKL':['D','F','C','K','I','H','G','L'],
-    'CDFGHIJL':['D','F','C','I','J','H','G','L'],
-    'CDFGHIJK':['D','F','C','K','J','H','G','I'],
-    'CDEHIJKL':['C','D','E','K','I','H','J','L'],
-    'CDEGIJKL':['C','D','E','K','I','J','G','L'],
-    'CDEGHJKL':['C','D','E','K','J','H','G','L'],
-    'CDEGHIKL':['C','D','E','K','I','H','G','L'],
-    'CDEGHIJL':['C','D','E','I','J','H','G','L'],
-    'CDEGHIJK':['C','D','E','K','J','H','G','I'],
-    'CDEFIJKL':['D','F','C','K','E','I','J','L'],
-    'CDEFHJKL':['D','F','C','K','E','H','J','L'],
-    'CDEFHIKL':['D','F','C','K','I','H','E','L'],
-    'CDEFHIJL':['D','F','C','I','E','H','J','L'],
-    'CDEFHIJK':['D','F','C','K','E','H','J','I'],
-    'CDEFGJKL':['D','F','C','K','E','J','G','L'],
-    'CDEFGIKL':['D','F','C','K','E','I','G','L'],
-    'CDEFGIJL':['D','F','C','I','E','J','G','L'],
-    'CDEFGIJK':['D','F','C','K','E','J','G','I'],
-    'CDEFGHKL':['D','F','C','K','E','H','G','L'],
-    'CDEFGHJL':['D','F','C','E','J','H','G','L'],
-    'CDEFGHJK':['D','F','C','K','J','H','G','E'],
-    'CDEFGHIL':['D','F','C','I','E','H','G','L'],
-    'CDEFGHIK':['D','F','C','K','E','H','G','I'],
-    'CDEFGHIJ':['D','F','C','I','J','H','G','E'],
-    'BFGHIJKL':['F','G','H','K','B','I','J','L'],
-    'BEGHIJKL':['B','G','E','K','I','H','J','L'],
-    'BEFHIJKL':['F','H','E','K','B','I','J','L'],
-    'BEFGIJKL':['F','G','E','K','B','I','J','L'],
-    'BEFGHJKL':['F','G','E','K','B','H','J','L'],
-    'BEFGHIKL':['F','H','E','K','B','I','G','L'],
-    'BEFGHIJL':['F','G','E','I','B','H','J','L'],
-    'BEFGHIJK':['F','G','E','K','B','H','J','I'],
-    'BDGHIJKL':['D','G','H','K','B','I','J','L'],
-    'BDFHIJKL':['D','F','H','K','B','I','J','L'],
-    'BDFGIJKL':['D','F','I','K','B','J','G','L'],
-    'BDFGHJKL':['D','F','H','K','B','J','G','L'],
-    'BDFGHIKL':['D','F','H','K','B','I','G','L'],
-    'BDFGHIJL':['D','F','H','I','B','J','G','L'],
-    'BDFGHIJK':['D','F','H','K','B','J','G','I'],
-    'BDEHIJKL':['D','H','E','K','B','I','J','L'],
-    'BDEGIJKL':['D','G','E','K','B','I','J','L'],
-    'BDEGHJKL':['D','G','E','K','B','H','J','L'],
-    'BDEGHIKL':['D','H','E','K','B','I','G','L'],
-    'BDEGHIJL':['D','G','E','I','B','H','J','L'],
-    'BDEGHIJK':['D','G','E','K','B','H','J','I'],
-    'BDEFIJKL':['D','F','E','K','B','I','J','L'],
-    'BDEFHJKL':['D','F','E','K','B','H','J','L'],
-    'BDEFHIKL':['D','F','E','K','B','H','I','L'],
-    'BDEFHIJL':['D','F','E','I','B','H','J','L'],
-    'BDEFHIJK':['D','F','E','K','B','H','J','I'],
-    'BDEFGJKL':['D','F','E','K','B','J','G','L'],
-    'BDEFGIKL':['D','F','E','K','B','I','G','L'],
-    'BDEFGIJL':['D','F','E','I','B','J','G','L'],
-    'BDEFGIJK':['D','F','E','K','B','J','G','I'],
-    'BDEFGHKL':['D','F','E','K','B','H','G','L'],
-    'BDEFGHJL':['D','F','H','E','B','J','G','L'],
-    'BDEFGHJK':['D','F','H','K','B','J','G','E'],
-    'BDEFGHIL':['D','F','E','I','B','H','G','L'],
-    'BDEFGHIK':['D','F','E','K','B','H','G','I'],
-    'BDEFGHIJ':['D','F','H','I','B','J','G','E'],
-    'BCGHIJKL':['C','G','H','K','B','I','J','L'],
-    'BCFHIJKL':['C','F','H','K','B','I','J','L'],
-    'BCFGIJKL':['C','F','I','K','B','J','G','L'],
-    'BCFGHJKL':['C','F','H','K','B','J','G','L'],
-    'BCFGHIKL':['C','F','H','K','B','I','G','L'],
-    'BCFGHIJL':['C','F','H','I','B','J','G','L'],
-    'BCFGHIJK':['C','F','H','K','B','J','G','I'],
-    'BCEHIJKL':['C','H','E','K','B','I','J','L'],
-    'BCEGIJKL':['C','G','E','K','B','I','J','L'],
-    'BCEGHJKL':['C','G','E','K','B','H','J','L'],
-    'BCEGHIKL':['C','H','E','K','B','I','G','L'],
-    'BCEGHIJL':['C','G','E','I','B','H','J','L'],
-    'BCEGHIJK':['C','G','E','K','B','H','J','I'],
-    'BCEFIJKL':['C','F','E','K','B','I','J','L'],
-    'BCEFHJKL':['C','F','E','K','B','H','J','L'],
-    'BCEFHIKL':['C','F','E','K','B','H','I','L'],
-    'BCEFHIJL':['C','F','E','I','B','H','J','L'],
-    'BCEFHIJK':['C','F','E','K','B','H','J','I'],
-    'BCEFGJKL':['C','F','E','K','B','J','G','L'],
-    'BCEFGIKL':['C','F','E','K','B','I','G','L'],
-    'BCEFGIJL':['C','F','E','I','B','J','G','L'],
-    'BCEFGIJK':['C','F','E','K','B','J','G','I'],
-    'BCEFGHKL':['C','F','E','K','B','H','G','L'],
-    'BCEFGHJL':['C','F','H','E','B','J','G','L'],
-    'BCEFGHJK':['C','F','H','K','B','J','G','E'],
-    'BCEFGHIL':['C','F','E','I','B','H','G','L'],
-    'BCEFGHIK':['C','F','E','K','B','H','G','I'],
-    'BCEFGHIJ':['C','F','H','I','B','J','G','E'],
-    'BCDHIJKL':['C','D','H','K','B','I','J','L'],
-    'BCDGIJKL':['C','D','I','K','B','J','G','L'],
-    'BCDGHJKL':['C','D','H','K','B','J','G','L'],
-    'BCDGHIKL':['C','D','H','K','B','I','G','L'],
-    'BCDGHIJL':['C','D','H','I','B','J','G','L'],
-    'BCDGHIJK':['C','D','H','K','B','J','G','I'],
-    'BCDFIJKL':['D','F','C','K','B','I','J','L'],
-    'BCDFHJKL':['D','F','C','K','B','H','J','L'],
-    'BCDFHIKL':['D','F','C','K','B','H','I','L'],
-    'BCDFHIJL':['D','F','C','I','B','H','J','L'],
-    'BCDFHIJK':['D','F','C','K','B','H','J','I'],
-    'BCDFGJKL':['D','F','C','K','B','J','G','L'],
-    'BCDFGIKL':['D','F','C','K','B','I','G','L'],
-    'BCDFGIJL':['D','F','C','I','B','J','G','L'],
-    'BCDFGIJK':['D','F','C','K','B','J','G','I'],
-    'BCDFGHKL':['D','F','C','K','B','H','G','L'],
-    'BCDFGHJL':['D','F','C','J','B','H','G','L'],
-    'BCDFGHJK':['C','F','H','K','B','J','G','D'],
-    'BCDFGHIL':['D','F','C','I','B','H','G','L'],
-    'BCDFGHIK':['D','F','C','K','B','H','G','I'],
-    'BCDFGHIJ':['C','F','H','I','B','J','G','D'],
-    'BCDEIJKL':['C','D','E','K','B','I','J','L'],
-    'BCDEHJKL':['C','D','E','K','B','H','J','L'],
-    'BCDEHIKL':['C','D','E','K','B','H','I','L'],
-    'BCDEHIJL':['C','D','E','I','B','H','J','L'],
-    'BCDEHIJK':['C','D','E','K','B','H','J','I'],
-    'BCDEGJKL':['C','D','E','K','B','J','G','L'],
-    'BCDEGIKL':['C','D','E','K','B','I','G','L'],
-    'BCDEGIJL':['C','D','E','I','B','J','G','L'],
-    'BCDEGIJK':['C','D','E','K','B','J','G','I'],
-    'BCDEGHKL':['C','D','E','K','B','H','G','L'],
-    'BCDEGHJL':['C','D','H','E','B','J','G','L'],
-    'BCDEGHJK':['C','D','H','K','B','J','G','E'],
-    'BCDEGHIL':['C','D','E','I','B','H','G','L'],
-    'BCDEGHIK':['C','D','E','K','B','H','G','I'],
-    'BCDEGHIJ':['C','D','H','I','B','J','G','E'],
-    'BCDEFJKL':['D','F','C','K','B','E','J','L'],
-    'BCDEFIKL':['D','F','C','K','B','I','E','L'],
-    'BCDEFIJL':['D','F','C','I','B','E','J','L'],
-    'BCDEFIJK':['D','F','C','K','B','E','J','I'],
-    'BCDEFHKL':['D','F','C','K','B','H','E','L'],
-    'BCDEFHJL':['D','F','C','E','B','H','J','L'],
-    'BCDEFHJK':['D','F','C','K','B','H','J','E'],
-    'BCDEFHIL':['D','F','C','I','B','H','E','L'],
-    'BCDEFHIK':['D','F','C','K','B','H','E','I'],
-    'BCDEFHIJ':['D','F','C','I','B','H','J','E'],
-    'BCDEFGKL':['D','F','C','K','B','E','G','L'],
-    'BCDEFGJL':['D','F','C','E','B','J','G','L'],
-    'BCDEFGJK':['D','F','C','K','B','J','G','E'],
-    'BCDEFGIL':['D','F','C','I','B','E','G','L'],
-    'BCDEFGIK':['D','F','C','K','B','E','G','I'],
-    'BCDEFGIJ':['D','F','C','I','B','J','G','E'],
-    'BCDEFGHL':['D','F','C','E','B','H','G','L'],
-    'BCDEFGHK':['D','F','C','K','B','H','G','E'],
-    'BCDEFGHJ':['C','F','H','E','B','J','G','D'],
-    'BCDEFGHI':['D','F','C','I','B','H','G','E'],
-    'AFGHIJKL':['F','G','H','K','I','A','J','L'],
-    'AEGHIJKL':['A','G','E','K','I','H','J','L'],
-    'AEFHIJKL':['F','H','E','K','I','A','J','L'],
-    'AEFGIJKL':['F','G','E','K','I','A','J','L'],
-    'AEFGHJKL':['F','H','E','K','J','A','G','L'],
-    'AEFGHIKL':['F','H','E','K','I','A','G','L'],
-    'AEFGHIJL':['F','H','E','I','J','A','G','L'],
-    'AEFGHIJK':['F','H','E','K','J','A','G','I'],
-    'ADGHIJKL':['D','G','H','K','I','A','J','L'],
-    'ADFHIJKL':['D','F','H','K','I','A','J','L'],
-    'ADFGIJKL':['D','F','I','K','J','A','G','L'],
-    'ADFGHJKL':['D','F','H','K','J','A','G','L'],
-    'ADFGHIKL':['D','F','H','K','I','A','G','L'],
-    'ADFGHIJL':['D','F','H','I','J','A','G','L'],
-    'ADFGHIJK':['D','F','H','K','J','A','G','I'],
-    'ADEHIJKL':['D','H','E','K','I','A','J','L'],
-    'ADEGIJKL':['D','G','E','K','I','A','J','L'],
-    'ADEGHJKL':['D','H','E','K','J','A','G','L'],
-    'ADEGHIKL':['D','H','E','K','I','A','G','L'],
-    'ADEGHIJL':['D','H','E','I','J','A','G','L'],
-    'ADEGHIJK':['D','H','E','K','J','A','G','I'],
-    'ADEFIJKL':['D','F','E','K','I','A','J','L'],
-    'ADEFHJKL':['D','F','H','K','E','A','J','L'],
-    'ADEFHIKL':['D','F','H','K','I','A','E','L'],
-    'ADEFHIJL':['D','F','H','I','E','A','J','L'],
-    'ADEFHIJK':['D','F','H','K','E','A','J','I'],
-    'ADEFGJKL':['D','F','E','K','J','A','G','L'],
-    'ADEFGIKL':['D','F','E','K','I','A','G','L'],
-    'ADEFGIJL':['D','F','E','I','J','A','G','L'],
-    'ADEFGIJK':['D','F','E','K','J','A','G','I'],
-    'ADEFGHKL':['D','F','H','K','E','A','G','L'],
-    'ADEFGHJL':['D','F','H','E','J','A','G','L'],
-    'ADEFGHJK':['D','F','H','K','J','A','G','E'],
-    'ADEFGHIL':['D','F','H','I','E','A','G','L'],
-    'ADEFGHIK':['D','F','H','K','E','A','G','I'],
-    'ADEFGHIJ':['D','F','H','I','J','A','G','E'],
-    'ACGHIJKL':['C','G','H','K','I','A','J','L'],
-    'ACFHIJKL':['C','F','H','K','I','A','J','L'],
-    'ACFGIJKL':['C','F','I','K','J','A','G','L'],
-    'ACFGHJKL':['C','F','H','K','J','A','G','L'],
-    'ACFGHIKL':['C','F','H','K','I','A','G','L'],
-    'ACFGHIJL':['C','F','H','I','J','A','G','L'],
-    'ACFGHIJK':['C','F','H','K','J','A','G','I'],
-    'ACEHIJKL':['C','H','E','K','I','A','J','L'],
-    'ACEGIJKL':['C','G','E','K','I','A','J','L'],
-    'ACEGHJKL':['C','H','E','K','J','A','G','L'],
-    'ACEGHIKL':['C','H','E','K','I','A','G','L'],
-    'ACEGHIJL':['C','H','E','I','J','A','G','L'],
-    'ACEGHIJK':['C','H','E','K','J','A','G','I'],
-    'ACEFIJKL':['C','F','E','K','I','A','J','L'],
-    'ACEFHJKL':['C','F','H','K','E','A','J','L'],
-    'ACEFHIKL':['C','F','H','K','I','A','E','L'],
-    'ACEFHIJL':['C','F','H','I','E','A','J','L'],
-    'ACEFHIJK':['C','F','H','K','E','A','J','I'],
-    'ACEFGJKL':['C','F','E','K','J','A','G','L'],
-    'ACEFGIKL':['C','F','E','K','I','A','G','L'],
-    'ACEFGIJL':['C','F','E','I','J','A','G','L'],
-    'ACEFGIJK':['C','F','E','K','J','A','G','I'],
-    'ACEFGHKL':['C','F','H','K','E','A','G','L'],
-    'ACEFGHJL':['C','F','H','E','J','A','G','L'],
-    'ACEFGHJK':['C','F','H','K','J','A','G','E'],
-    'ACEFGHIL':['C','F','H','I','E','A','G','L'],
-    'ACEFGHIK':['C','F','H','K','E','A','G','I'],
-    'ACEFGHIJ':['C','F','H','I','J','A','G','E'],
-    'ACDHIJKL':['C','D','H','K','I','A','J','L'],
-    'ACDGIJKL':['C','D','I','K','J','A','G','L'],
-    'ACDGHJKL':['C','D','H','K','J','A','G','L'],
-    'ACDGHIKL':['C','D','H','K','I','A','G','L'],
-    'ACDGHIJL':['C','D','H','I','J','A','G','L'],
-    'ACDGHIJK':['C','D','H','K','J','A','G','I'],
-    'ACDFIJKL':['D','F','C','K','I','A','J','L'],
-    'ACDFHJKL':['C','D','H','K','F','A','J','L'],
-    'ACDFHIKL':['C','D','H','K','I','A','F','L'],
-    'ACDFHIJL':['C','D','H','I','F','A','J','L'],
-    'ACDFHIJK':['C','D','H','K','F','A','J','I'],
-    'ACDFGJKL':['D','F','C','K','J','A','G','L'],
-    'ACDFGIKL':['D','F','C','K','I','A','G','L'],
-    'ACDFGIJL':['D','F','C','I','J','A','G','L'],
-    'ACDFGIJK':['D','F','C','K','J','A','G','I'],
-    'ACDFGHKL':['C','D','H','K','F','A','G','L'],
-    'ACDFGHJL':['D','F','C','H','J','A','G','L'],
-    'ACDFGHJK':['C','F','H','K','J','A','G','D'],
-    'ACDFGHIL':['C','D','H','I','F','A','G','L'],
-    'ACDFGHIK':['C','D','H','K','F','A','G','I'],
-    'ACDFGHIJ':['C','F','H','I','J','A','G','D'],
-    'ACDEIJKL':['C','D','E','K','I','A','J','L'],
-    'ACDEHJKL':['C','D','H','K','E','A','J','L'],
-    'ACDEHIKL':['C','D','H','K','I','A','E','L'],
-    'ACDEHIJL':['C','D','H','I','E','A','J','L'],
-    'ACDEHIJK':['C','D','H','K','E','A','J','I'],
-    'ACDEGJKL':['C','D','E','K','J','A','G','L'],
-    'ACDEGIKL':['C','D','E','K','I','A','G','L'],
-    'ACDEGIJL':['C','D','E','I','J','A','G','L'],
-    'ACDEGIJK':['C','D','E','K','J','A','G','I'],
-    'ACDEGHKL':['C','D','H','K','E','A','G','L'],
-    'ACDEGHJL':['C','D','H','E','J','A','G','L'],
-    'ACDEGHJK':['C','D','H','K','J','A','G','E'],
-    'ACDEGHIL':['C','D','H','I','E','A','G','L'],
-    'ACDEGHIK':['C','D','H','K','E','A','G','I'],
-    'ACDEGHIJ':['C','D','H','I','J','A','G','E'],
-    'ACDEFJKL':['D','F','C','K','E','A','J','L'],
-    'ACDEFIKL':['D','F','C','K','I','A','E','L'],
-    'ACDEFIJL':['D','F','C','I','E','A','J','L'],
-    'ACDEFIJK':['D','F','C','K','E','A','J','I'],
-    'ACDEFHKL':['C','D','H','K','F','A','E','L'],
-    'ACDEFHJL':['C','D','H','E','F','A','J','L'],
-    'ACDEFHJK':['C','F','H','K','E','A','J','D'],
-    'ACDEFHIL':['C','D','H','I','F','A','E','L'],
-    'ACDEFHIK':['C','D','H','K','F','A','E','I'],
-    'ACDEFHIJ':['C','F','H','I','E','A','J','D'],
-    'ACDEFGKL':['D','F','C','K','E','A','G','L'],
-    'ACDEFGJL':['D','F','C','E','J','A','G','L'],
-    'ACDEFGJK':['D','F','C','K','J','A','G','E'],
-    'ACDEFGIL':['D','F','C','I','E','A','G','L'],
-    'ACDEFGIK':['D','F','C','K','E','A','G','I'],
-    'ACDEFGIJ':['D','F','C','I','J','A','G','E'],
-    'ACDEFGHL':['D','F','C','E','A','H','G','L'],
-    'ACDEFGHK':['D','F','C','K','E','A','G','H'],
-    'ACDEFGHJ':['C','F','H','E','J','A','G','D'],
-    'ACDEFGHI':['D','F','C','I','E','A','G','H'],
-    'ABGHIJKL':['G','H','I','K','B','A','J','L'],
-    'ABFHIJKL':['F','H','I','K','B','A','J','L'],
-    'ABFGIJKL':['F','G','I','K','B','A','J','L'],
-    'ABFGHJKL':['F','H','I','K','B','A','G','L'],
-    'ABFGHIKL':['F','H','I','K','B','A','G','L'],
-    'ABFGHIJL':['F','H','I','J','B','A','G','L'],
-    'ABFGHIJK':['F','H','I','K','B','A','G','J'],
-    'ABEHIJKL':['H','E','I','K','B','A','J','L'],
-    'ABEGIJKL':['G','E','I','K','B','A','J','L'],
-    'ABEGHJKL':['H','E','J','K','B','A','G','L'],
-    'ABEGHIKL':['H','E','I','K','B','A','G','L'],
-    'ABEGHIJL':['H','E','I','J','B','A','G','L'],
-    'ABEGHIJK':['H','E','J','K','B','A','G','I'],
-    'ABEFIJKL':['F','E','I','K','B','A','J','L'],
-    'ABEFHJKL':['F','H','E','K','B','A','J','L'],
-    'ABEFHIKL':['F','H','I','K','B','A','E','L'],
-    'ABEFHIJL':['F','H','I','J','B','A','E','L'],
-    'ABEFHIJK':['F','H','E','K','B','A','J','I'],
-    'ABEFGJKL':['F','E','J','K','B','A','G','L'],
-    'ABEFGIKL':['F','E','I','K','B','A','G','L'],
-    'ABEFGIJL':['F','E','I','J','B','A','G','L'],
-    'ABEFGIJK':['F','E','J','K','B','A','G','I'],
-    'ABEFGHKL':['F','H','E','K','B','A','G','L'],
-    'ABEFGHJL':['F','H','E','J','B','A','G','L'],
-    'ABEFGHJK':['F','H','J','K','B','A','G','E'],
-    'ABEFGHIL':['F','H','I','E','B','A','G','L'],
-    'ABEFGHIK':['F','H','E','K','B','A','G','I'],
-    'ABEFGHIJ':['F','H','I','J','B','A','G','E'],
-    'ABDHIJKL':['D','H','I','K','B','A','J','L'],
-    'ABDGIJKL':['D','G','I','K','B','A','J','L'],
-    'ABDGHJKL':['D','H','J','K','B','A','G','L'],
-    'ABDGHIKL':['D','H','I','K','B','A','G','L'],
-    'ABDGHIJL':['D','H','I','J','B','A','G','L'],
-    'ABDGHIJK':['D','H','J','K','B','A','G','I'],
-    'ABDFIJKL':['D','F','I','K','B','A','J','L'],
-    'ABDFHJKL':['D','F','H','K','B','A','J','L'],
-    'ABDFHIKL':['D','F','H','K','B','A','I','L'],
-    'ABDFHIJL':['D','F','H','I','B','A','J','L'],
-    'ABDFHIJK':['D','F','H','K','B','A','J','I'],
-    'ABDFGJKL':['D','F','J','K','B','A','G','L'],
-    'ABDFGIKL':['D','F','I','K','B','A','G','L'],
-    'ABDFGIJL':['D','F','I','J','B','A','G','L'],
-    'ABDFGIJK':['D','F','J','K','B','A','G','I'],
-    'ABDFGHKL':['D','F','H','K','B','A','G','L'],
-    'ABDFGHJL':['D','F','H','J','B','A','G','L'],
-    'ABDFGHJK':['D','F','H','K','B','A','G','J'],
-    'ABDFGHIL':['D','F','H','I','B','A','G','L'],
-    'ABDFGHIK':['D','F','H','K','B','A','G','I'],
-    'ABDFGHIJ':['D','F','H','I','B','A','G','J'],
-    'ABDEHIJKL':['D','H','E','K','B','A','J','L'],
-    'ABDEIJKL':['D','E','I','K','B','A','J','L'],
-    'ABDEHJKL':['D','H','E','K','B','A','J','L'],
-    'ABDEHIKL':['D','H','E','K','B','A','I','L'],
-    'ABDEHIJL':['D','H','E','I','B','A','J','L'],
-    'ABDEHIJK':['D','H','E','K','B','A','J','I'],
-    'ABDEGJKL':['D','E','J','K','B','A','G','L'],
-    'ABDEGIKL':['D','E','I','K','B','A','G','L'],
-    'ABDEGIJL':['D','E','I','J','B','A','G','L'],
-    'ABDEGIJK':['D','E','J','K','B','A','G','I'],
-    'ABDEGHKL':['D','H','E','K','B','A','G','L'],
-    'ABDEGHJL':['D','H','E','J','B','A','G','L'],
-    'ABDEGHJK':['D','H','J','K','B','A','G','E'],
-    'ABDEGHIL':['D','H','E','I','B','A','G','L'],
-    'ABDEGHIK':['D','H','E','K','B','A','G','I'],
-    'ABDEGHIJ':['D','H','E','I','B','A','G','J'],
-    'ABCGHIJKL':['C','G','H','K','B','A','J','L'],
-    'ABCFHIJKL':['C','F','H','K','B','A','J','L'],
-    'ABCFGIJKL':['C','F','I','K','B','A','J','L'],
-    'ABCFGHJKL':['C','F','H','K','B','A','J','L'],
-    'ABCFGHIKL':['C','F','H','K','B','A','I','L'],
-    'ABCFGHIJL':['C','F','H','I','B','A','J','L'],
-    'ABCFGHIJK':['C','F','H','K','B','A','J','I'],
-    'ABCEHIJKL':['C','H','E','K','B','A','J','L'],
-    'ABCEGIJKL':['C','G','E','K','B','A','J','L'],
-    'ABCEGHJKL':['C','H','E','K','B','A','J','L'],
-    'ABCEGHIKL':['C','H','E','K','B','A','I','L'],
-    'ABCEGHIJL':['C','H','E','I','B','A','J','L'],
-    'ABCEGHIJK':['C','H','E','K','B','A','J','I'],
-    'ABCEFIJKL':['C','F','E','K','B','A','J','L'],
-    'ABCEFHJKL':['C','F','H','K','B','A','E','L'],
-    'ABCEFHIKL':['C','F','H','K','B','A','I','E'],
-    'ABCEFHIJL':['C','F','H','I','B','A','E','L'],
-    'ABCEFHIJK':['C','F','H','K','B','A','J','E'],
-    'ABCEFGJKL':['C','F','E','K','B','A','J','L'],
-    'ABCEFGIKL':['C','F','E','K','B','A','I','L'],
-    'ABCEFGIJL':['C','F','E','I','B','A','J','L'],
-    'ABCEFGIJK':['C','F','E','K','B','A','J','I'],
-    'ABCEFGHKL':['C','F','H','K','B','A','E','L'],
-    'ABCEFGHJL':['C','F','H','E','B','A','J','L'],
-    'ABCEFGHJK':['C','F','H','K','B','A','J','E'],
-    'ABCEFGHIL':['C','F','H','I','B','A','E','L'],
-    'ABCEFGHIK':['C','F','H','K','B','A','E','I'],
-    'ABCEFGHIJ':['C','F','H','I','B','A','J','E'],
-    'ABCDHIJKL':['C','D','H','K','B','A','J','L'],
-    'ABCDGIJKL':['C','D','I','K','B','A','J','L'],
-    'ABCDGHJKL':['C','D','H','K','B','A','J','L'],
-    'ABCDGHIKL':['C','D','H','K','B','A','I','L'],
-    'ABCDGHIJL':['C','D','H','I','B','A','J','L'],
-    'ABCDGHIJK':['C','D','H','K','B','A','J','I'],
-    'ABCDFIJKL':['D','F','C','K','B','A','J','L'],
-    'ABCDFHJKL':['C','D','H','K','B','A','F','L'],
-    'ABCDFHIKL':['C','D','H','K','B','A','I','F'],
-    'ABCDFHIJL':['C','D','H','I','B','A','F','L'],
-    'ABCDFHIJK':['C','D','H','K','B','A','J','F'],
-    'ABCDFGJKL':['D','F','C','K','B','A','J','L'],
-    'ABCDFGIKL':['D','F','C','K','B','A','I','L'],
-    'ABCDFGIJL':['D','F','C','I','B','A','J','L'],
-    'ABCDFGIJK':['D','F','C','K','B','A','J','I'],
-    'ABCDFGHKL':['C','D','H','K','B','A','F','L'],
-    'ABCDFGHJL':['D','F','C','H','B','A','J','L'],
-    'ABCDFGHJK':['C','F','H','K','B','A','J','D'],
-    'ABCDFGHIL':['C','D','H','I','B','A','F','L'],
-    'ABCDFGHIK':['C','D','H','K','B','A','F','I'],
-    'ABCDFGHIJ':['C','F','H','I','B','A','J','D'],
-    'ABCDEIJKL':['C','D','E','K','B','A','J','L'],
-    'ABCDEHJKL':['C','D','H','K','B','A','E','L'],
-    'ABCDEHIKL':['C','D','H','K','B','A','I','E'],
-    'ABCDEHIJL':['C','D','H','I','B','A','E','L'],
-    'ABCDEHIJK':['C','D','H','K','B','A','J','E'],
-    'ABCDEGJKL':['C','D','E','K','B','A','J','L'],
-    'ABCDEGIKL':['C','D','E','K','B','A','I','L'],
-    'ABCDEGIJL':['C','D','E','I','B','A','J','L'],
-    'ABCDEGIJK':['C','D','E','K','B','A','J','I'],
-    'ABCDEGHKL':['C','D','H','K','B','A','E','L'],
-    'ABCDEGHJL':['C','D','H','E','B','A','J','L'],
-    'ABCDEGHJK':['C','D','H','K','B','A','J','E'],
-    'ABCDEGHIL':['C','D','H','I','B','A','E','L'],
-    'ABCDEGHIK':['C','D','H','K','B','A','E','I'],
-    'ABCDEGHIJ':['C','D','H','I','B','A','J','E'],
-    'ABCDEFJKL':['D','F','C','K','B','A','E','L'],
-    'ABCDEFIKL':['D','F','C','K','B','A','I','E'],
-    'ABCDEFIJL':['D','F','C','I','B','A','E','L'],
-    'ABCDEFIJK':['D','F','C','K','B','A','J','E'],
-    'ABCDEFHKL':['C','D','H','K','B','A','E','F'],
-    'ABCDEFHJL':['C','D','H','E','B','A','J','F'],
-    'ABCDEFHJK':['C','F','H','K','B','A','J','E'],
-    'ABCDEFHIL':['C','D','H','I','B','A','E','F'],
-    'ABCDEFHIK':['C','D','H','K','B','A','E','I'],
-    'ABCDEFHIJ':['C','F','H','I','B','A','J','E'],
-    'ABCDEFGKL':['D','F','C','K','B','A','E','L'],
-    'ABCDEFGJL':['D','F','C','E','B','A','J','L'],
-    'ABCDEFGJK':['D','F','C','K','B','A','J','E'],
-    'ABCDEFGIL':['D','F','C','I','B','A','E','L'],
-    'ABCDEFGIK':['D','F','C','K','B','A','E','I'],
-    'ABCDEFGIJ':['D','F','C','I','B','A','J','E'],
-    'ABCDEFGHL':['D','F','C','E','B','A','H','L'],
-    'ABCDEFGHK':['D','F','C','K','B','A','E','H'],
-    'ABCDEFGHJ':['C','F','H','E','B','A','J','D'],
-    'ABCDEFGHI':['D','F','C','I','B','A','E','H'],
-    'ABCDEFKL':['D','F','C','K','B','A','E','L'],
-    'ABCDEFJL':['D','F','C','E','B','A','J','L'],
-    'ABCDEFJK':['D','F','C','K','B','A','J','E'],
-    'ABCDEFIL':['D','F','C','I','B','A','E','L'],
-    'ABCDEFIK':['D','F','C','K','B','A','E','I'],
-    'ABCDEFIJ':['D','F','C','I','B','A','J','E'],
-    'ABCDEFHL':['C','D','H','E','B','A','F','L'],
-    'ABCDEFHK':['C','F','H','K','B','A','E','D'],
-    'ABCDEFHJ':['C','F','H','E','B','A','J','D'],
-    'ABCDEFHI':['C','F','H','I','B','A','E','D'],
-    'ABCDEFGL':['D','F','C','E','B','A','G','L'],
-    'ABCDEFGK':['D','F','C','K','B','A','G','E'],
-    'ABCDEFGJ':['D','F','C','J','B','A','G','E'],
-    'ABCDEFGI':['D','F','C','I','B','A','G','E'],
-    'ABCDEFGH':['C','F','H','E','B','A','G','D'],
-  };
+  // Full Annex C (495 combos) — columns: [M74,M77,M79,M80,M81,M82,M85,M87]
   const SLOT_IDX = {M74:0,M77:1,M79:2,M80:3,M81:4,M82:5,M85:6,M87:7};
+  const AC={
+    'EFGHIJKL':['F','G','E','K','I','H','J','L'],'DFGHIJKL':['D','F','H','K','I','J','G','L'],'DEGHIJKL':['D','G','E','K','I','H','J','L'],'DEFHIJKL':['D','F','E','K','I','H','J','L'],'DEFGIJKL':['D','F','E','K','I','J','G','L'],'DEFGHJKL':['D','F','E','K','J','H','G','L'],'DEFGHIKL':['D','F','E','K','I','H','G','L'],'DEFGHIJL':['D','F','E','I','J','H','G','L'],'DEFGHIJK':['D','F','E','K','J','H','G','I'],'CFGHIJKL':['C','F','H','K','I','J','G','L'],'CEGHIJKL':['C','G','E','K','I','H','J','L'],'CEFHIJKL':['C','F','E','K','I','H','J','L'],'CEFGIJKL':['C','F','E','K','I','J','G','L'],'CEFGHJKL':['C','F','E','K','J','H','G','L'],'CEFGHIKL':['C','F','E','K','I','H','G','L'],'CEFGHIJL':['C','F','E','I','J','H','G','L'],'CEFGHIJK':['C','F','E','K','J','H','G','I'],'CDGHIJKL':['C','D','H','K','I','J','G','L'],'CDFHIJKL':['D','F','C','K','I','H','J','L'],'CDFGIJKL':['D','F','C','K','I','J','G','L'],'CDFGHJKL':['D','F','C','K','J','H','G','L'],'CDFGHIKL':['D','F','C','K','I','H','G','L'],'CDFGHIJL':['D','F','C','I','J','H','G','L'],'CDFGHIJK':['D','F','C','K','J','H','G','I'],'CDEHIJKL':['C','D','E','K','I','H','J','L'],'CDEGIJKL':['C','D','E','K','I','J','G','L'],'CDEGHJKL':['C','D','E','K','J','H','G','L'],'CDEGHIKL':['C','D','E','K','I','H','G','L'],'CDEGHIJL':['C','D','E','I','J','H','G','L'],'CDEGHIJK':['C','D','E','K','J','H','G','I'],'CDEFIJKL':['D','F','C','K','E','I','J','L'],'CDEFHJKL':['D','F','C','K','E','H','J','L'],'CDEFHIKL':['D','F','C','K','I','H','E','L'],'CDEFHIJL':['D','F','C','I','E','H','J','L'],'CDEFHIJK':['D','F','C','K','E','H','J','I'],'CDEFGJKL':['D','F','C','K','E','J','G','L'],'CDEFGIKL':['D','F','C','K','E','I','G','L'],'CDEFGIJL':['D','F','C','I','E','J','G','L'],'CDEFGIJK':['D','F','C','K','E','J','G','I'],'CDEFGHKL':['D','F','C','K','E','H','G','L'],'CDEFGHJL':['D','F','C','E','J','H','G','L'],'CDEFGHJK':['D','F','C','K','J','H','G','E'],'CDEFGHIL':['D','F','C','I','E','H','G','L'],'CDEFGHIK':['D','F','C','K','E','H','G','I'],'CDEFGHIJ':['D','F','C','I','J','H','G','E'],'BFGHIJKL':['F','G','H','K','B','I','J','L'],'BEGHIJKL':['B','G','E','K','I','H','J','L'],'BEFHIJKL':['F','H','E','K','B','I','J','L'],'BEFGIJKL':['F','G','E','K','B','I','J','L'],'BEFGHJKL':['F','G','E','K','B','H','J','L'],'BEFGHIKL':['F','H','E','K','B','I','G','L'],'BEFGHIJL':['F','G','E','I','B','H','J','L'],'BEFGHIJK':['F','G','E','K','B','H','J','I'],'BDGHIJKL':['D','G','H','K','B','I','J','L'],'BDFHIJKL':['D','F','H','K','B','I','J','L'],'BDFGIJKL':['D','F','I','K','B','J','G','L'],'BDFGHJKL':['D','F','H','K','B','J','G','L'],'BDFGHIKL':['D','F','H','K','B','I','G','L'],'BDFGHIJL':['D','F','H','I','B','J','G','L'],'BDFGHIJK':['D','F','H','K','B','J','G','I'],'BDEHIJKL':['D','H','E','K','B','I','J','L'],'BDEGIJKL':['D','G','E','K','B','I','J','L'],'BDEGHJKL':['D','G','E','K','B','H','J','L'],'BDEGHIKL':['D','H','E','K','B','I','G','L'],'BDEGHIJL':['D','G','E','I','B','H','J','L'],'BDEGHIJK':['D','G','E','K','B','H','J','I'],'BDEFIJKL':['D','F','E','K','B','I','J','L'],'BDEFHJKL':['D','F','E','K','B','H','J','L'],'BDEFHIKL':['D','F','E','K','B','H','I','L'],'BDEFHIJL':['D','F','E','I','B','H','J','L'],'BDEFHIJK':['D','F','E','K','B','H','J','I'],'BDEFGJKL':['D','F','E','K','B','J','G','L'],'BDEFGIKL':['D','F','E','K','B','I','G','L'],'BDEFGIJL':['D','F','E','I','B','J','G','L'],'BDEFGIJK':['D','F','E','K','B','J','G','I'],'BDEFGHKL':['D','F','E','K','B','H','G','L'],'BDEFGHJL':['D','F','H','E','B','J','G','L'],'BDEFGHJK':['D','F','H','K','B','J','G','E'],'BDEFGHIL':['D','F','E','I','B','H','G','L'],'BDEFGHIK':['D','F','E','K','B','H','G','I'],'BDEFGHIJ':['D','F','H','I','B','J','G','E'],'BCGHIJKL':['C','G','H','K','B','I','J','L'],'BCFHIJKL':['C','F','H','K','B','I','J','L'],'BCFGIJKL':['C','F','I','K','B','J','G','L'],'BCFGHJKL':['C','F','H','K','B','J','G','L'],'BCFGHIKL':['C','F','H','K','B','I','G','L'],'BCFGHIJL':['C','F','H','I','B','J','G','L'],'BCFGHIJK':['C','F','H','K','B','J','G','I'],'BCEHIJKL':['C','H','E','K','B','I','J','L'],'BCEGIJKL':['C','G','E','K','B','I','J','L'],'BCEGHJKL':['C','G','E','K','B','H','J','L'],'BCEGHIKL':['C','H','E','K','B','I','G','L'],'BCEGHIJL':['C','G','E','I','B','H','J','L'],'BCEGHIJK':['C','G','E','K','B','H','J','I'],'BCEFIJKL':['C','F','E','K','B','I','J','L'],'BCEFHJKL':['C','F','E','K','B','H','J','L'],'BCEFHIKL':['C','F','E','K','B','H','I','L'],'BCEFHIJL':['C','F','E','I','B','H','J','L'],'BCEFHIJK':['C','F','E','K','B','H','J','I'],'BCEFGJKL':['C','F','E','K','B','J','G','L'],'BCEFGIKL':['C','F','E','K','B','I','G','L'],'BCEFGIJL':['C','F','E','I','B','J','G','L'],'BCEFGIJK':['C','F','E','K','B','J','G','I'],'BCEFGHKL':['C','F','E','K','B','H','G','L'],'BCEFGHJL':['C','F','H','E','B','J','G','L'],'BCEFGHJK':['C','F','H','K','B','J','G','E'],'BCEFGHIL':['C','F','E','I','B','H','G','L'],'BCEFGHIK':['C','F','E','K','B','H','G','I'],'BCEFGHIJ':['C','F','H','I','B','J','G','E'],'BCDHIJKL':['C','D','H','K','B','I','J','L'],'BCDGIJKL':['C','D','I','K','B','J','G','L'],'BCDGHJKL':['C','D','H','K','B','J','G','L'],'BCDGHIKL':['C','D','H','K','B','I','G','L'],'BCDGHIJL':['C','D','H','I','B','J','G','L'],'BCDGHIJK':['C','D','H','K','B','J','G','I'],'BCDFIJKL':['D','F','C','K','B','I','J','L'],'BCDFHJKL':['D','F','C','K','B','H','J','L'],'BCDFHIKL':['D','F','C','K','B','H','I','L'],'BCDFHIJL':['D','F','C','I','B','H','J','L'],'BCDFHIJK':['D','F','C','K','B','H','J','I'],'BCDFGJKL':['D','F','C','K','B','J','G','L'],'BCDFGIKL':['D','F','C','K','B','I','G','L'],'BCDFGIJL':['D','F','C','I','B','J','G','L'],'BCDFGIJK':['D','F','C','K','B','J','G','I'],'BCDFGHKL':['D','F','C','K','B','H','G','L'],'BCDFGHJL':['D','F','C','J','B','H','G','L'],'BCDFGHJK':['C','F','H','K','B','J','G','D'],'BCDFGHIL':['D','F','C','I','B','H','G','L'],'BCDFGHIK':['D','F','C','K','B','H','G','I'],'BCDFGHIJ':['C','F','H','I','B','J','G','D'],'BCDEIJKL':['C','D','E','K','B','I','J','L'],'BCDEHJKL':['C','D','E','K','B','H','J','L'],'BCDEHIKL':['C','D','E','K','B','H','I','L'],'BCDEHIJL':['C','D','E','I','B','H','J','L'],'BCDEHIJK':['C','D','E','K','B','H','J','I'],'BCDEGJKL':['C','D','E','K','B','J','G','L'],'BCDEGIKL':['C','D','E','K','B','I','G','L'],'BCDEGIJL':['C','D','E','I','B','J','G','L'],'BCDEGIJK':['C','D','E','K','B','J','G','I'],'BCDEGHKL':['C','D','E','K','B','H','G','L'],'BCDEGHJL':['C','D','H','E','B','J','G','L'],'BCDEGHJK':['C','D','H','K','B','J','G','E'],'BCDEGHIL':['C','D','E','I','B','H','G','L'],'BCDEGHIK':['C','D','E','K','B','H','G','I'],'BCDEGHIJ':['C','D','H','I','B','J','G','E'],'BCDEFJKL':['D','F','C','K','B','E','J','L'],'BCDEFIKL':['D','F','C','K','B','I','E','L'],'BCDEFIJL':['D','F','C','I','B','E','J','L'],'BCDEFIJK':['D','F','C','K','B','E','J','I'],'BCDEFHKL':['D','F','C','K','B','H','E','L'],'BCDEFHJL':['D','F','C','E','B','H','J','L'],'BCDEFHJK':['D','F','C','K','B','H','J','E'],'BCDEFHIL':['D','F','C','I','B','H','E','L'],'BCDEFHIK':['D','F','C','K','B','H','E','I'],'BCDEFHIJ':['D','F','C','I','B','H','J','E'],'BCDEFGKL':['D','F','C','K','B','E','G','L'],'BCDEFGJL':['D','F','C','E','B','J','G','L'],'BCDEFGJK':['D','F','C','K','B','J','G','E'],'BCDEFGIL':['D','F','C','I','B','E','G','L'],'BCDEFGIK':['D','F','C','K','B','E','G','I'],'BCDEFGIJ':['D','F','C','I','B','J','G','E'],'BCDEFGHL':['D','F','C','E','B','H','G','L'],'BCDEFGHK':['D','F','C','K','B','H','G','E'],'BCDEFGHJ':['C','F','H','E','B','J','G','D'],'BCDEFGHI':['D','F','C','I','B','H','G','E'],'AFGHIJKL':['F','G','H','K','I','A','J','L'],'AEGHIJKL':['A','G','E','K','I','H','J','L'],'AEFHIJKL':['F','H','E','K','I','A','J','L'],'AEFGIJKL':['F','G','E','K','I','A','J','L'],'AEFGHJKL':['F','H','E','K','J','A','G','L'],'AEFGHIKL':['F','H','E','K','I','A','G','L'],'AEFGHIJL':['F','H','E','I','J','A','G','L'],'AEFGHIJK':['F','H','E','K','J','A','G','I'],'ADGHIJKL':['D','G','H','K','I','A','J','L'],'ADFHIJKL':['D','F','H','K','I','A','J','L'],'ADFGIJKL':['D','F','I','K','J','A','G','L'],'ADFGHJKL':['D','F','H','K','J','A','G','L'],'ADFGHIKL':['D','F','H','K','I','A','G','L'],'ADFGHIJL':['D','F','H','I','J','A','G','L'],'ADFGHIJK':['D','F','H','K','J','A','G','I'],'ADEHIJKL':['D','H','E','K','I','A','J','L'],'ADEGIJKL':['D','G','E','K','I','A','J','L'],'ADEGHJKL':['D','H','E','K','J','A','G','L'],'ADEGHIKL':['D','H','E','K','I','A','G','L'],'ADEGHIJL':['D','H','E','I','J','A','G','L'],'ADEGHIJK':['D','H','E','K','J','A','G','I'],'ADEFIJKL':['D','F','E','K','I','A','J','L'],'ADEFHJKL':['D','F','H','K','E','A','J','L'],'ADEFHIKL':['D','F','H','K','I','A','E','L'],'ADEFHIJL':['D','F','H','I','E','A','J','L'],'ADEFHIJK':['D','F','H','K','E','A','J','I'],'ADEFGJKL':['D','F','E','K','J','A','G','L'],'ADEFGIKL':['D','F','E','K','I','A','G','L'],'ADEFGIJL':['D','F','E','I','J','A','G','L'],'ADEFGIJK':['D','F','E','K','J','A','G','I'],'ADEFGHKL':['D','F','H','K','E','A','G','L'],'ADEFGHJL':['D','F','H','E','J','A','G','L'],'ADEFGHJK':['D','F','H','K','J','A','G','E'],'ADEFGHIL':['D','F','H','I','E','A','G','L'],'ADEFGHIK':['D','F','H','K','E','A','G','I'],'ADEFGHIJ':['D','F','H','I','J','A','G','E'],'ACGHIJKL':['C','G','H','K','I','A','J','L'],'ACFHIJKL':['C','F','H','K','I','A','J','L'],'ACFGIJKL':['C','F','I','K','J','A','G','L'],'ACFGHJKL':['C','F','H','K','J','A','G','L'],'ACFGHIKL':['C','F','H','K','I','A','G','L'],'ACFGHIJL':['C','F','H','I','J','A','G','L'],'ACFGHIJK':['C','F','H','K','J','A','G','I'],'ACEHIJKL':['C','H','E','K','I','A','J','L'],'ACEGIJKL':['C','G','E','K','I','A','J','L'],'ACEGHJKL':['C','H','E','K','J','A','G','L'],'ACEGHIKL':['C','H','E','K','I','A','G','L'],'ACEGHIJL':['C','H','E','I','J','A','G','L'],'ACEGHIJK':['C','H','E','K','J','A','G','I'],'ACEFIJKL':['C','F','E','K','I','A','J','L'],'ACEFHJKL':['C','F','H','K','E','A','J','L'],'ACEFHIKL':['C','F','H','K','I','A','E','L'],'ACEFHIJL':['C','F','H','I','E','A','J','L'],'ACEFHIJK':['C','F','H','K','E','A','J','I'],'ACEFGJKL':['C','F','E','K','J','A','G','L'],'ACEFGIKL':['C','F','E','K','I','A','G','L'],'ACEFGIJL':['C','F','E','I','J','A','G','L'],'ACEFGIJK':['C','F','E','K','J','A','G','I'],'ACEFGHKL':['C','F','H','K','E','A','G','L'],'ACEFGHJL':['C','F','H','E','J','A','G','L'],'ACEFGHJK':['C','F','H','K','J','A','G','E'],'ACEFGHIL':['C','F','H','I','E','A','G','L'],'ACEFGHIK':['C','F','H','K','E','A','G','I'],'ACEFGHIJ':['C','F','H','I','J','A','G','E'],'ACDHIJKL':['C','D','H','K','I','A','J','L'],'ACDGIJKL':['C','D','I','K','J','A','G','L'],'ACDGHJKL':['C','D','H','K','J','A','G','L'],'ACDGHIKL':['C','D','H','K','I','A','G','L'],'ACDGHIJL':['C','D','H','I','J','A','G','L'],'ACDGHIJK':['C','D','H','K','J','A','G','I'],'ACDFIJKL':['D','F','C','K','I','A','J','L'],'ACDFHJKL':['C','D','H','K','F','A','J','L'],'ACDFHIKL':['C','D','H','K','I','A','F','L'],'ACDFHIJL':['C','D','H','I','F','A','J','L'],'ACDFHIJK':['C','D','H','K','F','A','J','I'],'ACDFGJKL':['D','F','C','K','J','A','G','L'],'ACDFGIKL':['D','F','C','K','I','A','G','L'],'ACDFGIJL':['D','F','C','I','J','A','G','L'],'ACDFGIJK':['D','F','C','K','J','A','G','I'],'ACDFGHKL':['C','D','H','K','F','A','G','L'],'ACDFGHJL':['D','F','C','H','J','A','G','L'],'ACDFGHJK':['C','F','H','K','J','A','G','D'],'ACDFGHIL':['C','D','H','I','F','A','G','L'],'ACDFGHIK':['C','D','H','K','F','A','G','I'],'ACDFGHIJ':['C','F','H','I','J','A','G','D'],'ACDEIJKL':['C','D','E','K','I','A','J','L'],'ACDEHJKL':['C','D','H','K','E','A','J','L'],'ACDEHIKL':['C','D','H','K','I','A','E','L'],'ACDEHIJL':['C','D','H','I','E','A','J','L'],'ACDEHIJK':['C','D','H','K','E','A','J','I'],'ACDEGJKL':['C','D','E','K','J','A','G','L'],'ACDEGIKL':['C','D','E','K','I','A','G','L'],'ACDEGIJL':['C','D','E','I','J','A','G','L'],'ACDEGIJK':['C','D','E','K','J','A','G','I'],'ACDEGHKL':['C','D','H','K','E','A','G','L'],'ACDEGHJL':['C','D','H','E','J','A','G','L'],'ACDEGHJK':['C','D','H','K','J','A','G','E'],'ACDEGHIL':['C','D','H','I','E','A','G','L'],'ACDEGHIK':['C','D','H','K','E','A','G','I'],'ACDEGHIJ':['C','D','H','I','J','A','G','E'],'ACDEFJKL':['D','F','C','K','E','A','J','L'],'ACDEFIKL':['D','F','C','K','I','A','E','L'],'ACDEFIJL':['D','F','C','I','E','A','J','L'],'ACDEFIJK':['D','F','C','K','E','A','J','I'],'ACDEFHKL':['C','D','H','K','F','A','E','L'],'ACDEFHJL':['C','D','H','E','F','A','J','L'],'ACDEFHJK':['C','F','H','K','E','A','J','D'],'ACDEFHIL':['C','D','H','I','F','A','E','L'],'ACDEFHIK':['C','D','H','K','F','A','E','I'],'ACDEFHIJ':['C','F','H','I','E','A','J','D'],'ACDEFGKL':['D','F','C','K','E','A','G','L'],'ACDEFGJL':['D','F','C','E','J','A','G','L'],'ACDEFGJK':['D','F','C','K','J','A','G','E'],'ACDEFGIL':['D','F','C','I','E','A','G','L'],'ACDEFGIK':['D','F','C','K','E','A','G','I'],'ACDEFGIJ':['D','F','C','I','J','A','G','E'],'ACDEFGHL':['D','F','C','E','A','H','G','L'],'ACDEFGHK':['D','F','C','K','E','A','G','H'],'ACDEFGHJ':['C','F','H','E','J','A','G','D'],'ACDEFGHI':['D','F','C','I','E','A','G','H'],'ABGHIJKL':['G','H','I','K','B','A','J','L'],'ABFHIJKL':['F','H','I','K','B','A','J','L'],'ABFGIJKL':['F','G','I','K','B','A','J','L'],'ABFGHJKL':['F','H','I','K','B','A','G','L'],'ABFGHIKL':['F','H','I','K','B','A','G','L'],'ABFGHIJL':['F','H','I','J','B','A','G','L'],'ABFGHIJK':['F','H','I','K','B','A','G','J'],'ABEHIJKL':['H','E','I','K','B','A','J','L'],'ABEGIJKL':['G','E','I','K','B','A','J','L'],'ABEGHJKL':['H','E','J','K','B','A','G','L'],'ABEGHIKL':['H','E','I','K','B','A','G','L'],'ABEGHIJL':['H','E','I','J','B','A','G','L'],'ABEGHIJK':['H','E','J','K','B','A','G','I'],'ABEFIJKL':['F','E','I','K','B','A','J','L'],'ABEFHJKL':['F','H','E','K','B','A','J','L'],'ABEFHIKL':['F','H','I','K','B','A','E','L'],'ABEFHIJL':['F','H','I','J','B','A','E','L'],'ABEFHIJK':['F','H','E','K','B','A','J','I'],'ABEFGJKL':['F','E','J','K','B','A','G','L'],'ABEFGIKL':['F','E','I','K','B','A','G','L'],'ABEFGIJL':['F','E','I','J','B','A','G','L'],'ABEFGIJK':['F','E','J','K','B','A','G','I'],'ABEFGHKL':['F','H','E','K','B','A','G','L'],'ABEFGHJL':['F','H','E','J','B','A','G','L'],'ABEFGHJK':['F','H','J','K','B','A','G','E'],'ABEFGHIL':['F','H','I','E','B','A','G','L'],'ABEFGHIK':['F','H','E','K','B','A','G','I'],'ABEFGHIJ':['F','H','I','J','B','A','G','E'],'ABDHIJKL':['D','H','I','K','B','A','J','L'],'ABDGIJKL':['D','G','I','K','B','A','J','L'],'ABDGHJKL':['D','H','J','K','B','A','G','L'],'ABDGHIKL':['D','H','I','K','B','A','G','L'],'ABDGHIJL':['D','H','I','J','B','A','G','L'],'ABDGHIJK':['D','H','J','K','B','A','G','I'],'ABDFIJKL':['D','F','I','K','B','A','J','L'],'ABDFHJKL':['D','F','H','K','B','A','J','L'],'ABDFHIKL':['D','F','H','K','B','A','I','L'],'ABDFHIJL':['D','F','H','I','B','A','J','L'],'ABDFHIJK':['D','F','H','K','B','A','J','I'],'ABDFGJKL':['D','F','J','K','B','A','G','L'],'ABDFGIKL':['D','F','I','K','B','A','G','L'],'ABDFGIJL':['D','F','I','J','B','A','G','L'],'ABDFGIJK':['D','F','J','K','B','A','G','I'],'ABDFGHKL':['D','F','H','K','B','A','G','L'],'ABDFGHJL':['D','F','H','J','B','A','G','L'],'ABDFGHJK':['D','F','H','K','B','A','G','J'],'ABDFGHIL':['D','F','H','I','B','A','G','L'],'ABDFGHIK':['D','F','H','K','B','A','G','I'],'ABDFGHIJ':['D','F','H','I','B','A','G','J'],'ABDEHIJKL':['D','H','E','K','B','A','J','L'],'ABDEIJKL':['D','E','I','K','B','A','J','L'],'ABDEHJKL':['D','H','E','K','B','A','J','L'],'ABDEHIKL':['D','H','E','K','B','A','I','L'],'ABDEHIJL':['D','H','E','I','B','A','J','L'],'ABDEHIJK':['D','H','E','K','B','A','J','I'],'ABDEGJKL':['D','E','J','K','B','A','G','L'],'ABDEGIKL':['D','E','I','K','B','A','G','L'],'ABDEGIJL':['D','E','I','J','B','A','G','L'],'ABDEGIJK':['D','E','J','K','B','A','G','I'],'ABDEGHKL':['D','H','E','K','B','A','G','L'],'ABDEGHJL':['D','H','E','J','B','A','G','L'],'ABDEGHJK':['D','H','J','K','B','A','G','E'],'ABDEGHIL':['D','H','E','I','B','A','G','L'],'ABDEGHIK':['D','H','E','K','B','A','G','I'],'ABDEGHIJ':['D','H','E','I','B','A','G','J'],'ABCGHIJKL':['C','G','H','K','B','A','J','L'],'ABCFHIJKL':['C','F','H','K','B','A','J','L'],'ABCFGIJKL':['C','F','I','K','B','A','J','L'],'ABCFGHJKL':['C','F','H','K','B','A','J','L'],'ABCFGHIKL':['C','F','H','K','B','A','I','L'],'ABCFGHIJL':['C','F','H','I','B','A','J','L'],'ABCFGHIJK':['C','F','H','K','B','A','J','I'],'ABCEHIJKL':['C','H','E','K','B','A','J','L'],'ABCEGIJKL':['C','G','E','K','B','A','J','L'],'ABCEGHJKL':['C','H','E','K','B','A','J','L'],'ABCEGHIKL':['C','H','E','K','B','A','I','L'],'ABCEGHIJL':['C','H','E','I','B','A','J','L'],'ABCEGHIJK':['C','H','E','K','B','A','J','I'],'ABCEFIJKL':['C','F','E','K','B','A','J','L'],'ABCEFHJKL':['C','F','H','K','B','A','E','L'],'ABCEFHIKL':['C','F','H','K','B','A','I','E'],'ABCEFHIJL':['C','F','H','I','B','A','E','L'],'ABCEFHIJK':['C','F','H','K','B','A','J','E'],'ABCEFGJKL':['C','F','E','K','B','A','J','L'],'ABCEFGIKL':['C','F','E','K','B','A','I','L'],'ABCEFGIJL':['C','F','E','I','B','A','J','L'],'ABCEFGIJK':['C','F','E','K','B','A','J','I'],'ABCEFGHKL':['C','F','H','K','B','A','E','L'],'ABCEFGHJL':['C','F','H','E','B','A','J','L'],'ABCEFGHJK':['C','F','H','K','B','A','J','E'],'ABCEFGHIL':['C','F','H','I','B','A','E','L'],'ABCEFGHIK':['C','F','H','K','B','A','E','I'],'ABCEFGHIJ':['C','F','H','I','B','A','J','E'],'ABCDHIJKL':['C','D','H','K','B','A','J','L'],'ABCDGIJKL':['C','D','I','K','B','A','J','L'],'ABCDGHJKL':['C','D','H','K','B','A','J','L'],'ABCDGHIKL':['C','D','H','K','B','A','I','L'],'ABCDGHIJL':['C','D','H','I','B','A','J','L'],'ABCDGHIJK':['C','D','H','K','B','A','J','I'],'ABCDFIJKL':['D','F','C','K','B','A','J','L'],'ABCDFHJKL':['C','D','H','K','B','A','F','L'],'ABCDFHIKL':['C','D','H','K','B','A','I','F'],'ABCDFHIJL':['C','D','H','I','B','A','F','L'],'ABCDFHIJK':['C','D','H','K','B','A','J','F'],'ABCDFGJKL':['D','F','C','K','B','A','J','L'],'ABCDFGIKL':['D','F','C','K','B','A','I','L'],'ABCDFGIJL':['D','F','C','I','B','A','J','L'],'ABCDFGIJK':['D','F','C','K','B','A','J','I'],'ABCDFGHKL':['C','D','H','K','B','A','F','L'],'ABCDFGHJL':['D','F','C','H','B','A','J','L'],'ABCDFGHJK':['C','F','H','K','B','A','J','D'],'ABCDFGHIL':['C','D','H','I','B','A','F','L'],'ABCDFGHIK':['C','D','H','K','B','A','F','I'],'ABCDFGHIJ':['C','F','H','I','B','A','J','D'],'ABCDEIJKL':['C','D','E','K','B','A','J','L'],'ABCDEHJKL':['C','D','H','K','B','A','E','L'],'ABCDEHIKL':['C','D','H','K','B','A','I','E'],'ABCDEHIJL':['C','D','H','I','B','A','E','L'],'ABCDEHIJK':['C','D','H','K','B','A','J','E'],'ABCDEGJKL':['C','D','E','K','B','A','J','L'],'ABCDEGIKL':['C','D','E','K','B','A','I','L'],'ABCDEGIJL':['C','D','E','I','B','A','J','L'],'ABCDEGIJK':['C','D','E','K','B','A','J','I'],'ABCDEGHKL':['C','D','H','K','B','A','E','L'],'ABCDEGHJL':['C','D','H','E','B','A','J','L'],'ABCDEGHJK':['C','D','H','K','B','A','J','E'],'ABCDEGHIL':['C','D','H','I','B','A','E','L'],'ABCDEGHIK':['C','D','H','K','B','A','E','I'],'ABCDEGHIJ':['C','D','H','I','B','A','J','E'],'ABCDEFJKL':['D','F','C','K','B','A','E','L'],'ABCDEFIKL':['D','F','C','K','B','A','I','E'],'ABCDEFIJL':['D','F','C','I','B','A','E','L'],'ABCDEFIJK':['D','F','C','K','B','A','J','E'],'ABCDEFHKL':['C','D','H','K','B','A','E','F'],'ABCDEFHJL':['C','D','H','E','B','A','J','F'],'ABCDEFHJK':['C','F','H','K','B','A','J','E'],'ABCDEFHIL':['C','D','H','I','B','A','E','F'],'ABCDEFHIK':['C','D','H','K','B','A','E','I'],'ABCDEFHIJ':['C','F','H','I','B','A','J','E'],'ABCDEFGKL':['D','F','C','K','B','A','E','L'],'ABCDEFGJL':['D','F','C','E','B','A','J','L'],'ABCDEFGJK':['D','F','C','K','B','A','J','E'],'ABCDEFGIL':['D','F','C','I','B','A','E','L'],'ABCDEFGIK':['D','F','C','K','B','A','E','I'],'ABCDEFGIJ':['D','F','C','I','B','A','J','E'],'ABCDEFGHL':['D','F','C','E','B','A','H','L'],'ABCDEFGHK':['D','F','C','K','B','A','E','H'],'ABCDEFGHJ':['C','F','H','E','B','A','J','D'],'ABCDEFGHI':['D','F','C','I','B','A','E','H'],'ABCDEFKL':['D','F','C','K','B','A','E','L'],'ABCDEFJL':['D','F','C','E','B','A','J','L'],'ABCDEFJK':['D','F','C','K','B','A','J','E'],'ABCDEFIL':['D','F','C','I','B','A','E','L'],'ABCDEFIK':['D','F','C','K','B','A','E','I'],'ABCDEFIJ':['D','F','C','I','B','A','J','E'],'ABCDEFHL':['C','D','H','E','B','A','F','L'],'ABCDEFHK':['C','F','H','K','B','A','E','D'],'ABCDEFHJ':['C','F','H','E','B','A','J','D'],'ABCDEFHI':['C','F','H','I','B','A','E','D'],'ABCDEFGL':['D','F','C','E','B','A','G','L'],'ABCDEFGK':['D','F','C','K','B','A','G','E'],'ABCDEFGJ':['D','F','C','J','B','A','G','E'],'ABCDEFGI':['D','F','C','I','B','A','G','E'],'ABCDEFGH':['C','F','H','E','B','A','G','D'],
+  };
   const mapping = AC[qualKey];
-
   const usedFallback = new Set();
 
-  // ── R32 match definitions ────────────────────────────────
+  function getThirdSlot(matchId, pool){
+    if(mapping){
+      const grp = mapping[SLOT_IDX[matchId]];
+      const t = top8.find(t=>t.grp===grp);
+      if(t) return {text:`${t.flag} ${t.name}`, isTBD:false};
+      return {text:`Best 3rd (${pool.split('').join('/')})`, isTBD:true};
+    }
+    for(const t of top8){
+      if(pool.includes(t.grp) && !usedFallback.has(t.grp)){
+        usedFallback.add(t.grp);
+        return {text:`${t.flag} ${t.name}`, isTBD:false};
+      }
+    }
+    return {text:`Best 3rd (${pool.split('').join('/')})`, isTBD:true};
+  }
+
+  // ── Official R32 match definitions ───────────────────────
   const r32defs = [
     {id:'M73',date:'Jun 28',venue:'Los Angeles',   home:{type:'runner',grp:'A'}, away:{type:'runner',grp:'B'}},
     {id:'M74',date:'Jun 29',venue:'Boston',         home:{type:'winner',grp:'E'}, away:{type:'third',pool:'ABCDF'}},
@@ -3168,26 +2718,15 @@ function renderBracket(){
     {id:'M87',date:'Jul 2', venue:'Kansas City',   home:{type:'winner',grp:'K'}, away:{type:'third',pool:'DEIJL'}},
     {id:'M88',date:'Jul 3', venue:'Dallas',         home:{type:'runner',grp:'D'}, away:{type:'runner',grp:'G'}},
   ];
-
-  // Resolve each R32 slot
-  const r32resolved = {};
+  const r32map = {};
   r32defs.forEach(m => {
-    r32resolved[m.id] = {
-      ...m,
-      home: resolveSlot(m.home, m.id, usedFallback, top8, mapping, SLOT_IDX),
-      away: resolveSlot(m.away, m.id, usedFallback, top8, mapping, SLOT_IDX),
+    r32map[m.id] = {...m,
+      homeSlot: resolveSlot(m.home, m.id),
+      awaySlot: resolveSlot(m.away, m.id)
     };
   });
 
-  // ── Official R32 → R16 pairings (FIFA confirmed) ─────────
-  // M89: W(M74) vs W(M77)  Philadelphia
-  // M90: W(M73) vs W(M75)  Houston
-  // M91: W(M76) vs W(M78)  New York-NJ
-  // M92: W(M79) vs W(M80)  Mexico City
-  // M93: W(M83) vs W(M84)  Dallas
-  // M94: W(M81) vs W(M82)  Seattle
-  // M95: W(M86) vs W(M88)  Atlanta
-  // M96: W(M85) vs W(M87)  Vancouver
+  // ── Official R32→R16 pairings (FIFA confirmed) ────────────
   const r16defs = [
     {id:'M89',date:'Jul 4', venue:'Philadelphia', r32a:'M74', r32b:'M77'},
     {id:'M90',date:'Jul 4', venue:'Houston',      r32a:'M73', r32b:'M75'},
@@ -3199,48 +2738,47 @@ function renderBracket(){
     {id:'M96',date:'Jul 7', venue:'Vancouver',    r32a:'M85', r32b:'M87'},
   ];
 
-  // QF, SF, Final — fixed bracket structure
-  // QF: M97=W(M89)vsW(M90), M98=W(M91)vsW(M92), M99=W(M93)vsW(M94), M100=W(M95)vsW(M96)
+  // ── Official QF pairings (FIFA confirmed) ─────────────────
+  // M97=W89vsW90, M98=W93vsW94, M99=W91vsW92, M100=W95vsW96
   const qfdefs = [
-    {id:'M97',date:'Jul 9', venue:'Philadelphia',r16a:'M89',r16b:'M90'},
-    {id:'M98',date:'Jul 11',venue:'Dallas',      r16a:'M91',r16b:'M92'},
-    {id:'M99',date:'Jul 10',venue:'Seattle',     r16a:'M93',r16b:'M94'},
-    {id:'M100',date:'Jul 11',venue:'Miami',      r16a:'M95',r16b:'M96'},
-  ];
-  // SF: M101=W(M97)vsW(M98), M102=W(M99)vsW(M100)
-  const sfdefs = [
-    {id:'M101',date:'Jul 14',venue:'New York-NJ', qfa:'M97', qfb:'M98'},
-    {id:'M102',date:'Jul 15',venue:'Los Angeles', qfa:'M99', qfb:'M100'},
+    {id:'M97', date:'Jul 9', venue:'Boston',      r16a:'M89', r16b:'M90'},
+    {id:'M98', date:'Jul 10',venue:'Los Angeles', r16a:'M93', r16b:'M94'},
+    {id:'M99', date:'Jul 11',venue:'Miami',       r16a:'M91', r16b:'M92'},
+    {id:'M100',date:'Jul 12',venue:'Kansas City', r16a:'M95', r16b:'M96'},
   ];
 
-  // ── Build a team slot HTML element ───────────────────────
-  function teamEl(slot, classes=''){
-    const st = slot ? slot.state : 'tbd';
-    const text = slot ? slot.text : 'TBD';
-    const badge = st==='confirmed' ? '<span class="hkb-badge ok">✓</span>'
-                : st==='projected' ? '<span class="hkb-badge proj">~</span>'
-                : st==='third'     ? '<span class="hkb-badge t3">3rd</span>'
-                : '';
-    return `<div class="hkb-team ${st} ${classes}">${text}${badge}</div>`;
+  // ── Official SF pairings ──────────────────────────────────
+  // M101=W97vsW98 (Dallas), M102=W99vsW100 (Atlanta)
+  const sfdefs = [
+    {id:'M101',date:'Jul 14',venue:'Dallas',   qfa:'M97', qfb:'M98'},
+    {id:'M102',date:'Jul 15',venue:'Atlanta',  qfa:'M99', qfb:'M100'},
+  ];
+
+  // ── Build a team box ─────────────────────────────────────
+  function teamBox(slot){
+    if(!slot) return `<div class="hkb-team tbd">TBD</div>`;
+    const b = slot.state==='confirmed'?'<span class="hkb-badge ok">✓</span>'
+            : slot.state==='projected'?'<span class="hkb-badge proj">~</span>'
+            : slot.state==='third'    ?'<span class="hkb-badge t3">3rd</span>':'';
+    return `<div class="hkb-team ${slot.state}">${slot.text}${b}</div>`;
   }
 
-  function matchEl(r32m, showMeta=true){
-    const h = r32resolved[r32m.id].home;
-    const a = r32resolved[r32m.id].away;
-    return `<div class="hkb-match" data-mid="${r32m.id}">
-      ${teamEl(h)}
-      <div class="hkb-vs">${r32m.id} · ${r32m.date}</div>
-      ${teamEl(a)}
-      ${showMeta ? `<div class="hkb-meta">${r32m.venue}</div>` : ''}
+  function r32Card(mid){
+    const m = r32map[mid];
+    return `<div class="hkb-match" data-mid="${mid}">
+      ${teamBox(m.homeSlot)}
+      <div class="hkb-vs">${mid} · ${m.date}</div>
+      ${teamBox(m.awaySlot)}
+      <div class="hkb-meta">${m.venue}</div>
     </div>`;
   }
 
-  function tbdMatchEl(id, date, venue, label='TBD'){
-    return `<div class="hkb-match">
-      <div class="hkb-team tbd">${label}</div>
-      <div class="hkb-vs">${id}${date?' · '+date:''}</div>
-      <div class="hkb-team tbd">${label}</div>
-      ${venue ? `<div class="hkb-meta">${venue}</div>` : ''}
+  function tbdCard(id, date, venue){
+    return `<div class="hkb-match" data-mid="${id}">
+      <div class="hkb-team tbd">Winner</div>
+      <div class="hkb-vs">${id} · ${date}</div>
+      <div class="hkb-team tbd">Winner</div>
+      <div class="hkb-meta">${venue}</div>
     </div>`;
   }
 
@@ -3250,306 +2788,281 @@ function renderBracket(){
     <span><span class="hkb-leg-dot" style="background:var(--status-amber-bg);border:2px dashed var(--status-amber-border)"></span>Qualified, position projected ~</span>
     <span><span class="hkb-leg-dot" style="background:var(--status-amber-bg);border:2px solid var(--status-amber-text)"></span>Best 3rd place</span>
     <span><span class="hkb-leg-dot" style="background:var(--surface2);border:1px solid var(--border-strong)"></span>TBD</span>
-    <span style="font-size:10px;color:var(--text-3)">${mapping?'✅ FIFA Annex C applied':'⚠️ Best 3rd projected — confirmed Jun 27'}</span>
+    <span style="font-size:10px;margin-left:4px">${mapping?'✅ FIFA Annex C applied':'⚠️ Best 3rd projected — confirmed Jun 27'}</span>
   </div>`;
 
   // ══════════════════════════════════════════════════════════
-  // DESKTOP LAYOUT: horizontal SVG bracket tree
-  // ══════════════════════════════════════════════════════════
+  // DESKTOP: Two-sided mirrored bracket
+  // Left half:  M89,M90,M91,M92 → QF M97,M99 → SF M101 ─┐
+  //                                                        ├─ Final M104
+  // Right half: M93,M94,M95,M96 → QF M98,M100 → SF M102 ─┘
+  // (right half renders R32 on the far right, reading inward)
+  //
+  // Left bracket R16 order: M89(top), M90, M91, M92(bottom)
+  // Right bracket R16 order: M93(top), M94, M95, M96(bottom)
+  // Left QF: M97=W89vsW90 (top), M99=W91vsW92 (bottom)
+  // Right QF: M98=W93vsW94 (top), M100=W95vsW96 (bottom)
+  // Left SF: M101=W97vsW99
+  // Right SF: M102=W98vsW100  ← NOTE: fifa says M101=W97vsW98, M102=W99vsW100
+  // For the two-sided visual we split: left SF=M101(W97vsW98), right SF=M102(W99vsW100)
 
-  // Column widths
-  const COL_W = 164; // match card column
-  const CONN_W = 28; // connector column
+  // Left side R16 slots (top to bottom): M89, M90, M91, M92
+  // Right side R16 slots (top to bottom): M93, M94, M95, M96
 
-  // Build R32 column — pairs grouped by their R16 match
-  // Each r16def defines a pair; we render them in r16 order for proper alignment
-  function r32ColHtml(){
-    return r16defs.map(r16 => {
-      const ma = r32defs.find(m=>m.id===r16.r32a);
-      const mb = r32defs.find(m=>m.id===r16.r32b);
-      return `<div class="hkb-pair" data-r16="${r16.id}">
-        ${matchEl(ma)}
-        ${matchEl(mb)}
-      </div>`;
-    }).join('');
+  function buildHalf(r16pair, qfpair, sfid, sfdate, sfvenue, isLeft){
+    // r16pair = [r16def, r16def, r16def, r16def] — 4 R16 slots
+    // qfpair = [qfdef, qfdef] — 2 QF slots
+    const r32col = `<div class="hkb-col" id="hkb-r32-${isLeft?'L':'R'}">
+      <div class="hkb-col-hd">Round of 32<span class="hkb-col-sub">${isLeft?'Jun 28–Jul 3':''}</span></div>
+      <div class="hkb-slots" id="hkb-r32s-${isLeft?'L':'R'}">
+        ${r16pair.map(r16=>`<div class="hkb-pair" data-r16="${r16.id}">
+          ${r32Card(r16.r32a)}
+          ${r32Card(r16.r32b)}
+        </div>`).join('')}
+      </div>
+    </div>`;
+
+    const connR32R16 = `<div class="hkb-conn" id="hkb-c1-${isLeft?'L':'R'}"></div>`;
+
+    const r16col = `<div class="hkb-col" id="hkb-r16-${isLeft?'L':'R'}">
+      <div class="hkb-col-hd">Round of 16<span class="hkb-col-sub">${isLeft?'Jul 4–7':''}</span></div>
+      <div class="hkb-slots" id="hkb-r16s-${isLeft?'L':'R'}">
+        ${r16pair.map(r16=>tbdCard(r16.id, r16.date, r16.venue)).join('')}
+      </div>
+    </div>`;
+
+    const connR16QF = `<div class="hkb-conn" id="hkb-c2-${isLeft?'L':'R'}"></div>`;
+
+    const qfcol = `<div class="hkb-col" id="hkb-qf-${isLeft?'L':'R'}">
+      <div class="hkb-col-hd">Quarter-Finals<span class="hkb-col-sub">${isLeft?'Jul 9–12':''}</span></div>
+      <div class="hkb-slots" id="hkb-qfs-${isLeft?'L':'R'}">
+        ${qfpair.map(qf=>tbdCard(qf.id, qf.date, qf.venue)).join('')}
+      </div>
+    </div>`;
+
+    const connQFSF = `<div class="hkb-conn" id="hkb-c3-${isLeft?'L':'R'}"></div>`;
+
+    const sfcol = `<div class="hkb-col" id="hkb-sf-${isLeft?'L':'R'}">
+      <div class="hkb-col-hd">Semi-Final<span class="hkb-col-sub">${isLeft?'Jul 14–15':''}</span></div>
+      <div class="hkb-slots" id="hkb-sfs-${isLeft?'L':'R'}">
+        ${tbdCard(sfid, sfdate, sfvenue)}
+      </div>
+    </div>`;
+
+    const connSFFinal = `<div class="hkb-conn" id="hkb-c4-${isLeft?'L':'R'}"></div>`;
+
+    if(isLeft){
+      return r32col + connR32R16 + r16col + connR16QF + qfcol + connQFSF + sfcol + connSFFinal;
+    } else {
+      return connSFFinal + sfcol + connQFSF + qfcol + connR16QF + r16col + connR32R16 + r32col;
+    }
   }
 
-  // Build R16 column
-  function r16ColHtml(){
-    return r16defs.map(r16=>{
-      return tbdMatchEl(r16.id, r16.date, r16.venue, 'Winner');
-    }).join('');
-  }
+  const leftR16  = [r16defs[0], r16defs[1], r16defs[2], r16defs[3]]; // M89,M90,M91,M92
+  const rightR16 = [r16defs[4], r16defs[5], r16defs[6], r16defs[7]]; // M93,M94,M95,M96
+  const leftQF   = [qfdefs[0], qfdefs[2]]; // M97(W89vsW90), M99(W91vsW92)
+  const rightQF  = [qfdefs[1], qfdefs[3]]; // M98(W93vsW94), M100(W95vsW96)
 
-  // Build QF column
-  function qfColHtml(){
-    return qfdefs.map(qf=>{
-      return tbdMatchEl(qf.id, qf.date, qf.venue, 'Winner');
-    }).join('');
-  }
-
-  // Build SF column
-  function sfColHtml(){
-    return sfdefs.map(sf=>{
-      return tbdMatchEl(sf.id, sf.date, sf.venue, 'Winner');
-    }).join('');
-  }
-
-  const desktopHtml = `
-  <div class="hkb-desktop">
+  const desktopHtml = `<div class="hkb-desktop">
     ${legend}
-    <div class="hkb-scroll" id="hkb-scroll">
-      <div class="hkb-tree" id="hkb-tree">
-
-        <!-- R32 column -->
-        <div class="hkb-col" style="width:${COL_W}px">
-          <div class="hkb-col-hd">Round of 32<span class="hkb-col-sub">Jun 28 – Jul 3</span></div>
-          <div class="hkb-slots" id="hkb-r32-slots">${r32ColHtml()}</div>
-        </div>
-
-        <!-- R32→R16 connector -->
-        <div class="hkb-conn" style="width:${CONN_W}px" id="conn-r32-r16"></div>
-
-        <!-- R16 column -->
-        <div class="hkb-col" style="width:${COL_W}px">
-          <div class="hkb-col-hd">Round of 16<span class="hkb-col-sub">Jul 4 – 7</span></div>
-          <div class="hkb-slots" id="hkb-r16-slots">${r16ColHtml()}</div>
-        </div>
-
-        <!-- R16→QF connector -->
-        <div class="hkb-conn" style="width:${CONN_W}px" id="conn-r16-qf"></div>
-
-        <!-- QF column -->
-        <div class="hkb-col" style="width:${COL_W}px">
-          <div class="hkb-col-hd">Quarter-Finals<span class="hkb-col-sub">Jul 9 – 11</span></div>
-          <div class="hkb-slots" id="hkb-qf-slots">${qfColHtml()}</div>
-        </div>
-
-        <!-- QF→SF connector -->
-        <div class="hkb-conn" style="width:${CONN_W}px" id="conn-qf-sf"></div>
-
-        <!-- SF column -->
-        <div class="hkb-col" style="width:${COL_W}px">
-          <div class="hkb-col-hd">Semi-Finals<span class="hkb-col-sub">Jul 14 – 15</span></div>
-          <div class="hkb-slots" id="hkb-sf-slots">${sfColHtml()}</div>
-        </div>
-
-        <!-- SF→Final connector -->
-        <div class="hkb-conn" style="width:${CONN_W}px" id="conn-sf-final"></div>
-
-        <!-- Final column -->
-        <div class="hkb-final-col">
-          <div class="hkb-col-hd final">Final<span class="hkb-col-sub">Jul 19 · MetLife, NJ</span></div>
-          <div class="hkb-trophy">🏆</div>
-          <div class="hkb-final-team tbd">TBD</div>
-          <div class="hkb-vs" style="padding:4px 0">vs</div>
-          <div class="hkb-final-team tbd">TBD</div>
-          <div class="hkb-3rd-note">3rd place match: Jul 18</div>
-          <div class="hkb-date-note">MetLife Stadium, New Jersey</div>
-        </div>
-
+    <div class="hkb-two-sided" id="hkb-two-sided">
+      <div class="hkb-half left" id="hkb-half-L">
+        ${buildHalf(leftR16, leftQF, 'M101','Jul 14','Dallas', true)}
+      </div>
+      <div class="hkb-final-center" id="hkb-final-center">
+        <div class="hkb-col-hd final-hd" style="width:100%;margin-bottom:10px">Final<span class="hkb-col-sub">Jul 19 · MetLife, NJ</span></div>
+        <div class="hkb-trophy">🏆</div>
+        <div class="hkb-final-team tbd" id="hkb-ft1">TBD</div>
+        <div class="hkb-vs" style="padding:5px 0;font-size:11px">vs</div>
+        <div class="hkb-final-team tbd" id="hkb-ft2">TBD</div>
+        <div class="hkb-3rd-note">3rd place match<br>Jul 18 · Miami</div>
+      </div>
+      <div class="hkb-half right" id="hkb-half-R">
+        ${buildHalf(rightR16, rightQF,'M102','Jul 15','Atlanta', false)}
       </div>
     </div>
   </div>`;
 
   // ══════════════════════════════════════════════════════════
-  // MOBILE LAYOUT: vertical pods
+  // MOBILE: Vertical pods (unchanged, works well per feedback)
   // ══════════════════════════════════════════════════════════
-
-  function mobilePodHtml(r16, idx){
-    const ma = r32defs.find(m=>m.id===r16.r32a);
-    const mb = r32defs.find(m=>m.id===r16.r32b);
-    const ra = r32resolved[ma.id];
-    const rb = r32resolved[mb.id];
-
-    function mobileTeam(slot, isTbd){
-      if(isTbd || !slot) return '<div class="hkb-pod-team tbd">TBD</div>';
-      return `<div class="hkb-pod-team ${slot.state}">${slot.text}</div>`;
-    }
-
-    return `<div class="hkb-pod">
-      <div class="hkb-pod-hd">
-        <span>${r16.id} · ${r16.date} · ${r16.venue}</span>
-        <span style="font-size:9px;color:var(--text-3)">R16 slot ${idx+1}/8</span>
-      </div>
-      <div class="hkb-pod-r32">
-        <div class="hkb-pod-match">
-          <div class="hkb-pod-match-id">${ma.id} · ${ma.date}</div>
-          ${mobileTeam(ra.home, ra.home.state==='tbd')}
-          ${mobileTeam(ra.away, ra.away.state==='tbd')}
-          <div class="hkb-pod-venue">${ma.venue}</div>
-        </div>
-        <div class="hkb-pod-match">
-          <div class="hkb-pod-match-id">${mb.id} · ${mb.date}</div>
-          ${mobileTeam(rb.home, rb.home.state==='tbd')}
-          ${mobileTeam(rb.away, rb.away.state==='tbd')}
-          <div class="hkb-pod-venue">${mb.venue}</div>
-        </div>
-      </div>
-      <div class="hkb-pod-arrow">↓ Winners advance</div>
-      <div class="hkb-pod-r16">
-        ${r16.id} → TBD vs TBD · ${r16.venue}
-      </div>
-    </div>`;
+  function podTeam(slot){
+    if(!slot || slot.state==='tbd') return '<div class="hkb-pod-team tbd">TBD</div>';
+    return `<div class="hkb-pod-team ${slot.state}">${slot.text}</div>`;
   }
 
-  const mobilePodsHtml = r16defs.map((r16,i) => mobilePodHtml(r16,i)).join('');
-
-  const mobileHtml = `
-  <div class="hkb-mobile">
+  const mobileHtml = `<div class="hkb-mobile">
     ${legend}
-    ${mobilePodsHtml}
+    ${r16defs.map((r16,i)=>{
+      const ma = r32map[r16.r32a], mb = r32map[r16.r32b];
+      return `<div class="hkb-pod">
+        <div class="hkb-pod-hd">
+          <span>${r16.id} · ${r16.date} · ${r16.venue}</span>
+          <span style="font-size:9px;color:var(--text-3)">R16 ${i+1}/8</span>
+        </div>
+        <div class="hkb-pod-r32">
+          <div class="hkb-pod-match">
+            <div class="hkb-pod-match-id">${ma.id} · ${ma.date}</div>
+            ${podTeam(ma.homeSlot)}${podTeam(ma.awaySlot)}
+            <div class="hkb-pod-venue">${ma.venue}</div>
+          </div>
+          <div class="hkb-pod-match">
+            <div class="hkb-pod-match-id">${mb.id} · ${mb.date}</div>
+            ${podTeam(mb.homeSlot)}${podTeam(mb.awaySlot)}
+            <div class="hkb-pod-venue">${mb.venue}</div>
+          </div>
+        </div>
+        <div class="hkb-pod-arrow">↓ Winners meet in ${r16.id}</div>
+        <div class="hkb-pod-r16">${r16.id} · ${r16.date} · ${r16.venue}</div>
+      </div>`;
+    }).join('')}
     <div class="hkb-mob-later">
-      <div class="hkb-mob-round-hd">Quarter-Finals <span style="font-size:9px;font-weight:500;color:var(--text-3)">Jul 9–11</span></div>
-      <div class="hkb-mob-matches">
+      <div class="hkb-mob-round-hd">Quarter-Finals <span style="font-size:9px;font-weight:500;color:var(--text-3)">Jul 9–12</span></div>
+      <div class="hkb-mob-grid">
         ${qfdefs.map(qf=>`<div class="hkb-mob-match">
-          <div class="hkb-mob-team tbd">TBD</div>
-          <div class="hkb-vs">vs</div>
-          <div class="hkb-mob-team tbd">TBD</div>
+          <div class="hkb-mob-team tbd">W(${qf.r16a})</div>
+          <div class="hkb-vs" style="text-align:center;padding:2px 0;font-size:9px">vs</div>
+          <div class="hkb-mob-team tbd">W(${qf.r16b})</div>
           <div class="hkb-mob-meta">${qf.id} · ${qf.date} · ${qf.venue}</div>
         </div>`).join('')}
       </div>
       <div class="hkb-mob-round-hd">Semi-Finals <span style="font-size:9px;font-weight:500;color:var(--text-3)">Jul 14–15</span></div>
-      <div class="hkb-mob-matches">
+      <div class="hkb-mob-grid">
         ${sfdefs.map(sf=>`<div class="hkb-mob-match">
-          <div class="hkb-mob-team tbd">TBD</div>
-          <div class="hkb-vs">vs</div>
-          <div class="hkb-mob-team tbd">TBD</div>
+          <div class="hkb-mob-team tbd">W(${sf.qfa})</div>
+          <div class="hkb-vs" style="text-align:center;padding:2px 0;font-size:9px">vs</div>
+          <div class="hkb-mob-team tbd">W(${sf.qfb})</div>
           <div class="hkb-mob-meta">${sf.id} · ${sf.date} · ${sf.venue}</div>
         </div>`).join('')}
       </div>
       <div class="hkb-mob-round-hd" style="color:#d97706;border-color:#d97706">Final 🏆 <span style="font-size:9px;font-weight:500;color:var(--text-3)">Jul 19</span></div>
-      <div class="hkb-mob-match" style="max-width:300px">
-        <div class="hkb-mob-team tbd">TBD</div>
-        <div class="hkb-vs">vs</div>
-        <div class="hkb-mob-team tbd">TBD</div>
-        <div class="hkb-mob-meta">M103 · Jul 19 · MetLife Stadium, NJ</div>
+      <div class="hkb-mob-match" style="max-width:280px">
+        <div class="hkb-mob-team tbd">W(M101)</div>
+        <div class="hkb-vs" style="text-align:center;padding:2px 0;font-size:9px">vs</div>
+        <div class="hkb-mob-team tbd">W(M102)</div>
+        <div class="hkb-mob-meta">M104 · Jul 19 · MetLife Stadium, NJ</div>
       </div>
     </div>
   </div>`;
 
   el.innerHTML = desktopHtml + mobileHtml;
-
-  // ── Draw SVG connector lines (desktop only) ───────────────
-  requestAnimationFrame(() => drawBracketConnectors());
+  requestAnimationFrame(()=>{ requestAnimationFrame(drawBracketConnectors); });
 }
 
 function drawBracketConnectors(){
-  // For each connector column, draw bracket lines linking pairs of slots
-  // to the single slot in the next column
-  function getColSlots(slotsId){
-    const col = document.getElementById(slotsId);
-    if(!col) return [];
-    return Array.from(col.querySelectorAll('.hkb-match'));
+  const isDark = document.documentElement.getAttribute('data-theme')==='dark';
+  const stroke = isDark ? 'rgba(255,255,255,0.18)' : 'rgba(0,0,0,0.15)';
+
+  function midY(el, ref){
+    if(!el||!ref) return 0;
+    return el.getBoundingClientRect().top + el.offsetHeight/2 - ref.getBoundingClientRect().top;
   }
 
-  function drawConnectors(connId, leftSlots, rightSlots){
+  function drawConn(connId, leftSlotIds, rightSlotIds, pairSize){
     const conn = document.getElementById(connId);
-    if(!conn || !leftSlots.length || !rightSlots.length) return;
+    if(!conn) return;
     const connRect = conn.getBoundingClientRect();
-    const scrollEl = document.getElementById('hkb-scroll');
-    const scrollLeft = scrollEl ? scrollEl.scrollLeft : 0;
+    if(!connRect.width) return;
 
-    // Set connector height to match tree height
-    const treeEl = document.getElementById('hkb-tree');
-    if(treeEl) conn.style.height = treeEl.offsetHeight + 'px';
+    const leftEls  = leftSlotIds.map(id=>document.querySelector(`[data-mid="${id}"]`)).filter(Boolean);
+    const rightEls = rightSlotIds.map(id=>document.querySelector(`[data-mid="${id}"]`)).filter(Boolean);
+    if(!leftEls.length || !rightEls.length) return;
 
-    let svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
-    svg.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;overflow:visible;pointer-events:none';
+    // Set conn height
+    const parentH = conn.parentElement ? conn.parentElement.offsetHeight : 400;
+    conn.style.height = parentH + 'px';
+    conn.style.position = 'relative';
 
-    const color = getComputedStyle(document.documentElement)
-      .getPropertyValue('--border-strong').trim() || '#ccc';
+    const svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
+    svg.setAttribute('width','100%');
+    svg.setAttribute('height','100%');
+    svg.style.cssText='position:absolute;top:0;left:0;overflow:visible;pointer-events:none';
 
-    // Pair up left slots: 0+1 → right[0], 2+3 → right[1], etc.
-    for(let i=0; i<rightSlots.length; i++){
-      const la = leftSlots[i*2];
-      const lb = leftSlots[i*2+1];
-      const rc = rightSlots[i];
-      if(!la || !lb || !rc) continue;
+    // Pair up: every pairSize left slots → 1 right slot
+    for(let i=0; i<rightEls.length; i++){
+      const group = leftEls.slice(i*pairSize, (i+1)*pairSize);
+      if(!group.length) continue;
+      const rc = rightEls[i];
+      const y1 = midY(group[0], conn);
+      const y2 = midY(group[group.length-1], conn);
+      const yr = midY(rc, conn);
+      const midYval = (y1+y2)/2;
+      const xL = 0, xR = conn.offsetWidth, xM = xR/2;
 
-      const laRect = la.getBoundingClientRect();
-      const lbRect = lb.getBoundingClientRect();
-      const rcRect = rc.getBoundingClientRect();
-
-      // Y centres relative to connector element
-      const topOffset = connRect.top;
-      const y1 = laRect.top + laRect.height/2 - topOffset;
-      const y2 = lbRect.top + lbRect.height/2 - topOffset;
-      const y3 = rcRect.top + rcRect.height/2 - topOffset;
-      const midY = (y1+y2)/2;
-      const x0 = 0;
-      const xMid = conn.offsetWidth/2;
-      const x1 = conn.offsetWidth;
-
-      // Horizontal from left edge to midpoint, vertical bracket, horizontal to right edge
       const path = document.createElementNS('http://www.w3.org/2000/svg','path');
-      path.setAttribute('d',
-        `M${x0},${y1} H${xMid} V${y2} H${x0}` + // left bracket arm
-        ` M${xMid},${midY} H${x1}` +              // horizontal to right
-        ` M${xMid},${y3-8} V${y3} H${x1}`        // stub to right slot
-      );
-      // Simpler clean bracket: two horizontals + one vertical + connector
-      path.setAttribute('d',
-        `M0,${y1} H${xMid} M0,${y2} H${xMid} M${xMid},${y1} V${y2} M${xMid},${midY} H${conn.offsetWidth}`
-      );
-      path.setAttribute('stroke', color);
+      path.setAttribute('d',`M${xL},${y1} H${xM} V${y2} M${xL},${y2} H${xM} M${xM},${midYval} H${xR}`);
+      path.setAttribute('stroke', stroke);
       path.setAttribute('stroke-width','1.5');
       path.setAttribute('fill','none');
       path.setAttribute('stroke-linecap','round');
+      path.setAttribute('stroke-linejoin','round');
       svg.appendChild(path);
     }
-
-    conn.innerHTML = '';
+    conn.innerHTML='';
     conn.appendChild(svg);
   }
 
-  const r32Slots  = getColSlots('hkb-r32-slots');
-  const r16Slots  = getColSlots('hkb-r16-slots');
-  const qfSlots   = getColSlots('hkb-qf-slots');
-  const sfSlots   = getColSlots('hkb-sf-slots');
+  // ── Left side connectors ───────────────────────────────
+  // R32→R16 left: each pair of r32 cards in a .hkb-pair → 1 r16 card
+  // Left R16 ids: M89,M90,M91,M92; their R32 pairs: (M74,M77),(M73,M75),(M76,M78),(M79,M80)
+  drawConn('hkb-c1-L',
+    ['M74','M77','M73','M75','M76','M78','M79','M80'],
+    ['M89','M90','M91','M92'], 2);
+  drawConn('hkb-c2-L',
+    ['M89','M90','M91','M92'],
+    ['M97','M99'], 2);
+  drawConn('hkb-c3-L',
+    ['M97','M99'],
+    ['M101'], 2);
 
-  // R32 slots are inside .hkb-pair divs — get individual .hkb-match
-  const r32Matches = Array.from(document.querySelectorAll('#hkb-r32-slots .hkb-match'));
+  // ── Right side connectors (mirrored) ─────────────────
+  // Right R16: M93,M94,M95,M96; R32 pairs: (M83,M84),(M81,M82),(M86,M88),(M85,M87)
+  drawConn('hkb-c1-R',
+    ['M83','M84','M81','M82','M86','M88','M85','M87'],
+    ['M93','M94','M95','M96'], 2);
+  drawConn('hkb-c2-R',
+    ['M93','M94','M95','M96'],
+    ['M98','M100'], 2);
+  drawConn('hkb-c3-R',
+    ['M98','M100'],
+    ['M102'], 2);
 
-  drawConnectors('conn-r32-r16', r32Matches, r16Slots);
-  drawConnectors('conn-r16-qf',  r16Slots,   qfSlots);
-  drawConnectors('conn-qf-sf',   qfSlots,    sfSlots);
-  // SF→Final: 2 sf slots connect to 1 final — handled manually
-  const sfMatches = sfSlots;
-  const finalTeams = document.querySelectorAll('.hkb-final-team');
-  if(sfMatches.length===2 && finalTeams.length>=2){
-    const conn = document.getElementById('conn-sf-final');
-    if(conn){
-      const connRect = conn.getBoundingClientRect();
-      const treeEl = document.getElementById('hkb-tree');
-      if(treeEl) conn.style.height = treeEl.offsetHeight + 'px';
-      let svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
-      svg.style.cssText='position:absolute;top:0;left:0;width:100%;height:100%;overflow:visible;pointer-events:none';
-      const color = getComputedStyle(document.documentElement).getPropertyValue('--border-strong').trim()||'#ccc';
-      const y1 = sfMatches[0].getBoundingClientRect().top + sfMatches[0].offsetHeight/2 - connRect.top;
-      const y2 = sfMatches[1].getBoundingClientRect().top + sfMatches[1].offsetHeight/2 - connRect.top;
-      const yf1 = finalTeams[0].getBoundingClientRect().top + finalTeams[0].offsetHeight/2 - connRect.top;
-      const yf2 = finalTeams[1].getBoundingClientRect().top + finalTeams[1].offsetHeight/2 - connRect.top;
-      const xMid = conn.offsetWidth/2;
-      const p1 = document.createElementNS('http://www.w3.org/2000/svg','path');
-      p1.setAttribute('d',`M0,${y1} H${xMid} M${xMid},${y1} V${y2} M0,${y2} H${xMid} M${xMid},${yf1} H${conn.offsetWidth} M${xMid},${yf2} H${conn.offsetWidth}`);
-      p1.setAttribute('stroke',color);p1.setAttribute('stroke-width','1.5');p1.setAttribute('fill','none');p1.setAttribute('stroke-linecap','round');
-      svg.appendChild(p1);
-      conn.innerHTML='';conn.appendChild(svg);
-    }
-  }
+  // ── SF→Final connectors ───────────────────────────────
+  // Left SF (M101) → left final team; Right SF (M102) → right final team
+  // These go into the hkb-c4-L and hkb-c4-R connectors pointing toward center
+  ['L','R'].forEach(side=>{
+    const conn = document.getElementById(`hkb-c4-${side}`);
+    if(!conn) return;
+    const sfEl = document.querySelector(`[data-mid="${side==='L'?'M101':'M102'}"]`);
+    const ftEl = document.getElementById(side==='L'?'hkb-ft1':'hkb-ft2');
+    if(!sfEl||!ftEl||!conn) return;
+    const parentH = conn.parentElement ? conn.parentElement.offsetHeight : 400;
+    conn.style.height = parentH + 'px';
+    conn.style.position = 'relative';
+    const connRect = conn.getBoundingClientRect();
+    const yf = midY(sfEl, conn);
+    const svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
+    svg.setAttribute('width','100%');svg.setAttribute('height','100%');
+    svg.style.cssText='position:absolute;top:0;left:0;overflow:visible;pointer-events:none';
+    const p = document.createElementNS('http://www.w3.org/2000/svg','path');
+    const xFrom = side==='L' ? 0 : conn.offsetWidth;
+    const xTo   = side==='L' ? conn.offsetWidth : 0;
+    p.setAttribute('d',`M${xFrom},${yf} H${xTo}`);
+    p.setAttribute('stroke',stroke);p.setAttribute('stroke-width','1.5');p.setAttribute('fill','none');
+    svg.appendChild(p);
+    conn.innerHTML='';conn.appendChild(svg);
+  });
 }
 
 function renderWCSW(){
   const el = document.getElementById('fb-wcsw-content');
   if(!el) return;
   let html = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px;margin-top:10px">';
-  Object.keys(fbGroups).forEach(key => {
+  Object.keys(fbGroups).forEach(key=>{
     const g = fbGroups[key];
     const sorted = sortGroup(g.teams, g.fixtures);
-    sorted.forEach((t,i) => {
+    sorted.forEach((t,i)=>{
       const qs = computeQualStatus(t, i, g.teams, g.fixtures);
-      const pillCls = `fb-pill fb-${qs.qual}`;
       html += `<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:10px 12px;box-shadow:var(--shadow)">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
           <span style="font-weight:600;font-size:13px">${t.flag} ${t.name}</span>
@@ -3557,7 +3070,7 @@ function renderWCSW(){
         </div>
         <div style="display:flex;justify-content:space-between;align-items:center">
           <span style="font-size:12px;color:var(--text-3)">${t.pts} pts · ${t.p} played</span>
-          <span class="${pillCls}">${qs.label}</span>
+          <span class="fb-pill fb-${qs.qual}">${qs.label}</span>
         </div>
       </div>`;
     });
