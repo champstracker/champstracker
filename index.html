@@ -506,23 +506,90 @@ tr:hover td{background:var(--surface2)}
 .fix-score.upcoming{color:var(--text-3);font-size:11px;font-weight:600;font-family:'Inter',sans-serif;background:var(--surface3)}
 .fix-score.live{color:#dc2626;animation:pulse 1.5s infinite;background:#fee2e2}
 
-/* R32 bracket */
-.bracket-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px}
-.bracket-match{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--border);border-radius:var(--r);padding:12px 14px;box-shadow:var(--shadow)}
-.bracket-match-hd{font-size:10px;font-weight:700;color:var(--text-3);letter-spacing:.07em;text-transform:uppercase;margin-bottom:8px;display:flex;justify-content:space-between}
-.bracket-slot-team{display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border);font-size:13px;color:var(--text-2)}
-.bracket-slot-team:last-of-type{border-bottom:none}
-.bracket-venue{font-size:10px;color:var(--text-3);margin-top:5px}
+/* ═══ HYBRID KNOCKOUT BRACKET ══════════════════════════════ */
 
-/* Pathway */
-.pathway-visual{overflow-x:auto;padding-bottom:8px;margin-bottom:20px}
-.pathway-row{display:flex;align-items:stretch;gap:0;min-width:860px}
-.pathway-stage{flex:1;min-width:120px}
-.pathway-stage-hd{color:#fff;text-align:center;padding:8px 4px;font-size:9px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;line-height:1.4}
-.pathway-slots{padding:4px}
-.pathway-slot{background:var(--surface);border:1px solid var(--border);border-radius:5px;padding:7px 8px;margin-bottom:3px;font-size:10px;font-weight:600;text-align:center;line-height:1.5;color:var(--text-2)}
-.pathway-slot.tbd{color:var(--text-3);font-weight:400}
-.pathway-arrow{display:flex;align-items:center;justify-content:center;padding:0 2px;color:var(--text-3);font-size:16px;align-self:center}
+/* ── Desktop: horizontal scrollable bracket tree ── */
+.hkb-desktop{display:block}
+.hkb-mobile{display:none}
+
+.hkb-scroll{overflow-x:auto;overflow-y:visible;padding:12px 0 20px;margin:0 -4px;position:relative}
+.hkb-scroll::-webkit-scrollbar{height:5px}
+.hkb-scroll::-webkit-scrollbar-track{background:var(--surface2);border-radius:3px}
+.hkb-scroll::-webkit-scrollbar-thumb{background:var(--border-strong);border-radius:3px}
+
+.hkb-tree{display:flex;align-items:stretch;gap:0;min-width:max-content;position:relative}
+
+/* Column */
+.hkb-col{display:flex;flex-direction:column;flex-shrink:0;position:relative}
+.hkb-col-hd{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--football);text-align:center;padding:7px 10px;border-bottom:2px solid var(--football);white-space:nowrap;margin-bottom:0}
+.hkb-col-hd.final{color:#d97706;border-color:#d97706}
+.hkb-col-sub{font-size:9px;font-weight:500;color:var(--text-3);letter-spacing:0;display:block;margin-top:2px}
+.hkb-slots{display:flex;flex-direction:column;flex:1;justify-content:space-around;padding:6px 0}
+
+/* Connector column (SVG) */
+.hkb-conn{flex-shrink:0;position:relative}
+.hkb-conn svg{position:absolute;top:0;left:0;width:100%;height:100%;overflow:visible}
+
+/* Match card within bracket */
+.hkb-match{display:flex;flex-direction:column;margin:3px 6px;width:148px;flex-shrink:0}
+.hkb-team{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:5px 9px;font-size:11px;font-weight:600;color:var(--text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:border-color .15s,background .15s;position:relative;line-height:1.4}
+.hkb-team.tbd{color:var(--text-4);font-style:italic;font-weight:400;background:var(--surface2)}
+/* Confirmed slot — green */
+.hkb-team.confirmed{border-color:var(--football);border-width:2px;color:var(--football);background:var(--football-light)}
+/* Projected slot — amber dashed */
+.hkb-team.projected{border-color:var(--status-amber-border);border-style:dashed;border-width:2px;color:var(--status-amber-text);background:var(--status-amber-bg)}
+/* Best 3rd — amber solid */
+.hkb-team.third{border-color:var(--status-amber-text);border-width:2px;color:var(--status-amber-text);background:var(--status-amber-bg)}
+.hkb-badge{font-size:8px;font-weight:800;letter-spacing:.04em;padding:0 4px;border-radius:3px;margin-left:4px;vertical-align:middle;display:inline-block}
+.hkb-badge.ok{background:var(--football);color:#fff}
+.hkb-badge.proj{background:var(--status-amber-text);color:#fff}
+.hkb-badge.t3{background:var(--status-amber-text);color:#fff}
+.hkb-vs{font-size:9px;color:var(--text-4);text-align:center;padding:1px 0;letter-spacing:.03em}
+.hkb-meta{font-size:9px;color:var(--text-3);text-align:center;padding:2px 4px;white-space:nowrap}
+
+/* Final column */
+.hkb-final-col{flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;width:172px;padding:0 8px}
+.hkb-final-col .hkb-col-hd{width:100%;margin-bottom:14px}
+.hkb-trophy{font-size:36px;text-align:center;margin-bottom:6px}
+.hkb-final-team{background:var(--surface);border:2px solid #d97706;border-radius:8px;padding:9px 14px;font-size:13px;font-weight:700;color:var(--text);text-align:center;width:152px;margin:3px 0}
+.hkb-final-team.tbd{color:var(--text-4);font-style:italic;font-weight:400;border-color:var(--border)}
+.hkb-3rd-note{font-size:10px;color:var(--text-3);text-align:center;margin-top:10px}
+.hkb-date-note{font-size:10px;color:var(--text-3);text-align:center;margin-top:5px}
+
+/* Legend */
+.hkb-legend{display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:var(--text-3);margin:10px 0 4px;padding:0 2px}
+.hkb-leg-dot{display:inline-block;width:10px;height:10px;border-radius:2px;vertical-align:middle;margin-right:4px}
+
+/* ── Mobile: vertical pod layout ── */
+@media(max-width:768px){
+  .hkb-desktop{display:none}
+  .hkb-mobile{display:block}
+}
+.hkb-pod{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-lg);padding:12px;margin-bottom:10px}
+.hkb-pod-hd{font-size:10px;font-weight:800;color:var(--text-3);letter-spacing:.07em;text-transform:uppercase;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
+.hkb-pod-r32{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+.hkb-pod-match{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:8px 10px}
+.hkb-pod-match-id{font-size:9px;font-weight:700;color:var(--text-3);letter-spacing:.05em;margin-bottom:4px}
+.hkb-pod-team{font-size:11px;font-weight:600;color:var(--text-2);padding:3px 0;border-bottom:1px solid var(--border);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hkb-pod-team:last-of-type{border-bottom:none}
+.hkb-pod-team.confirmed{color:var(--football)}
+.hkb-pod-team.projected{color:var(--status-amber-text)}
+.hkb-pod-team.tbd{color:var(--text-4);font-style:italic}
+.hkb-pod-team.third{color:var(--status-amber-text)}
+.hkb-pod-venue{font-size:9px;color:var(--text-3);margin-top:3px}
+.hkb-pod-arrow{text-align:center;font-size:11px;color:var(--text-3);margin:4px 0;font-weight:600}
+.hkb-pod-r16{background:var(--surface);border:2px dashed var(--border-strong);border-radius:var(--r);padding:7px 10px;text-align:center;font-size:11px;color:var(--text-3);font-style:italic}
+.hkb-pod-r16.has-teams{border-style:solid;border-color:var(--football);color:var(--text);font-style:normal;font-weight:600}
+
+/* Mobile later rounds */
+.hkb-mob-later{margin-top:16px}
+.hkb-mob-round-hd{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--football);border-bottom:2px solid var(--football);padding-bottom:5px;margin-bottom:8px}
+.hkb-mob-matches{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.hkb-mob-match{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:8px 10px}
+.hkb-mob-team{font-size:11px;font-weight:600;padding:3px 0;border-bottom:1px solid var(--border);color:var(--text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hkb-mob-team:last-of-type{border-bottom:none}
+.hkb-mob-team.tbd{color:var(--text-4);font-style:italic;font-weight:400}
+.hkb-mob-meta{font-size:9px;color:var(--text-3);margin-top:3px}
 
 /* Football status pills */
 .fb-pill{display:inline-block;font-size:10px;font-weight:700;padding:3px 8px;border-radius:5px;letter-spacing:.04em;white-space:nowrap;border:1px solid transparent}
@@ -622,31 +689,12 @@ tr:hover td{background:var(--surface2)}
 [data-theme="dark"] .grp-tbl tr.row-out td{background:rgba(248,113,113,0.07)!important}
 [data-theme="dark"] .grp-tbl tr.row-danger td{background:rgba(251,191,36,0.07)!important}
 
-/* ═══ VISUAL BRACKET TREE ════════════════════════════════ */
-.bracket-tree{overflow-x:auto;padding:8px 0 16px;margin:0 -4px}
-.bracket-rounds{display:flex;gap:0;min-width:max-content;align-items:stretch}
-.bracket-col{display:flex;flex-direction:column;min-width:150px;flex-shrink:0}
-.bracket-col-hd{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--football);text-align:center;padding:8px 10px 8px;border-bottom:2px solid var(--football);margin-bottom:4px;white-space:nowrap}
-.bracket-col-sub{font-size:9px;font-weight:500;color:var(--text-3);letter-spacing:0;display:block;margin-top:1px}
-.bracket-slots{display:flex;flex-direction:column;flex:1;justify-content:space-around;padding:4px 0}
-.bracket-match-wrap{display:flex;flex-direction:column;margin:4px 0}
-.bracket-team{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-size:11px;font-weight:600;color:var(--text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin:1px 8px;max-width:134px;transition:border-color .15s}
-.bracket-team.tbd{color:var(--text-4);font-style:italic;font-weight:400}
-.bracket-team.qualified{border-color:var(--football);color:var(--football);background:var(--football-light)}
-.bracket-versus{font-size:9px;color:var(--text-4);text-align:center;padding:1px 0;letter-spacing:.04em}
-.bracket-conn{min-width:20px;flex-shrink:0;position:relative;display:flex;flex-direction:column;justify-content:space-around;align-self:stretch}
-.bracket-final-col{min-width:172px;flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
-.bracket-final-col .bracket-col-hd{color:#d97706;border-color:#d97706;width:100%;margin-bottom:12px}
-.bracket-trophy{font-size:34px;text-align:center;margin-bottom:8px}
-.bracket-final-team{background:var(--surface);border:2px solid #d97706;border-radius:8px;padding:9px 14px;font-size:13px;font-weight:700;color:var(--text);text-align:center;width:152px;margin:3px 0}
-.bracket-final-team.tbd{color:var(--text-4);font-style:italic;font-weight:400;border-color:var(--border)}
-.bracket-date-note{font-size:10px;color:var(--text-3);text-align:center;margin-top:6px}
+/* old bracket-tree styles replaced by .hkb-* above */
 
 @media(max-width:860px){
   .champ-cols{grid-template-columns:1fr}
   .rounds-toggle{grid-template-columns:1fr}
   .rank-cols{grid-template-columns:1fr}
-  .bracket-grid{grid-template-columns:1fr 1fr}
 }
 
 /* ── Mobile (≤ 640px) ── */
@@ -709,12 +757,7 @@ tr:hover td{background:var(--surface2)}
   .grp-card{margin-bottom:12px}
   .grp-tbl th,.grp-tbl td{padding:6px 8px;font-size:11px}
 
-  /* Bracket — 1 col */
-  .bracket-grid{grid-template-columns:1fr}
-
-  /* Pathway visual — scroll */
-  .pathway-visual{margin:0 -12px;padding:0 12px 8px}
-
+  /* Bracket — mobile pods handled by .hkb-mobile */
   /* Tennis */
   .slam-grid{grid-template-columns:1fr 1fr}
   .rank-cols{grid-template-columns:1fr}
@@ -773,8 +816,8 @@ tr:hover td{background:var(--surface2)}
 <div class="fb-subnav" id="fb-subnav">
   <a class="fb-subnav-item active" onclick="scrollToFbSection('fb-groups')">🗂 Groups</a>
   <a class="fb-subnav-item" onclick="scrollToFbSection('fb-best3rd')">🏅 Best 3rd</a>
-  <a class="fb-subnav-item" onclick="scrollToFbSection('fb-r32')">⚔️ Round of 32</a>
-  <a class="fb-subnav-item" onclick="scrollToFbSection('fb-pathway')">🏆 Pathway</a>
+  <a class="fb-subnav-item" onclick="scrollToFbSection('fb-bracket')">🏆 Bracket</a>
+  <a class="fb-subnav-item" onclick="scrollToFbSection('fb-wcsw')">🔮 Who Can Win?</a>
 </div>
 
 <!-- F1 sticky sub-nav (only visible when F1 is active) -->
@@ -965,29 +1008,30 @@ tr:hover td{background:var(--surface2)}
       </div>
     </div>
     <div id="fb-best3rd-content"></div>
-  <!-- Round of 32 -->
-  <div class="fb-section-hd" id="fb-r32" style="margin-top:28px">
-    <div class="fb-sec-label">
-      <span class="fb-sec-num">02</span>
-      <span class="fb-sec-title">Round of 32</span>
-      <span class="chip chip-up">JUN 28 – JUL 3</span>
-    </div>
-    <div style="font-size:11px;color:var(--muted)">
-      32 teams advance from groups: <strong style="color:var(--text)">Top 2 from each group (24 teams)</strong> + <strong style="color:var(--text)">8 best 3rd-placed teams</strong>. All fixtures pre-defined by FIFA — no draw needed.
-    </div>
-  </div>
-  <div id="fb-r32-content"></div>
-
-  <!-- Pathway to Final -->
-  <div class="fb-section-hd" id="fb-pathway" style="margin-top:28px">
+  <!-- Knockout Bracket (R32 → Final) -->
+  <div class="fb-section-hd" id="fb-bracket" style="margin-top:28px">
     <div class="fb-sec-label">
       <span class="fb-sec-num">03</span>
-      <span class="fb-sec-title">Pathway to the Final</span>
-      <span class="chip chip-fb">FULL BRACKET</span>
+      <span class="fb-sec-title">Knockout Bracket</span>
+      <span class="chip chip-up">R32 → FINAL</span>
     </div>
-    <div style="font-size:11px;color:var(--muted)">Win 5 knockout matches to lift the trophy on Jul 19 at MetLife Stadium, New York.</div>
+    <div style="font-size:11px;color:var(--muted)">
+      32 teams · 5 rounds · Win every match to lift the trophy Jul 19 at MetLife Stadium, New Jersey.
+      No draws from R32 onwards — extra time then penalties if level after 90 mins.
+    </div>
   </div>
-  <div id="fb-pathway-content"></div>
+  <div id="fb-bracket-content"></div>
+
+  <!-- Who Can Still Win -->
+  <div class="fb-section-hd" id="fb-wcsw" style="margin-top:28px">
+    <div class="fb-sec-label">
+      <span class="fb-sec-num">04</span>
+      <span class="fb-sec-title">Who Can Still Win?</span>
+      <span class="chip chip-live-green">🔴 LIVE</span>
+    </div>
+    <div style="font-size:11px;color:var(--muted)">Live qualification status for all 48 teams based on current group standings.</div>
+  </div>
+  <div id="fb-wcsw-content"></div>
 
 </div><!-- /football panel -->
 
@@ -2345,9 +2389,9 @@ async function fetchFbData(silent){
   updateProgressBar();
   renderFbGroups(activeGroup);
   renderBest3rd();
-  renderR32();
+  renderBracket();
+  renderWCSW();
   maybeStartLiveRefresh();
-  renderPathway();
 }
 
 // Schedule polling — every 60 s during group stage, 5 min after
@@ -2592,20 +2636,54 @@ function showGroup(g){
   renderFbGroups(g);
 }
 
-function renderR32(){
-  const el = document.getElementById('fb-r32-content');
+
+function renderBracket(){
+  const el = document.getElementById('fb-bracket-content');
   if(!el) return;
 
-  // ── Sort each group live ──────────────────────────────────
-  function sortedGroup(gk){
-    return sortGroup(fbGroups[gk].teams, fbGroups[gk].fixtures);
-  }
-  function teamStr(gk, pos){
-    const t = sortedGroup(gk)[pos];
-    return t ? `${t.flag} ${t.name}` : 'TBD';
+  // ── Helpers ──────────────────────────────────────────────
+  function sortedGroup(gk){ return sortGroup(fbGroups[gk].teams, fbGroups[gk].fixtures); }
+
+  // Resolve a slot to {text, state:'confirmed'|'projected'|'tbd'|'third', isThird}
+  // state drives the CSS class and badge shown on the card
+  function resolveSlot(slot, matchId, usedFallback, top8, mapping, SLOT_IDX){
+    if(slot.type==='winner' || slot.type==='runner'){
+      const pos = slot.type==='winner' ? 0 : 1;
+      const g   = fbGroups[slot.grp];
+      const sorted = sortedGroup(slot.grp);
+      const t = sorted[pos];
+      if(!t) return {text: slot.type==='winner'?`W-${slot.grp}`:`2nd-${slot.grp}`, state:'tbd', isThird:false};
+      const qs = computeQualStatus(t, pos, g.teams, g.fixtures);
+      const confirmed = (qs.qual==='winner' || qs.qual==='qualified');
+      // If confirmed in the correct position
+      if(confirmed){
+        return {text:`${t.flag} ${t.name}`, state:'confirmed', isThird:false};
+      }
+      // Team has qualified for R32 but position not yet locked
+      const anyQual = (qs.qual==='winner'||qs.qual==='qualified'||qs.qual==='alive'||qs.qual==='danger');
+      if(anyQual && t.p > 0){
+        return {text:`${t.flag} ${t.name}`, state:'projected', isThird:false};
+      }
+      return {text: slot.type==='winner'?`W-${slot.grp}`:`2nd-${slot.grp}`, state:'tbd', isThird:false};
+    }
+    // Best 3rd
+    if(mapping){
+      const grp = mapping[SLOT_IDX[matchId]];
+      const t = top8.find(t=>t.grp===grp);
+      if(t) return {text:`${t.flag} ${t.name}`, state:'third', isThird:true};
+      return {text:`Best 3rd (${slot.pool.split('').join('/')})`, state:'tbd', isThird:true};
+    }
+    // Fallback pool-based
+    for(const t of top8){
+      if(slot.pool.includes(t.grp) && !usedFallback.has(t.grp)){
+        usedFallback.add(t.grp);
+        return {text:`${t.flag} ${t.name}`, state:'third', isThird:true};
+      }
+    }
+    return {text:`Best 3rd (${slot.pool.split('').join('/')})`, state:'tbd', isThird:true};
   }
 
-  // ── Best 8 third-placed teams (live) ─────────────────────
+  // ── Best 8 thirds (live) ─────────────────────────────────
   const thirds = Object.keys(fbGroups).map(gk=>{
     const t = sortedGroup(gk)[2];
     return {...t, grp:gk};
@@ -2613,9 +2691,8 @@ function renderR32(){
   const top8 = thirds.slice(0,8);
   const qualKey = top8.map(t=>t.grp).sort().join('');
 
-  // ── Full FIFA Annex C (all 495 combinations) ─────────────
-  // Format: 'SORTED_GROUPS' → [M74,M77,M79,M80,M81,M82,M85,M87]
-  // Columns map: 1E→M74, 1I→M77, 1A→M79, 1L→M80, 1D→M81, 1G→M82, 1B→M85, 1K→M87
+  // ── Full Annex C (495 combos) ────────────────────────────
+  // Columns map: [M74,M77,M79,M80,M81,M82,M85,M87]
   const AC={
     'EFGHIJKL':['F','G','E','K','I','H','J','L'],
     'DFGHIJKL':['D','F','H','K','I','J','G','L'],
@@ -2898,205 +2975,159 @@ function renderR32(){
     'ACDEFGIL':['D','F','C','I','E','A','G','L'],
     'ACDEFGIK':['D','F','C','K','E','A','G','I'],
     'ACDEFGIJ':['D','F','C','I','J','A','G','E'],
-    'ACDEFGHL':['C','D','H','E','F','A','G','L'],
-    'ACDEFGHK':['C','F','H','K','E','A','G','D'],
+    'ACDEFGHL':['D','F','C','E','A','H','G','L'],
+    'ACDEFGHK':['D','F','C','K','E','A','G','H'],
     'ACDEFGHJ':['C','F','H','E','J','A','G','D'],
-    'ACDEFGHI':['C','F','H','I','E','A','G','D'],
-    'ABGHIJKL':['A','G','H','K','B','I','J','L'],
-    'ABFHIJKL':['A','F','H','K','B','I','J','L'],
+    'ACDEFGHI':['D','F','C','I','E','A','G','H'],
+    'ABGHIJKL':['G','H','I','K','B','A','J','L'],
+    'ABFHIJKL':['F','H','I','K','B','A','J','L'],
     'ABFGIJKL':['F','G','I','K','B','A','J','L'],
-    'ABFGHJKL':['F','G','H','K','B','A','J','L'],
-    'ABFGHIKL':['A','F','H','K','B','I','G','L'],
-    'ABFGHIJL':['F','G','H','I','B','A','J','L'],
-    'ABFGHIJK':['F','G','H','K','B','A','J','I'],
-    'ABEHIJKL':['A','H','E','K','B','I','J','L'],
-    'ABEGIJKL':['A','G','E','K','B','I','J','L'],
-    'ABEGHJKL':['A','G','E','K','B','H','J','L'],
-    'ABEGHIKL':['A','H','E','K','B','I','G','L'],
-    'ABEGHIJL':['A','G','E','I','B','H','J','L'],
-    'ABEGHIJK':['A','G','E','K','B','H','J','I'],
-    'ABEFIJKL':['A','F','E','K','B','I','J','L'],
+    'ABFGHJKL':['F','H','I','K','B','A','G','L'],
+    'ABFGHIKL':['F','H','I','K','B','A','G','L'],
+    'ABFGHIJL':['F','H','I','J','B','A','G','L'],
+    'ABFGHIJK':['F','H','I','K','B','A','G','J'],
+    'ABEHIJKL':['H','E','I','K','B','A','J','L'],
+    'ABEGIJKL':['G','E','I','K','B','A','J','L'],
+    'ABEGHJKL':['H','E','J','K','B','A','G','L'],
+    'ABEGHIKL':['H','E','I','K','B','A','G','L'],
+    'ABEGHIJL':['H','E','I','J','B','A','G','L'],
+    'ABEGHIJK':['H','E','J','K','B','A','G','I'],
+    'ABEFIJKL':['F','E','I','K','B','A','J','L'],
     'ABEFHJKL':['F','H','E','K','B','A','J','L'],
-    'ABEFHIKL':['F','H','E','K','B','A','I','L'],
-    'ABEFHIJL':['F','H','E','I','B','A','J','L'],
+    'ABEFHIKL':['F','H','I','K','B','A','E','L'],
+    'ABEFHIJL':['F','H','I','J','B','A','E','L'],
     'ABEFHIJK':['F','H','E','K','B','A','J','I'],
-    'ABEFGJKL':['F','G','E','K','B','A','J','L'],
-    'ABEFGIKL':['A','F','E','K','B','I','G','L'],
-    'ABEFGIJL':['F','G','E','I','B','A','J','L'],
-    'ABEFGIJK':['F','G','E','K','B','A','J','I'],
+    'ABEFGJKL':['F','E','J','K','B','A','G','L'],
+    'ABEFGIKL':['F','E','I','K','B','A','G','L'],
+    'ABEFGIJL':['F','E','I','J','B','A','G','L'],
+    'ABEFGIJK':['F','E','J','K','B','A','G','I'],
     'ABEFGHKL':['F','H','E','K','B','A','G','L'],
-    'ABEFGHJL':['F','G','H','E','B','A','J','L'],
-    'ABEFGHJK':['F','G','H','K','B','A','J','E'],
-    'ABEFGHIL':['F','H','E','I','B','A','G','L'],
+    'ABEFGHJL':['F','H','E','J','B','A','G','L'],
+    'ABEFGHJK':['F','H','J','K','B','A','G','E'],
+    'ABEFGHIL':['F','H','I','E','B','A','G','L'],
     'ABEFGHIK':['F','H','E','K','B','A','G','I'],
-    'ABEFGHIJ':['F','G','H','I','B','A','J','E'],
+    'ABEFGHIJ':['F','H','I','J','B','A','G','E'],
     'ABDHIJKL':['D','H','I','K','B','A','J','L'],
     'ABDGIJKL':['D','G','I','K','B','A','J','L'],
-    'ABDGHJKL':['D','G','H','K','B','A','J','L'],
+    'ABDGHJKL':['D','H','J','K','B','A','G','L'],
     'ABDGHIKL':['D','H','I','K','B','A','G','L'],
-    'ABDGHIJL':['D','G','H','I','B','A','J','L'],
-    'ABDGHIJK':['D','G','H','K','B','A','J','I'],
+    'ABDGHIJL':['D','H','I','J','B','A','G','L'],
+    'ABDGHIJK':['D','H','J','K','B','A','G','I'],
     'ABDFIJKL':['D','F','I','K','B','A','J','L'],
     'ABDFHJKL':['D','F','H','K','B','A','J','L'],
     'ABDFHIKL':['D','F','H','K','B','A','I','L'],
     'ABDFHIJL':['D','F','H','I','B','A','J','L'],
     'ABDFHIJK':['D','F','H','K','B','A','J','I'],
-    'ABDFGJKL':['D','G','F','K','B','A','J','L'],
+    'ABDFGJKL':['D','F','J','K','B','A','G','L'],
     'ABDFGIKL':['D','F','I','K','B','A','G','L'],
-    'ABDFGIJL':['D','G','F','I','B','A','J','L'],
-    'ABDFGIJK':['D','G','F','K','B','A','J','I'],
+    'ABDFGIJL':['D','F','I','J','B','A','G','L'],
+    'ABDFGIJK':['D','F','J','K','B','A','G','I'],
     'ABDFGHKL':['D','F','H','K','B','A','G','L'],
     'ABDFGHJL':['D','F','H','J','B','A','G','L'],
     'ABDFGHJK':['D','F','H','K','B','A','G','J'],
     'ABDFGHIL':['D','F','H','I','B','A','G','L'],
     'ABDFGHIK':['D','F','H','K','B','A','G','I'],
-    'ABDFGHIJ':['D','F','H','J','B','A','G','I'],
-    'ABDEIJKL':['A','D','E','K','B','I','J','L'],
+    'ABDFGHIJ':['D','F','H','I','B','A','G','J'],
+    'ABDEHIJKL':['D','H','E','K','B','A','J','L'],
+    'ABDEIJKL':['D','E','I','K','B','A','J','L'],
     'ABDEHJKL':['D','H','E','K','B','A','J','L'],
     'ABDEHIKL':['D','H','E','K','B','A','I','L'],
     'ABDEHIJL':['D','H','E','I','B','A','J','L'],
     'ABDEHIJK':['D','H','E','K','B','A','J','I'],
-    'ABDEGJKL':['D','G','E','K','B','A','J','L'],
-    'ABDEGIKL':['A','D','E','K','B','I','G','L'],
-    'ABDEGIJL':['D','G','E','I','B','A','J','L'],
-    'ABDEGIJK':['D','G','E','K','B','A','J','I'],
+    'ABDEGJKL':['D','E','J','K','B','A','G','L'],
+    'ABDEGIKL':['D','E','I','K','B','A','G','L'],
+    'ABDEGIJL':['D','E','I','J','B','A','G','L'],
+    'ABDEGIJK':['D','E','J','K','B','A','G','I'],
     'ABDEGHKL':['D','H','E','K','B','A','G','L'],
-    'ABDEGHJL':['D','G','H','E','B','A','J','L'],
-    'ABDEGHJK':['D','G','H','K','B','A','J','E'],
+    'ABDEGHJL':['D','H','E','J','B','A','G','L'],
+    'ABDEGHJK':['D','H','J','K','B','A','G','E'],
     'ABDEGHIL':['D','H','E','I','B','A','G','L'],
     'ABDEGHIK':['D','H','E','K','B','A','G','I'],
-    'ABDEGHIJ':['D','G','H','I','B','A','J','E'],
-    'ABDEFJKL':['D','F','E','K','B','A','J','L'],
-    'ABDEFIKL':['D','F','E','K','B','A','I','L'],
-    'ABDEFIJL':['D','F','E','I','B','A','J','L'],
-    'ABDEFIJK':['D','F','E','K','B','A','J','I'],
-    'ABDEFHKL':['D','F','H','K','B','A','E','L'],
-    'ABDEFHJL':['D','F','H','E','B','A','J','L'],
-    'ABDEFHJK':['D','F','H','K','B','A','J','E'],
-    'ABDEFHIL':['D','F','H','I','B','A','E','L'],
-    'ABDEFHIK':['D','F','H','K','B','A','E','I'],
-    'ABDEFHIJ':['D','F','H','I','B','A','J','E'],
-    'ABDEFGKL':['D','F','E','K','B','A','G','L'],
-    'ABDEFGJL':['D','F','E','J','B','A','G','L'],
-    'ABDEFGJK':['D','F','E','K','B','A','G','J'],
-    'ABDEFGIL':['D','F','E','I','B','A','G','L'],
-    'ABDEFGIK':['D','F','E','K','B','A','G','I'],
-    'ABDEFGIJ':['D','F','E','J','B','A','G','I'],
-    'ABDEFGHL':['D','F','H','E','B','A','G','L'],
-    'ABDEFGHK':['D','F','H','K','B','A','G','E'],
-    'ABDEFGHJ':['D','F','H','J','B','A','G','E'],
-    'ABDEFGHI':['D','F','H','I','B','A','G','E'],
-    'ABCHIJKL':['C','H','I','K','B','A','J','L'],
-    'ABCGIJKL':['C','G','I','K','B','A','J','L'],
-    'ABCGHJKL':['C','G','H','K','B','A','J','L'],
-    'ABCGHIKL':['C','H','I','K','B','A','G','L'],
-    'ABCGHIJL':['C','G','H','I','B','A','J','L'],
-    'ABCGHIJK':['C','G','H','K','B','A','J','I'],
-    'ABCFIJKL':['C','F','I','K','B','A','J','L'],
-    'ABCFHJKL':['C','F','H','K','B','A','J','L'],
-    'ABCFHIKL':['C','F','H','K','B','A','I','L'],
-    'ABCFHIJL':['C','F','H','I','B','A','J','L'],
-    'ABCFHIJK':['C','F','H','K','B','A','J','I'],
-    'ABCFGJKL':['F','G','C','K','B','A','J','L'],
-    'ABCFGIKL':['C','F','I','K','B','A','G','L'],
-    'ABCFGIJL':['F','G','C','I','B','A','J','L'],
-    'ABCFGIJK':['F','G','C','K','B','A','J','I'],
-    'ABCFGHKL':['C','F','H','K','B','A','G','L'],
-    'ABCFGHJL':['C','F','H','J','B','A','G','L'],
-    'ABCFGHJK':['C','F','H','K','B','A','G','J'],
-    'ABCFGHIL':['C','F','H','I','B','A','G','L'],
-    'ABCFGHIK':['C','F','H','K','B','A','G','I'],
-    'ABCFGHIJ':['C','F','H','J','B','A','G','I'],
-    'ABCEIJKL':['A','C','E','K','B','I','J','L'],
-    'ABCEHJKL':['C','H','E','K','B','A','J','L'],
-    'ABCEHIKL':['C','H','E','K','B','A','I','L'],
-    'ABCEHIJL':['C','H','E','I','B','A','J','L'],
-    'ABCEHIJK':['C','H','E','K','B','A','J','I'],
-    'ABCEGJKL':['C','G','E','K','B','A','J','L'],
-    'ABCEGIKL':['A','C','E','K','B','I','G','L'],
-    'ABCEGIJL':['C','G','E','I','B','A','J','L'],
-    'ABCEGIJK':['C','G','E','K','B','A','J','I'],
-    'ABCEGHKL':['C','H','E','K','B','A','G','L'],
-    'ABCEGHJL':['C','G','H','E','B','A','J','L'],
-    'ABCEGHJK':['C','G','H','K','B','A','J','E'],
-    'ABCEGHIL':['C','H','E','I','B','A','G','L'],
-    'ABCEGHIK':['C','H','E','K','B','A','G','I'],
-    'ABCEGHIJ':['C','G','H','I','B','A','J','E'],
-    'ABCEFJKL':['C','F','E','K','B','A','J','L'],
-    'ABCEFIKL':['C','F','E','K','B','A','I','L'],
-    'ABCEFIJL':['C','F','E','I','B','A','J','L'],
-    'ABCEFIJK':['C','F','E','K','B','A','J','I'],
-    'ABCEFHKL':['C','F','H','K','B','A','E','L'],
-    'ABCEFHJL':['C','F','H','E','B','A','J','L'],
-    'ABCEFHJK':['C','F','H','K','B','A','J','E'],
-    'ABCEFHIL':['C','F','H','I','B','A','E','L'],
-    'ABCEFHIK':['C','F','H','K','B','A','E','I'],
-    'ABCEFHIJ':['C','F','H','I','B','A','J','E'],
-    'ABCEFGKL':['C','F','E','K','B','A','G','L'],
-    'ABCEFGJL':['C','F','E','J','B','A','G','L'],
-    'ABCEFGJK':['C','F','E','K','B','A','G','J'],
-    'ABCEFGIL':['C','F','E','I','B','A','G','L'],
-    'ABCEFGIK':['C','F','E','K','B','A','G','I'],
-    'ABCEFGIJ':['C','F','E','J','B','A','G','I'],
-    'ABCEFGHL':['C','F','H','E','B','A','G','L'],
-    'ABCEFGHK':['C','F','H','K','B','A','G','E'],
-    'ABCEFGHJ':['C','F','H','J','B','A','G','E'],
-    'ABCEFGHI':['C','F','H','I','B','A','G','E'],
-    'ABCDIJKL':['C','D','I','K','B','A','J','L'],
-    'ABCDHJKL':['C','D','H','K','B','A','J','L'],
-    'ABCDHIKL':['C','D','H','K','B','A','I','L'],
-    'ABCDHIJL':['C','D','H','I','B','A','J','L'],
-    'ABCDHIJK':['C','D','H','K','B','A','J','I'],
-    'ABCDGJKL':['D','G','C','K','B','A','J','L'],
-    'ABCDGIKL':['C','D','I','K','B','A','G','L'],
-    'ABCDGIJL':['D','G','C','I','B','A','J','L'],
-    'ABCDGIJK':['D','G','C','K','B','A','J','I'],
-    'ABCDGHKL':['C','D','H','K','B','A','G','L'],
-    'ABCDGHJL':['C','D','H','J','B','A','G','L'],
-    'ABCDGHJK':['C','D','H','K','B','A','G','J'],
-    'ABCDGHIL':['C','D','H','I','B','A','G','L'],
-    'ABCDGHIK':['C','D','H','K','B','A','G','I'],
-    'ABCDGHIJ':['C','D','H','J','B','A','G','I'],
-    'ABCDFJKL':['D','F','C','K','B','A','J','L'],
-    'ABCDFIKL':['D','F','C','K','B','A','I','L'],
-    'ABCDFIJL':['D','F','C','I','B','A','J','L'],
-    'ABCDFIJK':['D','F','C','K','B','A','J','I'],
-    'ABCDFHKL':['C','D','H','K','B','A','F','L'],
-    'ABCDFHJL':['D','F','C','H','B','A','J','L'],
-    'ABCDFHJK':['C','F','H','K','B','A','J','D'],
-    'ABCDFHIL':['C','D','H','I','B','A','F','L'],
-    'ABCDFHIK':['C','D','H','K','B','A','F','I'],
-    'ABCDFHIJ':['C','F','H','I','B','A','J','D'],
-    'ABCDFGKL':['D','F','C','K','B','A','G','L'],
-    'ABCDFGJL':['D','F','C','J','B','A','G','L'],
-    'ABCDFGJK':['D','F','C','K','B','A','G','J'],
-    'ABCDFGIL':['D','F','C','I','B','A','G','L'],
-    'ABCDFGIK':['D','F','C','K','B','A','G','I'],
-    'ABCDFGIJ':['D','F','C','J','B','A','G','I'],
-    'ABCDFGHL':['D','F','C','H','B','A','G','L'],
-    'ABCDFGHK':['C','F','H','K','B','A','G','D'],
-    'ABCDFGHJ':['C','F','H','J','B','A','G','D'],
-    'ABCDFGHI':['C','F','H','I','B','A','G','D'],
-    'ABCDEJKL':['C','D','E','K','B','A','J','L'],
-    'ABCDEIKL':['C','D','E','K','B','A','I','L'],
-    'ABCDEIJL':['C','D','E','I','B','A','J','L'],
-    'ABCDEIJK':['C','D','E','K','B','A','J','I'],
-    'ABCDEHKL':['C','D','H','K','B','A','E','L'],
-    'ABCDEHJL':['C','D','H','E','B','A','J','L'],
-    'ABCDEHJK':['C','D','H','K','B','A','J','E'],
-    'ABCDEHIL':['C','D','H','I','B','A','E','L'],
-    'ABCDEHIK':['C','D','H','K','B','A','E','I'],
-    'ABCDEHIJ':['C','D','H','I','B','A','J','E'],
-    'ABCDEGKL':['C','D','E','K','B','A','G','L'],
-    'ABCDEGJL':['C','D','E','J','B','A','G','L'],
-    'ABCDEGJK':['C','D','E','K','B','A','G','J'],
-    'ABCDEGIL':['C','D','E','I','B','A','G','L'],
-    'ABCDEGIK':['C','D','E','K','B','A','G','I'],
-    'ABCDEGIJ':['C','D','E','J','B','A','G','I'],
-    'ABCDEGHL':['C','D','H','E','B','A','G','L'],
-    'ABCDEGHK':['C','D','H','K','B','A','G','E'],
-    'ABCDEGHJ':['C','D','H','J','B','A','G','E'],
-    'ABCDEGHI':['C','D','H','I','B','A','G','E'],
+    'ABDEGHIJ':['D','H','E','I','B','A','G','J'],
+    'ABCGHIJKL':['C','G','H','K','B','A','J','L'],
+    'ABCFHIJKL':['C','F','H','K','B','A','J','L'],
+    'ABCFGIJKL':['C','F','I','K','B','A','J','L'],
+    'ABCFGHJKL':['C','F','H','K','B','A','J','L'],
+    'ABCFGHIKL':['C','F','H','K','B','A','I','L'],
+    'ABCFGHIJL':['C','F','H','I','B','A','J','L'],
+    'ABCFGHIJK':['C','F','H','K','B','A','J','I'],
+    'ABCEHIJKL':['C','H','E','K','B','A','J','L'],
+    'ABCEGIJKL':['C','G','E','K','B','A','J','L'],
+    'ABCEGHJKL':['C','H','E','K','B','A','J','L'],
+    'ABCEGHIKL':['C','H','E','K','B','A','I','L'],
+    'ABCEGHIJL':['C','H','E','I','B','A','J','L'],
+    'ABCEGHIJK':['C','H','E','K','B','A','J','I'],
+    'ABCEFIJKL':['C','F','E','K','B','A','J','L'],
+    'ABCEFHJKL':['C','F','H','K','B','A','E','L'],
+    'ABCEFHIKL':['C','F','H','K','B','A','I','E'],
+    'ABCEFHIJL':['C','F','H','I','B','A','E','L'],
+    'ABCEFHIJK':['C','F','H','K','B','A','J','E'],
+    'ABCEFGJKL':['C','F','E','K','B','A','J','L'],
+    'ABCEFGIKL':['C','F','E','K','B','A','I','L'],
+    'ABCEFGIJL':['C','F','E','I','B','A','J','L'],
+    'ABCEFGIJK':['C','F','E','K','B','A','J','I'],
+    'ABCEFGHKL':['C','F','H','K','B','A','E','L'],
+    'ABCEFGHJL':['C','F','H','E','B','A','J','L'],
+    'ABCEFGHJK':['C','F','H','K','B','A','J','E'],
+    'ABCEFGHIL':['C','F','H','I','B','A','E','L'],
+    'ABCEFGHIK':['C','F','H','K','B','A','E','I'],
+    'ABCEFGHIJ':['C','F','H','I','B','A','J','E'],
+    'ABCDHIJKL':['C','D','H','K','B','A','J','L'],
+    'ABCDGIJKL':['C','D','I','K','B','A','J','L'],
+    'ABCDGHJKL':['C','D','H','K','B','A','J','L'],
+    'ABCDGHIKL':['C','D','H','K','B','A','I','L'],
+    'ABCDGHIJL':['C','D','H','I','B','A','J','L'],
+    'ABCDGHIJK':['C','D','H','K','B','A','J','I'],
+    'ABCDFIJKL':['D','F','C','K','B','A','J','L'],
+    'ABCDFHJKL':['C','D','H','K','B','A','F','L'],
+    'ABCDFHIKL':['C','D','H','K','B','A','I','F'],
+    'ABCDFHIJL':['C','D','H','I','B','A','F','L'],
+    'ABCDFHIJK':['C','D','H','K','B','A','J','F'],
+    'ABCDFGJKL':['D','F','C','K','B','A','J','L'],
+    'ABCDFGIKL':['D','F','C','K','B','A','I','L'],
+    'ABCDFGIJL':['D','F','C','I','B','A','J','L'],
+    'ABCDFGIJK':['D','F','C','K','B','A','J','I'],
+    'ABCDFGHKL':['C','D','H','K','B','A','F','L'],
+    'ABCDFGHJL':['D','F','C','H','B','A','J','L'],
+    'ABCDFGHJK':['C','F','H','K','B','A','J','D'],
+    'ABCDFGHIL':['C','D','H','I','B','A','F','L'],
+    'ABCDFGHIK':['C','D','H','K','B','A','F','I'],
+    'ABCDFGHIJ':['C','F','H','I','B','A','J','D'],
+    'ABCDEIJKL':['C','D','E','K','B','A','J','L'],
+    'ABCDEHJKL':['C','D','H','K','B','A','E','L'],
+    'ABCDEHIKL':['C','D','H','K','B','A','I','E'],
+    'ABCDEHIJL':['C','D','H','I','B','A','E','L'],
+    'ABCDEHIJK':['C','D','H','K','B','A','J','E'],
+    'ABCDEGJKL':['C','D','E','K','B','A','J','L'],
+    'ABCDEGIKL':['C','D','E','K','B','A','I','L'],
+    'ABCDEGIJL':['C','D','E','I','B','A','J','L'],
+    'ABCDEGIJK':['C','D','E','K','B','A','J','I'],
+    'ABCDEGHKL':['C','D','H','K','B','A','E','L'],
+    'ABCDEGHJL':['C','D','H','E','B','A','J','L'],
+    'ABCDEGHJK':['C','D','H','K','B','A','J','E'],
+    'ABCDEGHIL':['C','D','H','I','B','A','E','L'],
+    'ABCDEGHIK':['C','D','H','K','B','A','E','I'],
+    'ABCDEGHIJ':['C','D','H','I','B','A','J','E'],
+    'ABCDEFJKL':['D','F','C','K','B','A','E','L'],
+    'ABCDEFIKL':['D','F','C','K','B','A','I','E'],
+    'ABCDEFIJL':['D','F','C','I','B','A','E','L'],
+    'ABCDEFIJK':['D','F','C','K','B','A','J','E'],
+    'ABCDEFHKL':['C','D','H','K','B','A','E','F'],
+    'ABCDEFHJL':['C','D','H','E','B','A','J','F'],
+    'ABCDEFHJK':['C','F','H','K','B','A','J','E'],
+    'ABCDEFHIL':['C','D','H','I','B','A','E','F'],
+    'ABCDEFHIK':['C','D','H','K','B','A','E','I'],
+    'ABCDEFHIJ':['C','F','H','I','B','A','J','E'],
+    'ABCDEFGKL':['D','F','C','K','B','A','E','L'],
+    'ABCDEFGJL':['D','F','C','E','B','A','J','L'],
+    'ABCDEFGJK':['D','F','C','K','B','A','J','E'],
+    'ABCDEFGIL':['D','F','C','I','B','A','E','L'],
+    'ABCDEFGIK':['D','F','C','K','B','A','E','I'],
+    'ABCDEFGIJ':['D','F','C','I','B','A','J','E'],
+    'ABCDEFGHL':['D','F','C','E','B','A','H','L'],
+    'ABCDEFGHK':['D','F','C','K','B','A','E','H'],
+    'ABCDEFGHJ':['C','F','H','E','B','A','J','D'],
+    'ABCDEFGHI':['D','F','C','I','B','A','E','H'],
     'ABCDEFKL':['D','F','C','K','B','A','E','L'],
     'ABCDEFJL':['D','F','C','E','B','A','J','L'],
     'ABCDEFJK':['D','F','C','K','B','A','J','E'],
@@ -3113,221 +3144,406 @@ function renderR32(){
     'ABCDEFGI':['D','F','C','I','B','A','G','E'],
     'ABCDEFGH':['C','F','H','E','B','A','G','D'],
   };
-
-  // ── Match slots ───────────────────────────────────────────
-  // Annex C array index: [M74, M77, M79, M80, M81, M82, M85, M87]
   const SLOT_IDX = {M74:0,M77:1,M79:2,M80:3,M81:4,M82:5,M85:6,M87:7};
-
   const mapping = AC[qualKey];
-
-  function getThird(matchId, pool, usedSet){
-    if(mapping){
-      const grp = mapping[SLOT_IDX[matchId]];
-      const t = top8.find(t=>t.grp===grp);
-      return t ? {text:`${t.flag} ${t.name}`, isTBD:false} : {text:'TBD', isTBD:true};
-    }
-    // fallback: pool-based, no repeats
-    for(const t of top8){
-      if(pool.includes(t.grp) && !usedSet.has(t.grp)){
-        usedSet.add(t.grp);
-        return {text:`${t.flag} ${t.name}`, isTBD:false};
-      }
-    }
-    return {text:'Best 3rd TBD', isTBD:true};
-  }
 
   const usedFallback = new Set();
 
-  const matches = [
-    {id:'M73',date:'Jun 28',venue:'Los Angeles',
-     home:{type:'runner',grp:'A'}, away:{type:'runner',grp:'B'}},
-    {id:'M74',date:'Jun 29',venue:'Boston',
-     home:{type:'winner',grp:'E'}, away:{type:'third',pool:'ABCDF'}},
-    {id:'M75',date:'Jun 29',venue:'Guadalupe, MX',
-     home:{type:'winner',grp:'F'}, away:{type:'runner',grp:'C'}},
-    {id:'M76',date:'Jun 29',venue:'Houston',
-     home:{type:'winner',grp:'C'}, away:{type:'runner',grp:'F'}},
-    {id:'M77',date:'Jun 30',venue:'New York-NJ',
-     home:{type:'winner',grp:'I'}, away:{type:'third',pool:'CDFGH'}},
-    {id:'M78',date:'Jun 30',venue:'Dallas',
-     home:{type:'runner',grp:'E'}, away:{type:'runner',grp:'I'}},
-    {id:'M79',date:'Jun 30',venue:'Mexico City',
-     home:{type:'winner',grp:'A'}, away:{type:'third',pool:'CEFHI'}},
-    {id:'M80',date:'Jul 1',venue:'Atlanta',
-     home:{type:'winner',grp:'L'}, away:{type:'third',pool:'EHIJK'}},
-    {id:'M81',date:'Jul 1',venue:'San Francisco',
-     home:{type:'winner',grp:'D'}, away:{type:'third',pool:'BEFIJ'}},
-    {id:'M82',date:'Jul 1',venue:'Seattle',
-     home:{type:'winner',grp:'G'}, away:{type:'third',pool:'AEHIJ'}},
-    {id:'M83',date:'Jul 2',venue:'Toronto',
-     home:{type:'runner',grp:'K'}, away:{type:'runner',grp:'L'}},
-    {id:'M84',date:'Jul 2',venue:'Los Angeles',
-     home:{type:'winner',grp:'H'}, away:{type:'runner',grp:'J'}},
-    {id:'M85',date:'Jul 2',venue:'Vancouver',
-     home:{type:'winner',grp:'B'}, away:{type:'third',pool:'EFGIJ'}},
-    {id:'M86',date:'Jul 2',venue:'Miami',
-     home:{type:'winner',grp:'J'}, away:{type:'runner',grp:'H'}},
-    {id:'M87',date:'Jul 2',venue:'Kansas City',
-     home:{type:'winner',grp:'K'}, away:{type:'third',pool:'DEIJL'}},
-    {id:'M88',date:'Jul 3',venue:'Dallas',
-     home:{type:'runner',grp:'D'}, away:{type:'runner',grp:'G'}},
+  // ── R32 match definitions ────────────────────────────────
+  const r32defs = [
+    {id:'M73',date:'Jun 28',venue:'Los Angeles',   home:{type:'runner',grp:'A'}, away:{type:'runner',grp:'B'}},
+    {id:'M74',date:'Jun 29',venue:'Boston',         home:{type:'winner',grp:'E'}, away:{type:'third',pool:'ABCDF'}},
+    {id:'M75',date:'Jun 29',venue:'Guadalupe, MX', home:{type:'winner',grp:'F'}, away:{type:'runner',grp:'C'}},
+    {id:'M76',date:'Jun 29',venue:'Houston',        home:{type:'winner',grp:'C'}, away:{type:'runner',grp:'F'}},
+    {id:'M77',date:'Jun 30',venue:'New York-NJ',   home:{type:'winner',grp:'I'}, away:{type:'third',pool:'CDFGH'}},
+    {id:'M78',date:'Jun 30',venue:'Dallas',         home:{type:'runner',grp:'E'}, away:{type:'runner',grp:'I'}},
+    {id:'M79',date:'Jun 30',venue:'Mexico City',   home:{type:'winner',grp:'A'}, away:{type:'third',pool:'CEFHI'}},
+    {id:'M80',date:'Jul 1', venue:'Atlanta',        home:{type:'winner',grp:'L'}, away:{type:'third',pool:'EHIJK'}},
+    {id:'M81',date:'Jul 1', venue:'San Francisco', home:{type:'winner',grp:'D'}, away:{type:'third',pool:'BEFIJ'}},
+    {id:'M82',date:'Jul 1', venue:'Seattle',        home:{type:'winner',grp:'G'}, away:{type:'third',pool:'AEHIJ'}},
+    {id:'M83',date:'Jul 2', venue:'Toronto',        home:{type:'runner',grp:'K'}, away:{type:'runner',grp:'L'}},
+    {id:'M84',date:'Jul 2', venue:'Los Angeles',   home:{type:'winner',grp:'H'}, away:{type:'runner',grp:'J'}},
+    {id:'M85',date:'Jul 2', venue:'Vancouver',      home:{type:'winner',grp:'B'}, away:{type:'third',pool:'EFGIJ'}},
+    {id:'M86',date:'Jul 2', venue:'Miami',          home:{type:'winner',grp:'J'}, away:{type:'runner',grp:'H'}},
+    {id:'M87',date:'Jul 2', venue:'Kansas City',   home:{type:'winner',grp:'K'}, away:{type:'third',pool:'DEIJL'}},
+    {id:'M88',date:'Jul 3', venue:'Dallas',         home:{type:'runner',grp:'D'}, away:{type:'runner',grp:'G'}},
   ];
 
-  function resolveSlot(slot, matchId){
-    if(slot.type==='winner') return {text:teamStr(slot.grp,0), isTBD:false, isThird:false};
-    if(slot.type==='runner') return {text:teamStr(slot.grp,1), isTBD:false, isThird:false};
-    const r = getThird(matchId, slot.pool, usedFallback);
-    return {...r, isThird:true};
-  }
+  // Resolve each R32 slot
+  const r32resolved = {};
+  r32defs.forEach(m => {
+    r32resolved[m.id] = {
+      ...m,
+      home: resolveSlot(m.home, m.id, usedFallback, top8, mapping, SLOT_IDX),
+      away: resolveSlot(m.away, m.id, usedFallback, top8, mapping, SLOT_IDX),
+    };
+  });
 
-  const cards = matches.map(m=>{
-    const home = resolveSlot(m.home, m.id);
-    const away = resolveSlot(m.away, m.id);
-    const isTBD = home.isTBD || away.isTBD;
-    const border = isTBD?'var(--border-strong)':away.isThird?'var(--status-amber-text)':'var(--football)';
-    const homeCol = isTBD?'var(--text-3)':'var(--text)';
-    const awayCol = isTBD?'var(--text-3)':away.isThird?'var(--status-amber-text)':'var(--text)';
-    const slotLabel = away.isThird
-      ? `${m.id} · W-${m.home.grp} vs Best 3rd (${m.away.pool.split('').join('/')})`
-      : `${m.id} · ${m.home.type==='winner'?'W':'2nd'}-${m.home.grp} vs ${m.away.type==='winner'?'W':'2nd'}-${m.away.grp}`;
-    return `<div class="bracket-match" style="border-left:3px solid ${border}">
-      <div class="bracket-match-hd"><span style="font-weight:800">${m.date}</span><span>${m.venue}</span></div>
-      <div style="font-size:10px;color:var(--text-3);font-style:italic;margin-bottom:6px">${slotLabel}</div>
-      <div style="padding:5px 0;border-bottom:1px solid var(--border);font-weight:600;font-size:13px;color:${homeCol}">${home.text}</div>
-      <div style="text-align:center;font-size:10px;color:var(--text-3);padding:2px 0">vs</div>
-      <div style="padding:5px 0;font-weight:600;font-size:13px;color:${awayCol}">${away.text}</div>
-      ${away.isThird?'<div style="font-size:10px;color:var(--status-amber-text);margin-top:4px">⚠️ Best 3rd — confirmed Jun 27</div>':''}
-    </div>`;
-  }).join('');
-
-  el.innerHTML = `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:12px;display:flex;align-items:flex-start;gap:8px">
-    <span style="font-size:15px;flex-shrink:0">${mapping?'✅':'⚠️'}</span>
-    <span style="color:var(--text)"><strong>${mapping?'FIFA Annex C mapping applied.':'Projected — group stage in progress.'}</strong> All teams derived from live standings. ${mapping?'Best 3rd assigned per official FIFA regulation.':'Best 3rd positions finalised Jun 27 once all groups complete.'} Amber border = Best 3rd place team.</span>
-  </div>
-  <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:12px;font-size:11px;color:var(--text-3)">
-    <span><span style="display:inline-block;width:10px;height:10px;background:var(--football);border-radius:2px;vertical-align:middle;margin-right:4px"></span>Direct qualifier</span>
-    <span><span style="display:inline-block;width:10px;height:10px;background:var(--status-amber-text);border-radius:2px;vertical-align:middle;margin-right:4px"></span>Best 3rd place</span>
-    <span><span style="display:inline-block;width:10px;height:10px;background:var(--border-strong);border-radius:2px;vertical-align:middle;margin-right:4px"></span>TBD</span>
-  </div>
-  <div class="bracket-grid">${cards}</div>`;
-}
-
-
-function renderPathway(){
-  const el = document.getElementById('fb-pathway-content');
-
-  // Build bracket slots — only show team if mathematically confirmed qualified
-  function sortedGroup(gk){ return sortGroup(fbGroups[gk].teams, fbGroups[gk].fixtures); }
-  function teamStr(gk, pos){
-    const g = fbGroups[gk];
-    const sorted = sortedGroup(gk);
-    const t = sorted[pos];
-    if(!t) return 'TBD';
-    const qs = computeQualStatus(t, pos, g.teams, g.fixtures);
-    return (qs.qual === 'qualified' || qs.qual === 'winner') ? `${t.flag} ${t.name}` : 'TBD';
-  }
-
-  const r32 = [
-    {id:'M73',home:teamStr('A',1),away:teamStr('B',1),date:'Jun 28'},
-    {id:'M74',home:teamStr('E',0),away:'⚠️ Best 3rd',date:'Jun 29'},
-    {id:'M75',home:teamStr('F',0),away:teamStr('C',1),date:'Jun 29'},
-    {id:'M76',home:teamStr('C',0),away:teamStr('F',1),date:'Jun 29'},
-    {id:'M77',home:teamStr('I',0),away:'⚠️ Best 3rd',date:'Jun 30'},
-    {id:'M78',home:teamStr('E',1),away:teamStr('I',1),date:'Jun 30'},
-    {id:'M79',home:teamStr('A',0),away:'⚠️ Best 3rd',date:'Jun 30'},
-    {id:'M80',home:teamStr('L',0),away:'⚠️ Best 3rd',date:'Jul 1'},
-    {id:'M81',home:teamStr('D',0),away:'⚠️ Best 3rd',date:'Jul 1'},
-    {id:'M82',home:teamStr('G',0),away:'⚠️ Best 3rd',date:'Jul 1'},
-    {id:'M83',home:teamStr('K',1),away:teamStr('L',1),date:'Jul 2'},
-    {id:'M84',home:teamStr('H',0),away:teamStr('J',1),date:'Jul 2'},
-    {id:'M85',home:teamStr('B',0),away:'⚠️ Best 3rd',date:'Jul 2'},
-    {id:'M86',home:teamStr('J',0),away:teamStr('H',1),date:'Jul 2'},
-    {id:'M87',home:teamStr('K',0),away:'⚠️ Best 3rd',date:'Jul 2'},
-    {id:'M88',home:teamStr('D',1),away:teamStr('G',1),date:'Jul 3'},
+  // ── Official R32 → R16 pairings (FIFA confirmed) ─────────
+  // M89: W(M74) vs W(M77)  Philadelphia
+  // M90: W(M73) vs W(M75)  Houston
+  // M91: W(M76) vs W(M78)  New York-NJ
+  // M92: W(M79) vs W(M80)  Mexico City
+  // M93: W(M83) vs W(M84)  Dallas
+  // M94: W(M81) vs W(M82)  Seattle
+  // M95: W(M86) vs W(M88)  Atlanta
+  // M96: W(M85) vs W(M87)  Vancouver
+  const r16defs = [
+    {id:'M89',date:'Jul 4', venue:'Philadelphia', r32a:'M74', r32b:'M77'},
+    {id:'M90',date:'Jul 4', venue:'Houston',      r32a:'M73', r32b:'M75'},
+    {id:'M91',date:'Jul 5', venue:'New York-NJ',  r32a:'M76', r32b:'M78'},
+    {id:'M92',date:'Jul 5', venue:'Mexico City',  r32a:'M79', r32b:'M80'},
+    {id:'M93',date:'Jul 6', venue:'Dallas',       r32a:'M83', r32b:'M84'},
+    {id:'M94',date:'Jul 6', venue:'Seattle',      r32a:'M81', r32b:'M82'},
+    {id:'M95',date:'Jul 7', venue:'Atlanta',      r32a:'M86', r32b:'M88'},
+    {id:'M96',date:'Jul 7', venue:'Vancouver',    r32a:'M85', r32b:'M87'},
   ];
 
-  function mCard(m){
-    const hTbd = m.home==='TBD', aTbd = m.away==='TBD'||m.away.startsWith('⚠️');
-    const hCls = hTbd ? 'tbd' : 'qualified';
-    const aCls = aTbd ? 'tbd' : 'qualified';
-    return `<div class="bracket-match-wrap">
-      <div class="bracket-team ${hCls}">${m.home}</div>
-      <div class="bracket-versus">${m.id} · ${m.date}</div>
-      <div class="bracket-team ${aCls}">${m.away}</div>
+  // QF, SF, Final — fixed bracket structure
+  // QF: M97=W(M89)vsW(M90), M98=W(M91)vsW(M92), M99=W(M93)vsW(M94), M100=W(M95)vsW(M96)
+  const qfdefs = [
+    {id:'M97',date:'Jul 9', venue:'Philadelphia',r16a:'M89',r16b:'M90'},
+    {id:'M98',date:'Jul 11',venue:'Dallas',      r16a:'M91',r16b:'M92'},
+    {id:'M99',date:'Jul 10',venue:'Seattle',     r16a:'M93',r16b:'M94'},
+    {id:'M100',date:'Jul 11',venue:'Miami',      r16a:'M95',r16b:'M96'},
+  ];
+  // SF: M101=W(M97)vsW(M98), M102=W(M99)vsW(M100)
+  const sfdefs = [
+    {id:'M101',date:'Jul 14',venue:'New York-NJ', qfa:'M97', qfb:'M98'},
+    {id:'M102',date:'Jul 15',venue:'Los Angeles', qfa:'M99', qfb:'M100'},
+  ];
+
+  // ── Build a team slot HTML element ───────────────────────
+  function teamEl(slot, classes=''){
+    const st = slot ? slot.state : 'tbd';
+    const text = slot ? slot.text : 'TBD';
+    const badge = st==='confirmed' ? '<span class="hkb-badge ok">✓</span>'
+                : st==='projected' ? '<span class="hkb-badge proj">~</span>'
+                : st==='third'     ? '<span class="hkb-badge t3">3rd</span>'
+                : '';
+    return `<div class="hkb-team ${st} ${classes}">${text}${badge}</div>`;
+  }
+
+  function matchEl(r32m, showMeta=true){
+    const h = r32resolved[r32m.id].home;
+    const a = r32resolved[r32m.id].away;
+    return `<div class="hkb-match" data-mid="${r32m.id}">
+      ${teamEl(h)}
+      <div class="hkb-vs">${r32m.id} · ${r32m.date}</div>
+      ${teamEl(a)}
+      ${showMeta ? `<div class="hkb-meta">${r32m.venue}</div>` : ''}
     </div>`;
   }
-  function tbdCol(n){
-    return Array(n).fill(0).map(()=>`<div class="bracket-match-wrap">
-      <div class="bracket-team tbd">TBD</div>
-      <div class="bracket-versus">—</div>
-      <div class="bracket-team tbd">TBD</div>
-    </div>`).join('');
+
+  function tbdMatchEl(id, date, venue, label='TBD'){
+    return `<div class="hkb-match">
+      <div class="hkb-team tbd">${label}</div>
+      <div class="hkb-vs">${id}${date?' · '+date:''}</div>
+      <div class="hkb-team tbd">${label}</div>
+      ${venue ? `<div class="hkb-meta">${venue}</div>` : ''}
+    </div>`;
   }
 
-  el.innerHTML = `
-  <div class="info" style="margin-bottom:16px">
-    <strong>To win the World Cup</strong> a team must play <strong>8 matches total</strong> — 3 group stage + 5 knockout rounds.
-    No draws from Round of 32 onwards — extra time then penalties if level after 90 mins.
-  </div>
-
-  <div class="bracket-tree">
-    <div class="bracket-rounds">
-
-      <div class="bracket-col" style="min-width:158px">
-        <div class="bracket-col-hd">Round of 32 <span class="bracket-col-sub">Jun 28 – Jul 3</span></div>
-        <div class="bracket-slots">${r32.slice(0,8).map(mCard).join('')}</div>
-      </div>
-
-      <div class="bracket-col" style="min-width:158px">
-        <div class="bracket-col-hd">&nbsp;<span class="bracket-col-sub">16 matches total</span></div>
-        <div class="bracket-slots">${r32.slice(8,16).map(mCard).join('')}</div>
-      </div>
-
-      <div class="bracket-col" style="min-width:145px">
-        <div class="bracket-col-hd">Round of 16 <span class="bracket-col-sub">Jul 4 – 7</span></div>
-        <div class="bracket-slots">${tbdCol(8)}</div>
-      </div>
-
-      <div class="bracket-col" style="min-width:140px">
-        <div class="bracket-col-hd">Quarter-Finals <span class="bracket-col-sub">Jul 9 – 11</span></div>
-        <div class="bracket-slots">${tbdCol(4)}</div>
-      </div>
-
-      <div class="bracket-col" style="min-width:138px">
-        <div class="bracket-col-hd">Semi-Finals <span class="bracket-col-sub">Jul 14 – 15</span></div>
-        <div class="bracket-slots">${tbdCol(2)}</div>
-      </div>
-
-      <div class="bracket-final-col">
-        <div class="bracket-col-hd" style="color:#d97706;border-color:#d97706;width:100%;text-align:center;padding:8px 10px 8px">Final <span class="bracket-col-sub">Jul 19 · New York</span></div>
-        <div class="bracket-trophy">🏆</div>
-        <div class="bracket-final-team tbd">TBD</div>
-        <div class="bracket-versus" style="font-size:11px;padding:4px 0">vs</div>
-        <div class="bracket-final-team tbd">TBD</div>
-        <div class="bracket-date-note">MetLife Stadium, New Jersey</div>
-      </div>
-
-    </div>
-  </div>
-
-  <div style="display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:var(--text-3);margin:12px 0 20px;padding:0 2px">
-    <span><span style="display:inline-block;width:10px;height:10px;background:var(--football);border-radius:2px;vertical-align:middle;margin-right:4px"></span>Confirmed qualified</span>
-    <span><span style="display:inline-block;width:10px;height:10px;background:var(--surface2);border:1px solid var(--border-strong);border-radius:2px;vertical-align:middle;margin-right:4px"></span>TBD — group not yet decided</span>
-    <span>⚠️ Best 3rd slots filled after Jun 27</span>
-  </div>
-
-  <div style="margin-top:4px">
-    <div class="sec-hd" id="wcsw-hd"><h2>Who Can Still Win?</h2><span class="chip chip-fb" id="wcsw-chip">LIVE</span></div>
-    <div class="info" id="wcsw-info">
-      The table below shows each team's current qualification status based on live standings.
-    </div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px;margin-top:10px" id="status-grid"></div>
+  // ── Legend ────────────────────────────────────────────────
+  const legend = `<div class="hkb-legend">
+    <span><span class="hkb-leg-dot" style="background:var(--football)"></span>Confirmed ✓</span>
+    <span><span class="hkb-leg-dot" style="background:var(--status-amber-bg);border:2px dashed var(--status-amber-border)"></span>Qualified, position projected ~</span>
+    <span><span class="hkb-leg-dot" style="background:var(--status-amber-bg);border:2px solid var(--status-amber-text)"></span>Best 3rd place</span>
+    <span><span class="hkb-leg-dot" style="background:var(--surface2);border:1px solid var(--border-strong)"></span>TBD</span>
+    <span style="font-size:10px;color:var(--text-3)">${mapping?'✅ FIFA Annex C applied':'⚠️ Best 3rd projected — confirmed Jun 27'}</span>
   </div>`;
 
-  // Status grid
-  const statusGrid = document.getElementById('status-grid');
-  if(!statusGrid) return;
-  let html = '';
+  // ══════════════════════════════════════════════════════════
+  // DESKTOP LAYOUT: horizontal SVG bracket tree
+  // ══════════════════════════════════════════════════════════
+
+  // Column widths
+  const COL_W = 164; // match card column
+  const CONN_W = 28; // connector column
+
+  // Build R32 column — pairs grouped by their R16 match
+  // Each r16def defines a pair; we render them in r16 order for proper alignment
+  function r32ColHtml(){
+    return r16defs.map(r16 => {
+      const ma = r32defs.find(m=>m.id===r16.r32a);
+      const mb = r32defs.find(m=>m.id===r16.r32b);
+      return `<div class="hkb-pair" data-r16="${r16.id}">
+        ${matchEl(ma)}
+        ${matchEl(mb)}
+      </div>`;
+    }).join('');
+  }
+
+  // Build R16 column
+  function r16ColHtml(){
+    return r16defs.map(r16=>{
+      return tbdMatchEl(r16.id, r16.date, r16.venue, 'Winner');
+    }).join('');
+  }
+
+  // Build QF column
+  function qfColHtml(){
+    return qfdefs.map(qf=>{
+      return tbdMatchEl(qf.id, qf.date, qf.venue, 'Winner');
+    }).join('');
+  }
+
+  // Build SF column
+  function sfColHtml(){
+    return sfdefs.map(sf=>{
+      return tbdMatchEl(sf.id, sf.date, sf.venue, 'Winner');
+    }).join('');
+  }
+
+  const desktopHtml = `
+  <div class="hkb-desktop">
+    ${legend}
+    <div class="hkb-scroll" id="hkb-scroll">
+      <div class="hkb-tree" id="hkb-tree">
+
+        <!-- R32 column -->
+        <div class="hkb-col" style="width:${COL_W}px">
+          <div class="hkb-col-hd">Round of 32<span class="hkb-col-sub">Jun 28 – Jul 3</span></div>
+          <div class="hkb-slots" id="hkb-r32-slots">${r32ColHtml()}</div>
+        </div>
+
+        <!-- R32→R16 connector -->
+        <div class="hkb-conn" style="width:${CONN_W}px" id="conn-r32-r16"></div>
+
+        <!-- R16 column -->
+        <div class="hkb-col" style="width:${COL_W}px">
+          <div class="hkb-col-hd">Round of 16<span class="hkb-col-sub">Jul 4 – 7</span></div>
+          <div class="hkb-slots" id="hkb-r16-slots">${r16ColHtml()}</div>
+        </div>
+
+        <!-- R16→QF connector -->
+        <div class="hkb-conn" style="width:${CONN_W}px" id="conn-r16-qf"></div>
+
+        <!-- QF column -->
+        <div class="hkb-col" style="width:${COL_W}px">
+          <div class="hkb-col-hd">Quarter-Finals<span class="hkb-col-sub">Jul 9 – 11</span></div>
+          <div class="hkb-slots" id="hkb-qf-slots">${qfColHtml()}</div>
+        </div>
+
+        <!-- QF→SF connector -->
+        <div class="hkb-conn" style="width:${CONN_W}px" id="conn-qf-sf"></div>
+
+        <!-- SF column -->
+        <div class="hkb-col" style="width:${COL_W}px">
+          <div class="hkb-col-hd">Semi-Finals<span class="hkb-col-sub">Jul 14 – 15</span></div>
+          <div class="hkb-slots" id="hkb-sf-slots">${sfColHtml()}</div>
+        </div>
+
+        <!-- SF→Final connector -->
+        <div class="hkb-conn" style="width:${CONN_W}px" id="conn-sf-final"></div>
+
+        <!-- Final column -->
+        <div class="hkb-final-col">
+          <div class="hkb-col-hd final">Final<span class="hkb-col-sub">Jul 19 · MetLife, NJ</span></div>
+          <div class="hkb-trophy">🏆</div>
+          <div class="hkb-final-team tbd">TBD</div>
+          <div class="hkb-vs" style="padding:4px 0">vs</div>
+          <div class="hkb-final-team tbd">TBD</div>
+          <div class="hkb-3rd-note">3rd place match: Jul 18</div>
+          <div class="hkb-date-note">MetLife Stadium, New Jersey</div>
+        </div>
+
+      </div>
+    </div>
+  </div>`;
+
+  // ══════════════════════════════════════════════════════════
+  // MOBILE LAYOUT: vertical pods
+  // ══════════════════════════════════════════════════════════
+
+  function mobilePodHtml(r16, idx){
+    const ma = r32defs.find(m=>m.id===r16.r32a);
+    const mb = r32defs.find(m=>m.id===r16.r32b);
+    const ra = r32resolved[ma.id];
+    const rb = r32resolved[mb.id];
+
+    function mobileTeam(slot, isTbd){
+      if(isTbd || !slot) return '<div class="hkb-pod-team tbd">TBD</div>';
+      return `<div class="hkb-pod-team ${slot.state}">${slot.text}</div>`;
+    }
+
+    return `<div class="hkb-pod">
+      <div class="hkb-pod-hd">
+        <span>${r16.id} · ${r16.date} · ${r16.venue}</span>
+        <span style="font-size:9px;color:var(--text-3)">R16 slot ${idx+1}/8</span>
+      </div>
+      <div class="hkb-pod-r32">
+        <div class="hkb-pod-match">
+          <div class="hkb-pod-match-id">${ma.id} · ${ma.date}</div>
+          ${mobileTeam(ra.home, ra.home.state==='tbd')}
+          ${mobileTeam(ra.away, ra.away.state==='tbd')}
+          <div class="hkb-pod-venue">${ma.venue}</div>
+        </div>
+        <div class="hkb-pod-match">
+          <div class="hkb-pod-match-id">${mb.id} · ${mb.date}</div>
+          ${mobileTeam(rb.home, rb.home.state==='tbd')}
+          ${mobileTeam(rb.away, rb.away.state==='tbd')}
+          <div class="hkb-pod-venue">${mb.venue}</div>
+        </div>
+      </div>
+      <div class="hkb-pod-arrow">↓ Winners advance</div>
+      <div class="hkb-pod-r16">
+        ${r16.id} → TBD vs TBD · ${r16.venue}
+      </div>
+    </div>`;
+  }
+
+  const mobilePodsHtml = r16defs.map((r16,i) => mobilePodHtml(r16,i)).join('');
+
+  const mobileHtml = `
+  <div class="hkb-mobile">
+    ${legend}
+    ${mobilePodsHtml}
+    <div class="hkb-mob-later">
+      <div class="hkb-mob-round-hd">Quarter-Finals <span style="font-size:9px;font-weight:500;color:var(--text-3)">Jul 9–11</span></div>
+      <div class="hkb-mob-matches">
+        ${qfdefs.map(qf=>`<div class="hkb-mob-match">
+          <div class="hkb-mob-team tbd">TBD</div>
+          <div class="hkb-vs">vs</div>
+          <div class="hkb-mob-team tbd">TBD</div>
+          <div class="hkb-mob-meta">${qf.id} · ${qf.date} · ${qf.venue}</div>
+        </div>`).join('')}
+      </div>
+      <div class="hkb-mob-round-hd">Semi-Finals <span style="font-size:9px;font-weight:500;color:var(--text-3)">Jul 14–15</span></div>
+      <div class="hkb-mob-matches">
+        ${sfdefs.map(sf=>`<div class="hkb-mob-match">
+          <div class="hkb-mob-team tbd">TBD</div>
+          <div class="hkb-vs">vs</div>
+          <div class="hkb-mob-team tbd">TBD</div>
+          <div class="hkb-mob-meta">${sf.id} · ${sf.date} · ${sf.venue}</div>
+        </div>`).join('')}
+      </div>
+      <div class="hkb-mob-round-hd" style="color:#d97706;border-color:#d97706">Final 🏆 <span style="font-size:9px;font-weight:500;color:var(--text-3)">Jul 19</span></div>
+      <div class="hkb-mob-match" style="max-width:300px">
+        <div class="hkb-mob-team tbd">TBD</div>
+        <div class="hkb-vs">vs</div>
+        <div class="hkb-mob-team tbd">TBD</div>
+        <div class="hkb-mob-meta">M103 · Jul 19 · MetLife Stadium, NJ</div>
+      </div>
+    </div>
+  </div>`;
+
+  el.innerHTML = desktopHtml + mobileHtml;
+
+  // ── Draw SVG connector lines (desktop only) ───────────────
+  requestAnimationFrame(() => drawBracketConnectors());
+}
+
+function drawBracketConnectors(){
+  // For each connector column, draw bracket lines linking pairs of slots
+  // to the single slot in the next column
+  function getColSlots(slotsId){
+    const col = document.getElementById(slotsId);
+    if(!col) return [];
+    return Array.from(col.querySelectorAll('.hkb-match'));
+  }
+
+  function drawConnectors(connId, leftSlots, rightSlots){
+    const conn = document.getElementById(connId);
+    if(!conn || !leftSlots.length || !rightSlots.length) return;
+    const connRect = conn.getBoundingClientRect();
+    const scrollEl = document.getElementById('hkb-scroll');
+    const scrollLeft = scrollEl ? scrollEl.scrollLeft : 0;
+
+    // Set connector height to match tree height
+    const treeEl = document.getElementById('hkb-tree');
+    if(treeEl) conn.style.height = treeEl.offsetHeight + 'px';
+
+    let svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
+    svg.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;overflow:visible;pointer-events:none';
+
+    const color = getComputedStyle(document.documentElement)
+      .getPropertyValue('--border-strong').trim() || '#ccc';
+
+    // Pair up left slots: 0+1 → right[0], 2+3 → right[1], etc.
+    for(let i=0; i<rightSlots.length; i++){
+      const la = leftSlots[i*2];
+      const lb = leftSlots[i*2+1];
+      const rc = rightSlots[i];
+      if(!la || !lb || !rc) continue;
+
+      const laRect = la.getBoundingClientRect();
+      const lbRect = lb.getBoundingClientRect();
+      const rcRect = rc.getBoundingClientRect();
+
+      // Y centres relative to connector element
+      const topOffset = connRect.top;
+      const y1 = laRect.top + laRect.height/2 - topOffset;
+      const y2 = lbRect.top + lbRect.height/2 - topOffset;
+      const y3 = rcRect.top + rcRect.height/2 - topOffset;
+      const midY = (y1+y2)/2;
+      const x0 = 0;
+      const xMid = conn.offsetWidth/2;
+      const x1 = conn.offsetWidth;
+
+      // Horizontal from left edge to midpoint, vertical bracket, horizontal to right edge
+      const path = document.createElementNS('http://www.w3.org/2000/svg','path');
+      path.setAttribute('d',
+        `M${x0},${y1} H${xMid} V${y2} H${x0}` + // left bracket arm
+        ` M${xMid},${midY} H${x1}` +              // horizontal to right
+        ` M${xMid},${y3-8} V${y3} H${x1}`        // stub to right slot
+      );
+      // Simpler clean bracket: two horizontals + one vertical + connector
+      path.setAttribute('d',
+        `M0,${y1} H${xMid} M0,${y2} H${xMid} M${xMid},${y1} V${y2} M${xMid},${midY} H${conn.offsetWidth}`
+      );
+      path.setAttribute('stroke', color);
+      path.setAttribute('stroke-width','1.5');
+      path.setAttribute('fill','none');
+      path.setAttribute('stroke-linecap','round');
+      svg.appendChild(path);
+    }
+
+    conn.innerHTML = '';
+    conn.appendChild(svg);
+  }
+
+  const r32Slots  = getColSlots('hkb-r32-slots');
+  const r16Slots  = getColSlots('hkb-r16-slots');
+  const qfSlots   = getColSlots('hkb-qf-slots');
+  const sfSlots   = getColSlots('hkb-sf-slots');
+
+  // R32 slots are inside .hkb-pair divs — get individual .hkb-match
+  const r32Matches = Array.from(document.querySelectorAll('#hkb-r32-slots .hkb-match'));
+
+  drawConnectors('conn-r32-r16', r32Matches, r16Slots);
+  drawConnectors('conn-r16-qf',  r16Slots,   qfSlots);
+  drawConnectors('conn-qf-sf',   qfSlots,    sfSlots);
+  // SF→Final: 2 sf slots connect to 1 final — handled manually
+  const sfMatches = sfSlots;
+  const finalTeams = document.querySelectorAll('.hkb-final-team');
+  if(sfMatches.length===2 && finalTeams.length>=2){
+    const conn = document.getElementById('conn-sf-final');
+    if(conn){
+      const connRect = conn.getBoundingClientRect();
+      const treeEl = document.getElementById('hkb-tree');
+      if(treeEl) conn.style.height = treeEl.offsetHeight + 'px';
+      let svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
+      svg.style.cssText='position:absolute;top:0;left:0;width:100%;height:100%;overflow:visible;pointer-events:none';
+      const color = getComputedStyle(document.documentElement).getPropertyValue('--border-strong').trim()||'#ccc';
+      const y1 = sfMatches[0].getBoundingClientRect().top + sfMatches[0].offsetHeight/2 - connRect.top;
+      const y2 = sfMatches[1].getBoundingClientRect().top + sfMatches[1].offsetHeight/2 - connRect.top;
+      const yf1 = finalTeams[0].getBoundingClientRect().top + finalTeams[0].offsetHeight/2 - connRect.top;
+      const yf2 = finalTeams[1].getBoundingClientRect().top + finalTeams[1].offsetHeight/2 - connRect.top;
+      const xMid = conn.offsetWidth/2;
+      const p1 = document.createElementNS('http://www.w3.org/2000/svg','path');
+      p1.setAttribute('d',`M0,${y1} H${xMid} M${xMid},${y1} V${y2} M0,${y2} H${xMid} M${xMid},${yf1} H${conn.offsetWidth} M${xMid},${yf2} H${conn.offsetWidth}`);
+      p1.setAttribute('stroke',color);p1.setAttribute('stroke-width','1.5');p1.setAttribute('fill','none');p1.setAttribute('stroke-linecap','round');
+      svg.appendChild(p1);
+      conn.innerHTML='';conn.appendChild(svg);
+    }
+  }
+}
+
+function renderWCSW(){
+  const el = document.getElementById('fb-wcsw-content');
+  if(!el) return;
+  let html = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px;margin-top:10px">';
   Object.keys(fbGroups).forEach(key => {
     const g = fbGroups[key];
     const sorted = sortGroup(g.teams, g.fixtures);
@@ -3346,8 +3562,10 @@ function renderPathway(){
       </div>`;
     });
   });
-  statusGrid.innerHTML = html;
+  html += '</div>';
+  el.innerHTML = html;
 }
+
 
 
 function renderBest3rd(){
@@ -3535,8 +3753,8 @@ function initFootball(){
   if(el.innerHTML === ''){
     renderFbGroups('ALL');
     renderBest3rd();
-    renderR32();
-    renderPathway();
+    renderBracket();
+    renderWCSW();
   }
   // Always try to fetch fresh data (first call or returning to tab)
   if(!fbFetchTimer){
