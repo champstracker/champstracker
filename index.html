@@ -2757,6 +2757,14 @@ async function fetchFbData(silent){
     const upEl = document.getElementById('hdrUpdated'); if(upEl) upEl.textContent = '· Updated ' + new Date().toLocaleTimeString();
   } catch(e){
     console.warn('Football API fetch failed:', e);
+    // Fetch failed — fall back to rendering seed data so page isn't blank
+    const activeTab = document.querySelector('.grp-tab.active');
+    const activeGroup = activeTab ? activeTab.textContent.trim().toUpperCase() : 'ALL';
+    renderBest3rd();
+    renderFbGroups(activeGroup);
+    renderBracket();
+    renderWCSW();
+    updateProgressBar();
   } finally {
     setFbLoading(false);
   }
@@ -3712,15 +3720,7 @@ function sw(sport){
 }
 
 function initFootball(){
-  const el = document.getElementById('fb-groups-content');
-  if(el.innerHTML === ''){
-    renderBest3rd();
-    renderFbGroups('ALL');
-    renderBracket();
-    renderWCSW();
-    updateProgressBar();
-  }
-  // Always try to fetch fresh data (first call or returning to tab)
+  // Fetch first — seed data renders as fallback only if fetch fails
   if(!fbFetchTimer){
     fetchFbData(false);
     scheduleFbPoll();
