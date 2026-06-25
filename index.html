@@ -2828,6 +2828,16 @@ function computeQualStatus(team, position, groupTeams, groupFixtures){
   const totalGames = 3;
   const myMax = team.pts + (totalGames - team.p) * 3;
 
+  // ── Early exit: all group games played → use final standings position directly ──
+  const groupDone = groupTeams.every(t => t.p >= totalGames);
+  if(groupDone){
+    // position is 0-indexed rank in already-sorted groupTeams
+    if(position === 0) return {qual:'winner',    label:'GROUP WINNER ✓'};
+    if(position === 1) return {qual:'qualified', label:'QUALIFIED ✓'};
+    if(position === 2) return {qual:'danger',    label:'BEST 3RD ONLY'};
+    return                    {qual:'out',       label:'ELIMINATED'};
+  }
+
   let possiblyAbove = 0;  // for QUALIFIED check
   let guaranteedAbove = 0; // for ELIMINATED check
 
