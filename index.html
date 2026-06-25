@@ -207,7 +207,7 @@ body{
 .fb-subnav-item.active{color:var(--football);border-color:var(--football)}
 
 /* ═══ MAIN CONTENT ══════════════════════════════════════ */
-.main{padding:24px 24px 60px;max-width:1280px}
+.main{padding:24px 24px 60px;max-width:1600px;margin:0 auto}
 .panel{display:none}.panel.active{display:block}
 
 /* ═══ CHIPS / BADGES ════════════════════════════════════ */
@@ -788,6 +788,26 @@ tbody tr:hover td{background:var(--surface2)}
 
 /* bracket-tree styles replaced by .hkb-* */
 
+/* ── Stacked bracket layout ── */
+.hkb-stack{display:flex;flex-direction:column;gap:0;overflow-x:auto;padding:8px 0 16px}
+.hkb-stack::-webkit-scrollbar{height:5px}
+.hkb-stack::-webkit-scrollbar-track{background:var(--surface2);border-radius:3px}
+.hkb-stack::-webkit-scrollbar-thumb{background:var(--border-strong);border-radius:3px}
+.hkb-row{display:flex;align-items:stretch;flex-shrink:0;min-width:max-content}
+.hkb-row-label{font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:800;
+  letter-spacing:.08em;text-transform:uppercase;color:var(--text-4);writing-mode:vertical-rl;
+  transform:rotate(180deg);padding:4px 2px;flex-shrink:0;width:14px;display:flex;
+  align-items:center;justify-content:center}
+.hkb-divider{height:1px;background:var(--border);margin:8px 0;flex-shrink:0}
+.hkb-final-row{display:flex;align-items:center;justify-content:center;
+  padding:12px 0;min-width:max-content;gap:16px}
+.hkb-fit-btn{font-size:11px;padding:4px 10px;border-radius:6px;border:1px solid var(--border);
+  background:var(--surface2);color:var(--text-3);cursor:pointer;font-family:'Inter',sans-serif;
+  transition:all .15s;white-space:nowrap}
+.hkb-fit-btn:hover{color:var(--text);background:var(--surface);border-color:var(--text-3)}
+.hkb-fit-btn.active{background:var(--football);color:#fff;border-color:var(--football)}
+.hkb-bracket-wrap{transition:transform .2s;transform-origin:top left}
+
 @media(max-width:860px){
   .champ-cols{grid-template-columns:1fr}
   .rounds-toggle{grid-template-columns:1fr}
@@ -912,7 +932,7 @@ tbody tr:hover td{background:var(--surface2)}
 <div class="fb-subnav" id="fb-subnav">
   <a class="fb-subnav-item active" onclick="scrollToFbSection('fb-groups')">🗂 Groups</a>
   <a class="fb-subnav-item" onclick="scrollToFbSection('fb-best3rd')">🏅 Best 3rd</a>
-  <a class="fb-subnav-item" onclick="scrollToFbSection('fb-bracket')">🏆 Bracket</a>
+  <a class="fb-subnav-item" onclick="scrollToFbSection('fb-bracket')">🏆 Knockouts</a>
   <a class="fb-subnav-item" onclick="scrollToFbSection('fb-wcsw')">🔮 Who Can Win?</a>
 </div>
 
@@ -1107,7 +1127,7 @@ tbody tr:hover td{background:var(--surface2)}
   <div class="fb-section-hd" id="fb-bracket" style="margin-top:28px">
     <div class="fb-sec-label">
       <span class="fb-sec-num">03</span>
-      <span class="fb-sec-title">Knockout Bracket</span>
+      <span class="fb-sec-title">Knockouts</span>
       <span class="chip chip-up">R32 → FINAL</span>
     </div>
     <div style="font-size:11px;color:var(--muted)">
@@ -3233,162 +3253,92 @@ function renderBracket(){
   </div>`;
 
   // ══════════════════════════════════════════════════════════
-  // DESKTOP: Two-sided mirrored bracket
-  // Left half:  M89,M90,M91,M92 → QF M97,M99 → SF M101 ─┐
-  //                                                        ├─ Final M104
-  // Right half: M93,M94,M95,M96 → QF M98,M100 → SF M102 ─┘
-  // (right half renders R32 on the far right, reading inward)
-  //
-  // Left bracket R16 order: M89(top), M90, M91, M92(bottom)
-  // Right bracket R16 order: M93(top), M94, M95, M96(bottom)
-  // Left QF: M97=W89vsW90 (top), M99=W91vsW92 (bottom)
-  // Right QF: M98=W93vsW94 (top), M100=W95vsW96 (bottom)
-  // Left SF: M101=W97vsW99
-  // Right SF: M102=W98vsW100  ← NOTE: fifa says M101=W97vsW98, M102=W99vsW100
-  // For the two-sided visual we split: left SF=M101(W97vsW98), right SF=M102(W99vsW100)
+  // DESKTOP: Stacked two-row bracket (Option C)
+  // Top row:    M74,M77,M73,M75,M76,M78,M79,M80 → M89-M92 → M97,M99 → M101
+  // Bottom row: M83,M84,M81,M82,M86,M88,M85,M87 → M93-M96 → M98,M100 → M102
+  // Final: shared at right end of both rows
+  // ══════════════════════════════════════════════════════════
 
-  // Left side R16 slots (top to bottom): M89, M90, M91, M92
-  // Right side R16 slots (top to bottom): M93, M94, M95, M96
+  function buildRow(r32ids, r16ids, qfids, sfid, sfdate, sfvenue, rowLabel){
+    const r32slots = r32ids.map(function(mid){
+      return '<div class="hkb-pair" data-r16="' + mid + '">' + r32Card(mid) + '</div>';
+    }).join('');
+    const r32col = '<div class="hkb-col" id="hkb-r32-' + rowLabel + '">'
+      + '<div class="hkb-col-hd">Round of 32<span class="hkb-col-sub">Jun 28\u2013Jul 3</span></div>'
+      + '<div class="hkb-slots" id="hkb-r32s-' + rowLabel + '">' + r32slots + '</div>'
+      + '</div>';
 
-  function buildHalf(r16pair, qfpair, sfid, sfdate, sfvenue, isLeft){
-    // r16pair = [r16def, r16def, r16def, r16def] — 4 R16 slots
-    // qfpair = [qfdef, qfdef] — 2 QF slots
-    const r32col = `<div class="hkb-col" id="hkb-r32-${isLeft?'L':'R'}">
-      <div class="hkb-col-hd">Round of 32<span class="hkb-col-sub">${isLeft?'Jun 28–Jul 3':''}</span></div>
-      <div class="hkb-slots" id="hkb-r32s-${isLeft?'L':'R'}">
-        ${r16pair.map(r16=>`<div class="hkb-pair" data-r16="${r16.id}">
-          ${r32Card(r16.r32a)}
-          ${r32Card(r16.r32b)}
-        </div>`).join('')}
-      </div>
-    </div>`;
+    const connR32R16 = '<div class="hkb-conn" id="hkb-c1-' + rowLabel + '"></div>';
 
-    const connR32R16 = `<div class="hkb-conn" id="hkb-c1-${isLeft?'L':'R'}"></div>`;
+    const r16slots = r16ids.map(function(r16){
+      return tbdCard(r16.id, r16.date, r16.venue);
+    }).join('');
+    const r16col = '<div class="hkb-col" id="hkb-r16-' + rowLabel + '">'
+      + '<div class="hkb-col-hd">Round of 16<span class="hkb-col-sub">Jul 4\u20137</span></div>'
+      + '<div class="hkb-slots" id="hkb-r16s-' + rowLabel + '">' + r16slots + '</div>'
+      + '</div>';
 
-    const r16col = `<div class="hkb-col" id="hkb-r16-${isLeft?'L':'R'}">
-      <div class="hkb-col-hd">Round of 16<span class="hkb-col-sub">${isLeft?'Jul 4–7':''}</span></div>
-      <div class="hkb-slots" id="hkb-r16s-${isLeft?'L':'R'}">
-        ${r16pair.map(r16=>tbdCard(r16.id, r16.date, r16.venue)).join('')}
-      </div>
-    </div>`;
+    const connR16QF = '<div class="hkb-conn" id="hkb-c2-' + rowLabel + '"></div>';
 
-    const connR16QF = `<div class="hkb-conn" id="hkb-c2-${isLeft?'L':'R'}"></div>`;
+    const qfslots = qfids.map(function(qf){
+      return tbdCard(qf.id, qf.date, qf.venue);
+    }).join('');
+    const qfcol = '<div class="hkb-col" id="hkb-qf-' + rowLabel + '">'
+      + '<div class="hkb-col-hd">Quarter-Finals<span class="hkb-col-sub">Jul 9\u201312</span></div>'
+      + '<div class="hkb-slots" id="hkb-qfs-' + rowLabel + '">' + qfslots + '</div>'
+      + '</div>';
 
-    const qfcol = `<div class="hkb-col" id="hkb-qf-${isLeft?'L':'R'}">
-      <div class="hkb-col-hd">Quarter-Finals<span class="hkb-col-sub">${isLeft?'Jul 9–12':''}</span></div>
-      <div class="hkb-slots" id="hkb-qfs-${isLeft?'L':'R'}">
-        ${qfpair.map(qf=>tbdCard(qf.id, qf.date, qf.venue)).join('')}
-      </div>
-    </div>`;
+    const connQFSF = '<div class="hkb-conn" id="hkb-c3-' + rowLabel + '"></div>';
 
-    const connQFSF = `<div class="hkb-conn" id="hkb-c3-${isLeft?'L':'R'}"></div>`;
+    const sfcol = '<div class="hkb-col" id="hkb-sf-' + rowLabel + '">'
+      + '<div class="hkb-col-hd">Semi-Final<span class="hkb-col-sub">Jul 14\u201315</span></div>'
+      + '<div class="hkb-slots" id="hkb-sfs-' + rowLabel + '">' + tbdCard(sfid, sfdate, sfvenue) + '</div>'
+      + '</div>';
 
-    const sfcol = `<div class="hkb-col" id="hkb-sf-${isLeft?'L':'R'}">
-      <div class="hkb-col-hd">Semi-Final<span class="hkb-col-sub">${isLeft?'Jul 14–15':''}</span></div>
-      <div class="hkb-slots" id="hkb-sfs-${isLeft?'L':'R'}">
-        ${tbdCard(sfid, sfdate, sfvenue)}
-      </div>
-    </div>`;
+    const connSFFinal = '<div class="hkb-conn" id="hkb-c4-' + rowLabel + '"></div>';
 
-    const connSFFinal = `<div class="hkb-conn" id="hkb-c4-${isLeft?'L':'R'}"></div>`;
-
-    if(isLeft){
-      return r32col + connR32R16 + r16col + connR16QF + qfcol + connQFSF + sfcol + connSFFinal;
-    } else {
-      return connSFFinal + sfcol + connQFSF + qfcol + connR16QF + r16col + connR32R16 + r32col;
-    }
+    return r32col + connR32R16 + r16col + connR16QF + qfcol + connQFSF + sfcol + connSFFinal;
   }
 
-  const leftR16  = [r16defs[0], r16defs[1], r16defs[2], r16defs[3]]; // M89,M90,M91,M92
-  const rightR16 = [r16defs[4], r16defs[5], r16defs[6], r16defs[7]]; // M93,M94,M95,M96
-  const leftQF   = [qfdefs[0], qfdefs[2]]; // M97(W89vsW90), M99(W91vsW92)
-  const rightQF  = [qfdefs[1], qfdefs[3]]; // M98(W93vsW94), M100(W95vsW96)
+  // Top row R16/QF objects
+  const topR16 = [r16defs[0],r16defs[1],r16defs[2],r16defs[3]]; // M89,M90,M91,M92
+  const topQF  = [qfdefs[0],qfdefs[2]];                          // M97,M99
+  const botR16 = [r16defs[4],r16defs[5],r16defs[6],r16defs[7]]; // M93,M94,M95,M96
+  const botQF  = [qfdefs[1],qfdefs[3]];                          // M98,M100
+
+  // R32 match order (pairs that feed each R16)
+  const topR32 = ['M74','M77','M73','M75','M76','M78','M79','M80'];
+  const botR32 = ['M83','M84','M81','M82','M86','M88','M85','M87'];
+
+  const finalCol = `<div class="hkb-final-center" id="hkb-final-center" style="align-self:stretch;display:flex;flex-direction:column;align-items:center;justify-content:center">
+    <div class="hkb-col-hd final-hd" style="width:100%;margin-bottom:10px">Final<span class="hkb-col-sub">Jul 19 · MetLife, NJ</span></div>
+    <div class="hkb-trophy">🏆</div>
+    <div class="hkb-final-team tbd" id="hkb-ft1">TBD</div>
+    <div class="hkb-vs" style="padding:5px 0;font-size:11px">vs</div>
+    <div class="hkb-final-team tbd" id="hkb-ft2">TBD</div>
+    <div class="hkb-3rd-note">3rd place match<br>Jul 18 · Miami</div>
+  </div>`;
 
   const desktopHtml = `<div class="hkb-desktop">
     ${legend}
-    <div class="hkb-two-sided" id="hkb-two-sided">
-      <div class="hkb-half left" id="hkb-half-L">
-        ${buildHalf(leftR16, leftQF, 'M101','Jul 14','Dallas', true)}
-      </div>
-      <div class="hkb-final-center" id="hkb-final-center">
-        <div class="hkb-col-hd final-hd" style="width:100%;margin-bottom:10px">Final<span class="hkb-col-sub">Jul 19 · MetLife, NJ</span></div>
-        <div class="hkb-trophy">🏆</div>
-        <div class="hkb-final-team tbd" id="hkb-ft1">TBD</div>
-        <div class="hkb-vs" style="padding:5px 0;font-size:11px">vs</div>
-        <div class="hkb-final-team tbd" id="hkb-ft2">TBD</div>
-        <div class="hkb-3rd-note">3rd place match<br>Jul 18 · Miami</div>
-      </div>
-      <div class="hkb-half right" id="hkb-half-R">
-        ${buildHalf(rightR16, rightQF,'M102','Jul 15','Atlanta', false)}
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+      <button class="hkb-fit-btn" id="hkb-fit-btn" onclick="toggleBracketFit()">⤢ Fit to screen</button>
+    </div>
+    <div class="hkb-bracket-wrap" id="hkb-bracket-wrap">
+      <div class="hkb-stack" id="hkb-stack">
+        <div class="hkb-row" id="hkb-row-T">
+          ${buildRow(topR32, topR16, topQF, 'M101','Jul 14','Dallas','T')}
+          ${finalCol}
+        </div>
+        <div class="hkb-divider"></div>
+        <div class="hkb-row" id="hkb-row-B">
+          ${buildRow(botR32, botR16, botQF, 'M102','Jul 15','Atlanta','B')}
+        </div>
       </div>
     </div>
   </div>`;
 
-  // ══════════════════════════════════════════════════════════
-  // MOBILE: Vertical pods (unchanged, works well per feedback)
-  // ══════════════════════════════════════════════════════════
-  function podTeam(slot){
-    if(!slot || slot.state==='tbd') return '<div class="hkb-pod-team tbd">TBD</div>';
-    return `<div class="hkb-pod-team ${slot.state}">${slot.text}</div>`;
-  }
-
-  const mobileHtml = `<div class="hkb-mobile">
-    ${legend}
-    ${r16defs.map((r16,i)=>{
-      const ma = r32map[r16.r32a], mb = r32map[r16.r32b];
-      return `<div class="hkb-pod">
-        <div class="hkb-pod-hd">
-          <span>${r16.id} · ${r16.date} · ${r16.venue}</span>
-          <span style="font-size:9px;color:var(--text-3)">R16 ${i+1}/8</span>
-        </div>
-        <div class="hkb-pod-r32">
-          <div class="hkb-pod-match">
-            <div class="hkb-pod-match-id">${ma.id} · ${ma.date}</div>
-            ${podTeam(ma.homeSlot)}${podTeam(ma.awaySlot)}
-            <div class="hkb-pod-venue">${slotLabel(ma.home)} vs ${slotLabel(ma.away)}</div>
-            <div class="hkb-pod-venue">${ma.venue}</div>
-          </div>
-          <div class="hkb-pod-match">
-            <div class="hkb-pod-match-id">${mb.id} · ${mb.date}</div>
-            ${podTeam(mb.homeSlot)}${podTeam(mb.awaySlot)}
-            <div class="hkb-pod-venue">${slotLabel(mb.home)} vs ${slotLabel(mb.away)}</div>
-            <div class="hkb-pod-venue">${mb.venue}</div>
-          </div>
-        </div>
-        <div class="hkb-pod-arrow">↓ Winners meet in ${r16.id}</div>
-        <div class="hkb-pod-r16">${r16.id} · ${r16.date} · ${r16.venue}</div>
-      </div>`;
-    }).join('')}
-    <div class="hkb-mob-later">
-      <div class="hkb-mob-round-hd">Quarter-Finals <span style="font-size:9px;font-weight:500;color:var(--text-3)">Jul 9–12</span></div>
-      <div class="hkb-mob-grid">
-        ${qfdefs.map(qf=>`<div class="hkb-mob-match">
-          <div class="hkb-mob-team tbd">W(${qf.r16a})</div>
-          <div class="hkb-vs" style="text-align:center;padding:2px 0;font-size:9px">vs</div>
-          <div class="hkb-mob-team tbd">W(${qf.r16b})</div>
-          <div class="hkb-mob-meta">${qf.id} · ${qf.date} · ${qf.venue}</div>
-        </div>`).join('')}
-      </div>
-      <div class="hkb-mob-round-hd">Semi-Finals <span style="font-size:9px;font-weight:500;color:var(--text-3)">Jul 14–15</span></div>
-      <div class="hkb-mob-grid">
-        ${sfdefs.map(sf=>`<div class="hkb-mob-match">
-          <div class="hkb-mob-team tbd">W(${sf.qfa})</div>
-          <div class="hkb-vs" style="text-align:center;padding:2px 0;font-size:9px">vs</div>
-          <div class="hkb-mob-team tbd">W(${sf.qfb})</div>
-          <div class="hkb-mob-meta">${sf.id} · ${sf.date} · ${sf.venue}</div>
-        </div>`).join('')}
-      </div>
-      <div class="hkb-mob-round-hd" style="color:#d97706;border-color:#d97706">Final 🏆 <span style="font-size:9px;font-weight:500;color:var(--text-3)">Jul 19</span></div>
-      <div class="hkb-mob-match" style="max-width:280px">
-        <div class="hkb-mob-team tbd">W(M101)</div>
-        <div class="hkb-vs" style="text-align:center;padding:2px 0;font-size:9px">vs</div>
-        <div class="hkb-mob-team tbd">W(M102)</div>
-        <div class="hkb-mob-meta">M104 · Jul 19 · MetLife Stadium, NJ</div>
-      </div>
-    </div>
-  </div>`;
-
-  el.innerHTML = desktopHtml + mobileHtml;
+  el.innerHTML = desktopHtml;
   requestAnimationFrame(()=>{ requestAnimationFrame(drawBracketConnectors); });
 }
 
@@ -3401,8 +3351,8 @@ function drawBracketConnectors(){
     return el.getBoundingClientRect().top + el.offsetHeight/2 - ref.getBoundingClientRect().top;
   }
 
-  // rev=true → right-half: connectors draw right→mid→left (inward toward centre)
-  function drawConn(connId, outerIds, innerIds, pairSize, rev){
+  // All connectors left→right (rev always false for stacked layout)
+  function drawConn(connId, outerIds, innerIds, pairSize){
     const conn = document.getElementById(connId);
     if(!conn) return;
     const connRect = conn.getBoundingClientRect();
@@ -3421,12 +3371,8 @@ function drawBracketConnectors(){
     svg.setAttribute('height','100%');
     svg.style.cssText='position:absolute;top:0;left:0;overflow:visible;pointer-events:none';
 
-    // outer = the "many" side (R32 for R32→R16, etc.)
-    // inner = the "one" side (the slot they feed into)
-    // left half: outer is LEFT, inner is RIGHT → lines go left→mid→right
-    // right half: outer is RIGHT, inner is LEFT → lines go right→mid→left
-    const xOuter = rev ? conn.offsetWidth : 0;
-    const xInner = rev ? 0 : conn.offsetWidth;
+    const xOuter = 0;
+    const xInner = conn.offsetWidth;
     const xMid   = conn.offsetWidth / 2;
 
     for(let i=0; i<innerEls.length; i++){
@@ -3437,8 +3383,6 @@ function drawBracketConnectors(){
       const midYval = (y1+y2)/2;
 
       const path = document.createElementNS('http://www.w3.org/2000/svg','path');
-      // Two horizontal lines from outer to mid, vertical bracket between them,
-      // then horizontal from mid to inner
       path.setAttribute('d',
         `M${xOuter},${y1} H${xMid} V${y2} M${xOuter},${y2} H${xMid} M${xMid},${midYval} H${xInner}`
       );
@@ -3453,53 +3397,71 @@ function drawBracketConnectors(){
     conn.appendChild(svg);
   }
 
-  // ── Left side connectors (rev=false, outer→inner = left→right) ──
-  drawConn('hkb-c1-L',
+  // ── Top row connectors (T) ──
+  drawConn('hkb-c1-T',
     ['M74','M77','M73','M75','M76','M78','M79','M80'],
-    ['M89','M90','M91','M92'], 2, false);
-  drawConn('hkb-c2-L',
+    ['M89','M90','M91','M92'], 2);
+  drawConn('hkb-c2-T',
     ['M89','M90','M91','M92'],
-    ['M97','M99'], 2, false);
-  drawConn('hkb-c3-L',
+    ['M97','M99'], 2);
+  drawConn('hkb-c3-T',
     ['M97','M99'],
-    ['M101'], 2, false);
+    ['M101'], 2);
 
-  // ── Right side connectors (rev=true, outer→inner = right→left) ──
-  drawConn('hkb-c1-R',
+  // ── Bottom row connectors (B) ──
+  drawConn('hkb-c1-B',
     ['M83','M84','M81','M82','M86','M88','M85','M87'],
-    ['M93','M94','M95','M96'], 2, true);
-  drawConn('hkb-c2-R',
+    ['M93','M94','M95','M96'], 2);
+  drawConn('hkb-c2-B',
     ['M93','M94','M95','M96'],
-    ['M98','M100'], 2, true);
-  drawConn('hkb-c3-R',
+    ['M98','M100'], 2);
+  drawConn('hkb-c3-B',
     ['M98','M100'],
-    ['M102'], 2, true);
+    ['M102'], 2);
 
-  // ── SF→Final connectors ───────────────────────────────
-  // Left SF (M101) → left final team; Right SF (M102) → right final team
-  // These go into the hkb-c4-L and hkb-c4-R connectors pointing toward center
-  ['L','R'].forEach(side=>{
-    const conn = document.getElementById(`hkb-c4-${side}`);
+  // ── SF→Final connectors: top SF(M101)→ft1, bot SF(M102)→ft2 ──
+  ['T','B'].forEach(row => {
+    const conn = document.getElementById(`hkb-c4-${row}`);
     if(!conn) return;
-    const sfEl = document.querySelector(`[data-mid="${side==='L'?'M101':'M102'}"]`);
-    const ftEl = document.getElementById(side==='L'?'hkb-ft1':'hkb-ft2');
-    if(!sfEl||!ftEl||!conn) return;
+    const sfEl = document.querySelector(`[data-mid="${row==='T'?'M101':'M102'}"]`);
+    const ftEl = document.getElementById(row==='T'?'hkb-ft1':'hkb-ft2');
+    if(!sfEl||!conn) return;
     const parentH = conn.parentElement ? conn.parentElement.offsetHeight : 400;
     conn.style.height = parentH + 'px';
     conn.style.position = 'relative';
-    const connRect = conn.getBoundingClientRect();
     const yf = midY(sfEl, conn);
     const svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
     svg.setAttribute('width','100%');svg.setAttribute('height','100%');
     svg.style.cssText='position:absolute;top:0;left:0;overflow:visible;pointer-events:none';
     const p = document.createElementNS('http://www.w3.org/2000/svg','path');
-    const xFrom = side==='L' ? 0 : conn.offsetWidth;
-    const xTo   = side==='L' ? conn.offsetWidth : 0;
-    p.setAttribute('d',`M${xFrom},${yf} H${xTo}`);
+    p.setAttribute('d',`M0,${yf} H${conn.offsetWidth}`);
     p.setAttribute('stroke',stroke);p.setAttribute('stroke-width','1.5');p.setAttribute('fill','none');
     svg.appendChild(p);
     conn.innerHTML='';conn.appendChild(svg);
   });
+}
+
+// ── Option A: Fit-to-screen toggle ───────────────────────────
+function toggleBracketFit(){
+  const wrap = document.getElementById('hkb-bracket-wrap');
+  const btn  = document.getElementById('hkb-fit-btn');
+  const stack = document.getElementById('hkb-stack');
+  if(!wrap||!stack) return;
+  const isActive = btn.classList.contains('active');
+  if(isActive){
+    wrap.style.transform = '';
+    wrap.style.width = '';
+    btn.classList.remove('active');
+    btn.textContent = '⤢ Fit to screen';
+  } else {
+    const naturalW = stack.scrollWidth;
+    const availW   = wrap.parentElement.clientWidth;
+    const scale    = Math.min(1, availW / naturalW);
+    wrap.style.transform = `scale(${scale})`;
+    wrap.style.width = naturalW + 'px';
+    btn.classList.add('active');
+    btn.textContent = '⤡ Restore size';
+  }
 }
 
 function renderWCSW(){
@@ -3744,15 +3706,35 @@ function scrollToSection(id){
 
 // Scroll spy — highlight active sub-nav item
 window.addEventListener('scroll', ()=>{
+  // ── F1 scroll spy ──
   const rounds = document.getElementById('f1-rounds');
   const champs = document.getElementById('f1-champs');
-  if(!rounds||!champs) return;
-  const champsTop = champs.getBoundingClientRect().top;
-  const items = document.querySelectorAll('.f1-subnav-item');
-  if(champsTop <= 150){
-    items[0].classList.remove('active'); items[1].classList.add('active');
-  } else {
-    items[0].classList.add('active');    items[1].classList.remove('active');
+  if(rounds && champs){
+    const champsTop = champs.getBoundingClientRect().top;
+    const items = document.querySelectorAll('.f1-subnav-item');
+    if(champsTop <= 150){
+      items[0].classList.remove('active'); items[1].classList.add('active');
+    } else {
+      items[0].classList.add('active');    items[1].classList.remove('active');
+    }
+  }
+  // ── Football scroll spy ──
+  const fbSections = [
+    {id:'fb-groups',  idx:0},
+    {id:'fb-best3rd', idx:1},
+    {id:'fb-bracket', idx:2},
+    {id:'fb-wcsw',    idx:3},
+  ];
+  const fbItems = document.querySelectorAll('.fb-subnav-item');
+  if(fbItems.length){
+    let activeIdx = 0;
+    fbSections.forEach(s => {
+      const el = document.getElementById(s.id);
+      if(el && el.getBoundingClientRect().top <= 160) activeIdx = s.idx;
+    });
+    fbItems.forEach((it, i) => {
+      it.classList.toggle('active', i === activeIdx);
+    });
   }
 }, {passive:true});
 
