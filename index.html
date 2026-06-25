@@ -788,22 +788,32 @@ tbody tr:hover td{background:var(--surface2)}
 
 /* bracket-tree styles replaced by .hkb-* */
 
-/* ── Stacked bracket layout ── */
-.hkb-stack{display:flex;flex-direction:column;gap:0;overflow-x:auto;padding:8px 0 16px}
-.hkb-stack::-webkit-scrollbar{height:5px}
-.hkb-stack::-webkit-scrollbar-track{background:var(--surface2);border-radius:3px}
-.hkb-stack::-webkit-scrollbar-thumb{background:var(--border-strong);border-radius:3px}
-.hkb-row{display:flex;align-items:stretch;flex-shrink:0;min-width:max-content}
-.hkb-row-label{font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:800;
-  letter-spacing:.08em;text-transform:uppercase;color:var(--text-4);writing-mode:vertical-rl;
-  transform:rotate(180deg);padding:4px 2px;flex-shrink:0;width:14px;display:flex;
-  align-items:center;justify-content:center}
-.hkb-divider{height:1px;background:var(--border);margin:8px 0;flex-shrink:0}
-.hkb-final-row{display:flex;align-items:center;justify-content:center;
-  padding:12px 0;min-width:max-content;gap:16px}
-.hkb-fit-btn{font-size:11px;padding:4px 10px;border-radius:6px;border:1px solid var(--border);
-  background:var(--surface2);color:var(--text-3);cursor:pointer;font-family:'Inter',sans-serif;
-  transition:all .15s;white-space:nowrap}
+/* ── Vertical bracket layout ── */
+.hkb-vbracket{overflow-x:auto;padding-bottom:16px}
+.hkb-vbracket::-webkit-scrollbar{height:5px}
+.hkb-vbracket::-webkit-scrollbar-track{background:var(--surface2);border-radius:3px}
+.hkb-vbracket::-webkit-scrollbar-thumb{background:var(--border-strong);border-radius:3px}
+.hkb-vwrap{display:inline-flex;flex-direction:column;min-width:max-content;gap:0;position:relative}
+.hkb-vrow{display:flex;align-items:center;padding:3px 0}
+.hkb-vlabel{width:72px;flex-shrink:0;font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--football);padding-right:8px;text-align:right;line-height:1.3}
+.hkb-vlabel small{display:block;font-size:8px;font-weight:400;color:var(--text-4);letter-spacing:0;text-transform:none}
+.hkb-vcells{display:flex;gap:6px;align-items:center}
+.hkb-vcard{background:var(--surface);border:1px solid var(--border-strong);border-radius:6px;padding:5px 8px;min-width:130px;box-shadow:var(--shadow);position:relative;z-index:1}
+.hkb-vcard.wider{min-width:160px}
+.hkb-vcard.final-card{min-width:220px;border:2px solid #d97706;padding:10px 14px;text-align:center;z-index:1}
+.hkb-vcard.third-card{min-width:170px;border:1px dashed var(--border-strong);text-align:center;z-index:1}
+.hkb-vmid{font-size:8px;font-weight:700;color:var(--text-4);letter-spacing:.05em;margin-bottom:3px}
+.hkb-vteam{font-size:11px;font-weight:600;color:var(--text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:2px 0;line-height:1.3}
+.hkb-vteam.confirmed{color:var(--football)}
+.hkb-vteam.inR32{color:var(--football)}
+.hkb-vteam.projected{color:var(--status-amber-text)}
+.hkb-vteam.third{color:var(--status-amber-text)}
+.hkb-vteam.tbd{color:var(--text-4);font-style:italic;font-weight:400}
+.hkb-vdivider{height:1px;background:var(--border);margin:1px 0}
+.hkb-vmeta{font-size:8px;color:var(--text-4);margin-top:3px;white-space:nowrap}
+.hkb-vcenter-row{display:flex;align-items:center;padding:8px 0;padding-left:412px;gap:12px}
+.hkb-final-title{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#d97706;margin-bottom:6px}
+.hkb-fit-btn{font-size:11px;padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text-3);cursor:pointer;font-family:'Inter',sans-serif;transition:all .15s;white-space:nowrap}
 .hkb-fit-btn:hover{color:var(--text);background:var(--surface);border-color:var(--text-3)}
 .hkb-fit-btn.active{background:var(--football);color:#fff;border-color:var(--football)}
 .hkb-bracket-wrap{transition:transform .2s;transform-origin:top left}
@@ -3199,10 +3209,10 @@ function renderBracket(){
   ];
 
   // ── Official SF pairings ──────────────────────────────────
-  // M101=W97vsW98 (Dallas), M102=W99vsW100 (Atlanta)
+  // M101=W97vsW99 (Dallas), M102=W98vsW100 (Atlanta)
   const sfdefs = [
-    {id:'M101',date:'Jul 14',venue:'Dallas',   qfa:'M97', qfb:'M98'},
-    {id:'M102',date:'Jul 15',venue:'Atlanta',  qfa:'M99', qfb:'M100'},
+    {id:'M101',date:'Jul 14',venue:'Dallas',   qfa:'M97', qfb:'M99'},
+    {id:'M102',date:'Jul 15',venue:'Atlanta',  qfa:'M98', qfb:'M100'},
   ];
 
   // ── Build a team box ─────────────────────────────────────
@@ -3253,215 +3263,159 @@ function renderBracket(){
   </div>`;
 
   // ══════════════════════════════════════════════════════════
-  // DESKTOP: Stacked two-row bracket (Option C)
-  // Top row:    M74,M77,M73,M75,M76,M78,M79,M80 → M89-M92 → M97,M99 → M101
-  // Bottom row: M83,M84,M81,M82,M86,M88,M85,M87 → M93-M96 → M98,M100 → M102
-  // Final: shared at right end of both rows
+  // ══════════════════════════════════════════════════════════
+  // ══════════════════════════════════════════════════════════
+  // DESKTOP: Vertical bracket — CSS grid aligned
+  // W=130px per R32 card, G=6px gap
+  // R16 = 2W+G, QF = 4W+3G, SF = 8W+7G
+  // Each round card spans exactly its feeder cards width
   // ══════════════════════════════════════════════════════════
 
-  function buildRow(r32ids, r16ids, qfids, sfid, sfdate, sfvenue, rowLabel){
-    const r32slots = r32ids.map(function(mid){
-      return '<div class="hkb-pair" data-r16="' + mid + '">' + r32Card(mid) + '</div>';
-    }).join('');
-    const r32col = '<div class="hkb-col" id="hkb-r32-' + rowLabel + '">'
-      + '<div class="hkb-col-hd">Round of 32<span class="hkb-col-sub">Jun 28\u2013Jul 3</span></div>'
-      + '<div class="hkb-slots" id="hkb-r32s-' + rowLabel + '">' + r32slots + '</div>'
-      + '</div>';
+  var W = 130, G = 6; // R32 card width, gap
+  var W16 = 2*W+G;       // 266
+  var W_QF = 4*W+3*G;    // 538
+  var W_SF = 8*W+7*G;    // 1082
 
-    const connR32R16 = '<div class="hkb-conn" id="hkb-c1-' + rowLabel + '"></div>';
-
-    const r16slots = r16ids.map(function(r16){
-      return tbdCard(r16.id, r16.date, r16.venue);
-    }).join('');
-    const r16col = '<div class="hkb-col" id="hkb-r16-' + rowLabel + '">'
-      + '<div class="hkb-col-hd">Round of 16<span class="hkb-col-sub">Jul 4\u20137</span></div>'
-      + '<div class="hkb-slots" id="hkb-r16s-' + rowLabel + '">' + r16slots + '</div>'
-      + '</div>';
-
-    const connR16QF = '<div class="hkb-conn" id="hkb-c2-' + rowLabel + '"></div>';
-
-    const qfslots = qfids.map(function(qf){
-      return tbdCard(qf.id, qf.date, qf.venue);
-    }).join('');
-    const qfcol = '<div class="hkb-col" id="hkb-qf-' + rowLabel + '">'
-      + '<div class="hkb-col-hd">Quarter-Finals<span class="hkb-col-sub">Jul 9\u201312</span></div>'
-      + '<div class="hkb-slots" id="hkb-qfs-' + rowLabel + '">' + qfslots + '</div>'
-      + '</div>';
-
-    const connQFSF = '<div class="hkb-conn" id="hkb-c3-' + rowLabel + '"></div>';
-
-    const sfcol = '<div class="hkb-col" id="hkb-sf-' + rowLabel + '">'
-      + '<div class="hkb-col-hd">Semi-Final<span class="hkb-col-sub">Jul 14\u201315</span></div>'
-      + '<div class="hkb-slots" id="hkb-sfs-' + rowLabel + '">' + tbdCard(sfid, sfdate, sfvenue) + '</div>'
-      + '</div>';
-
-    const connSFFinal = '<div class="hkb-conn" id="hkb-c4-' + rowLabel + '"></div>';
-
-    return r32col + connR32R16 + r16col + connR16QF + qfcol + connQFSF + sfcol + connSFFinal;
+  // Slot label for seeding display e.g. "1E" or "3rd(A/B/C)"
+  function seedLabel(slot) {
+    if (slot.type==='winner') return '1'+slot.grp;
+    if (slot.type==='runner') return '2'+slot.grp;
+    return '3rd';
   }
 
-  // Top row R16/QF objects
-  const topR16 = [r16defs[0],r16defs[1],r16defs[2],r16defs[3]]; // M89,M90,M91,M92
-  const topQF  = [qfdefs[0],qfdefs[2]];                          // M97,M99
-  const botR16 = [r16defs[4],r16defs[5],r16defs[6],r16defs[7]]; // M93,M94,M95,M96
-  const botQF  = [qfdefs[1],qfdefs[3]];                          // M98,M100
+  // Strip leading emoji/flag from slot text for clean bracket display
+  function stripFlag(text) {
+    return text.replace(/^[^a-zA-Z0-9À-ɏ]+/, '').trim();
+  }
 
-  // R32 match order (pairs that feed each R16)
-  const topR32 = ['M74','M77','M73','M75','M76','M78','M79','M80'];
-  const botR32 = ['M83','M84','M81','M82','M86','M88','M85','M87'];
+  function vR32Card(mid) {
+    var m = r32map[mid];
+    var hs = m.homeSlot, as_ = m.awaySlot;
+    var hbadge = hs.state==='confirmed' ? ' <span class="hkb-badge ok">&#10003;</span>'
+               : hs.state==='projected' ? ' <span class="hkb-badge proj">~</span>'
+               : hs.state==='third'     ? ' <span class="hkb-badge t3">3rd</span>' : '';
+    var abadge = as_.state==='confirmed' ? ' <span class="hkb-badge ok">&#10003;</span>'
+               : as_.state==='projected' ? ' <span class="hkb-badge proj">~</span>'
+               : as_.state==='third'     ? ' <span class="hkb-badge t3">3rd</span>' : '';
+    var hseed = '<span style="font-size:8px;color:var(--text-4);margin-right:3px;font-weight:600">' + seedLabel(m.home) + '</span>';
+    var aseed = '<span style="font-size:8px;color:var(--text-4);margin-right:3px;font-weight:600">' + seedLabel(m.away) + '</span>';
+    return '<div class="hkb-vcard" data-mid="' + mid + '" style="width:' + W + 'px;min-width:' + W + 'px;box-sizing:border-box">'
+      + '<div class="hkb-vmid">' + mid + ' &middot; ' + m.date + '</div>'
+      + '<div class="hkb-vteam ' + hs.state + '">' + hseed + stripFlag(hs.text) + hbadge + '</div>'
+      + '<div class="hkb-vdivider"></div>'
+      + '<div class="hkb-vteam ' + as_.state + '">' + aseed + stripFlag(as_.text) + abadge + '</div>'
+      + '<div class="hkb-vmeta">' + m.venue + '</div>'
+      + '</div>';
+  }
 
-  const finalCol = `<div class="hkb-final-center" id="hkb-final-center" style="align-self:stretch;display:flex;flex-direction:column;align-items:center;justify-content:center">
-    <div class="hkb-col-hd final-hd" style="width:100%;margin-bottom:10px">Final<span class="hkb-col-sub">Jul 19 · MetLife, NJ</span></div>
-    <div class="hkb-trophy">🏆</div>
-    <div class="hkb-final-team tbd" id="hkb-ft1">TBD</div>
-    <div class="hkb-vs" style="padding:5px 0;font-size:11px">vs</div>
-    <div class="hkb-final-team tbd" id="hkb-ft2">TBD</div>
-    <div class="hkb-3rd-note">3rd place match<br>Jul 18 · Miami</div>
-  </div>`;
+  function vTbdCard(id, date, venue, w, feedA, feedB) {
+    var ta = feedA ? 'W·' + feedA : 'Winner';
+    var tb = feedB ? 'W·' + feedB : 'Winner';
+    return '<div class="hkb-vcard" data-mid="' + id + '" style="width:' + w + 'px;min-width:' + w + 'px;box-sizing:border-box">'
+      + '<div class="hkb-vmid">' + id + ' &middot; ' + date + '</div>'
+      + '<div class="hkb-vteam tbd">' + ta + '</div>'
+      + '<div class="hkb-vdivider"></div>'
+      + '<div class="hkb-vteam tbd">' + tb + '</div>'
+      + '<div class="hkb-vmeta">' + venue + '</div>'
+      + '</div>';
+  }
 
-  const desktopHtml = `<div class="hkb-desktop">
-    ${legend}
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
-      <button class="hkb-fit-btn" id="hkb-fit-btn" onclick="toggleBracketFit()">⤢ Fit to screen</button>
-    </div>
-    <div class="hkb-bracket-wrap" id="hkb-bracket-wrap">
-      <div class="hkb-stack" id="hkb-stack">
-        <div class="hkb-row" id="hkb-row-T">
-          ${buildRow(topR32, topR16, topQF, 'M101','Jul 14','Dallas','T')}
-          ${finalCol}
-        </div>
-        <div class="hkb-divider"></div>
-        <div class="hkb-row" id="hkb-row-B">
-          ${buildRow(botR32, botR16, botQF, 'M102','Jul 15','Atlanta','B')}
-        </div>
-      </div>
-    </div>
-  </div>`;
+  function vLbl(text, sub) {
+    return '<div class="hkb-vlabel">' + text + (sub ? '<small>' + sub + '</small>' : '') + '</div>';
+  }
+
+  var topR32ids = ['M74','M77','M73','M75','M76','M78','M79','M80'];
+  var botR32ids = ['M83','M84','M81','M82','M86','M88','M85','M87'];
+  var topR16arr = [r16defs[0],r16defs[1],r16defs[2],r16defs[3]];
+  var botR16arr = [r16defs[4],r16defs[5],r16defs[6],r16defs[7]];
+  var topQFarr  = [qfdefs[0], qfdefs[2]];
+  var botQFarr  = [qfdefs[1], qfdefs[3]];
+  var SEP = '<div style="width:' + G + 'px;flex-shrink:0"></div>';
+
+  var topR32html = topR32ids.map(vR32Card).join(SEP);
+  var botR32html = botR32ids.map(vR32Card).join(SEP);
+  var topR16html = topR16arr.map(function(r){ return vTbdCard(r.id,r.date,r.venue,W16,r.r32a,r.r32b); }).join(SEP);
+  var botR16html = botR16arr.map(function(r){ return vTbdCard(r.id,r.date,r.venue,W16,r.r32a,r.r32b); }).join(SEP);
+  var topQFhtml  = topQFarr.map(function(q){ return vTbdCard(q.id,q.date,q.venue,W_QF,q.r16a,q.r16b); }).join(SEP);
+  var botQFhtml  = botQFarr.map(function(q){ return vTbdCard(q.id,q.date,q.venue,W_QF,q.r16a,q.r16b); }).join(SEP);
+  var topSFhtml  = vTbdCard(sfdefs[0].id, sfdefs[0].date, sfdefs[0].venue, W_SF, sfdefs[0].qfa, sfdefs[0].qfb);
+  var botSFhtml  = vTbdCard(sfdefs[1].id, sfdefs[1].date, sfdefs[1].venue, W_SF, sfdefs[1].qfa, sfdefs[1].qfb);
+
+  var desktopHtml = '<div class="hkb-desktop">'
+    + legend
+    + '<div class="hkb-bracket-wrap" id="hkb-bracket-wrap"><div class="hkb-vbracket"><div class="hkb-vwrap" id="hkb-vwrap">'
+    + '<div class="hkb-vrow" id="hkb-vrow-r32t">' + vLbl('R32','Jun 28-Jul 3') + '<div class="hkb-vcells">' + topR32html + '</div></div>'
+    + '<div class="hkb-vrow" id="hkb-vrow-r16t">' + vLbl('R16','Jul 4-7')      + '<div class="hkb-vcells">' + topR16html + '</div></div>'
+    + '<div class="hkb-vrow" id="hkb-vrow-qft">'  + vLbl('QF','Jul 9-12')      + '<div class="hkb-vcells">' + topQFhtml  + '</div></div>'
+    + '<div class="hkb-vrow" id="hkb-vrow-sft">'  + vLbl('SF','Jul 14')        + '<div class="hkb-vcells">' + topSFhtml  + '</div></div>'
+    + '<div class="hkb-vcenter-row" id="hkb-vrow-final">'
+      + '<div class="hkb-vcard final-card" id="hkb-final-box">'
+        + '<div class="hkb-final-title">&#127942; Final &middot; Jul 19 &middot; MetLife, NJ</div>'
+        + '<div class="hkb-vteam tbd" id="hkb-ft1" style="font-size:13px;font-weight:700;text-align:center">TBD</div>'
+        + '<div style="font-size:10px;color:var(--text-4);text-align:center;padding:3px 0">vs</div>'
+        + '<div class="hkb-vteam tbd" id="hkb-ft2" style="font-size:13px;font-weight:700;text-align:center">TBD</div>'
+      + '</div>'
+      + '<div class="hkb-vcard third-card" id="hkb-3rd-box">'
+        + '<div class="hkb-vmid">&#129353; 3rd Place &middot; Jul 18 &middot; Miami</div>'
+        + '<div class="hkb-vteam tbd" style="text-align:center">TBD</div>'
+        + '<div style="font-size:10px;color:var(--text-4);text-align:center;padding:2px 0">vs</div>'
+        + '<div class="hkb-vteam tbd" style="text-align:center">TBD</div>'
+      + '</div>'
+    + '</div>'
+    + '<div class="hkb-vrow" id="hkb-vrow-sfb">'  + vLbl('SF','Jul 15')        + '<div class="hkb-vcells">' + botSFhtml  + '</div></div>'
+    + '<div class="hkb-vrow" id="hkb-vrow-qfb">'  + vLbl('QF','Jul 9-12')      + '<div class="hkb-vcells">' + botQFhtml  + '</div></div>'
+    + '<div class="hkb-vrow" id="hkb-vrow-r16b">' + vLbl('R16','Jul 4-7')      + '<div class="hkb-vcells">' + botR16html + '</div></div>'
+    + '<div class="hkb-vrow" id="hkb-vrow-r32b">' + vLbl('R32','Jun 28-Jul 3') + '<div class="hkb-vcells">' + botR32html + '</div></div>'
+    + '</div></div></div></div>';
 
   el.innerHTML = desktopHtml;
-  requestAnimationFrame(()=>{ requestAnimationFrame(drawBracketConnectors); });
+  requestAnimationFrame(function(){ requestAnimationFrame(drawBracketConnectors); });
 }
 
 function drawBracketConnectors(){
-  const isDark = document.documentElement.getAttribute('data-theme')==='dark';
-  const stroke = isDark ? 'rgba(255,255,255,0.18)' : 'rgba(0,0,0,0.15)';
-
-  function midY(el, ref){
-    if(!el||!ref) return 0;
-    return el.getBoundingClientRect().top + el.offsetHeight/2 - ref.getBoundingClientRect().top;
-  }
-
-  // All connectors left→right (rev always false for stacked layout)
-  function drawConn(connId, outerIds, innerIds, pairSize){
-    const conn = document.getElementById(connId);
-    if(!conn) return;
-    const connRect = conn.getBoundingClientRect();
-    if(!connRect.width) return;
-
-    const outerEls = outerIds.map(id=>document.querySelector(`[data-mid="${id}"]`)).filter(Boolean);
-    const innerEls = innerIds.map(id=>document.querySelector(`[data-mid="${id}"]`)).filter(Boolean);
-    if(!outerEls.length || !innerEls.length) return;
-
-    const parentH = conn.parentElement ? conn.parentElement.offsetHeight : 400;
-    conn.style.height = parentH + 'px';
-    conn.style.position = 'relative';
-
-    const svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
-    svg.setAttribute('width','100%');
-    svg.setAttribute('height','100%');
-    svg.style.cssText='position:absolute;top:0;left:0;overflow:visible;pointer-events:none';
-
-    const xOuter = 0;
-    const xInner = conn.offsetWidth;
-    const xMid   = conn.offsetWidth / 2;
-
-    for(let i=0; i<innerEls.length; i++){
-      const group = outerEls.slice(i*pairSize, (i+1)*pairSize);
-      if(!group.length) continue;
-      const y1 = midY(group[0], conn);
-      const y2 = midY(group[group.length-1], conn);
-      const midYval = (y1+y2)/2;
-
-      const path = document.createElementNS('http://www.w3.org/2000/svg','path');
-      path.setAttribute('d',
-        `M${xOuter},${y1} H${xMid} V${y2} M${xOuter},${y2} H${xMid} M${xMid},${midYval} H${xInner}`
-      );
-      path.setAttribute('stroke', stroke);
-      path.setAttribute('stroke-width','1.5');
-      path.setAttribute('fill','none');
-      path.setAttribute('stroke-linecap','round');
-      path.setAttribute('stroke-linejoin','round');
-      svg.appendChild(path);
-    }
-    conn.innerHTML='';
-    conn.appendChild(svg);
-  }
-
-  // ── Top row connectors (T) ──
-  drawConn('hkb-c1-T',
-    ['M74','M77','M73','M75','M76','M78','M79','M80'],
-    ['M89','M90','M91','M92'], 2);
-  drawConn('hkb-c2-T',
-    ['M89','M90','M91','M92'],
-    ['M97','M99'], 2);
-  drawConn('hkb-c3-T',
-    ['M97','M99'],
-    ['M101'], 2);
-
-  // ── Bottom row connectors (B) ──
-  drawConn('hkb-c1-B',
-    ['M83','M84','M81','M82','M86','M88','M85','M87'],
-    ['M93','M94','M95','M96'], 2);
-  drawConn('hkb-c2-B',
-    ['M93','M94','M95','M96'],
-    ['M98','M100'], 2);
-  drawConn('hkb-c3-B',
-    ['M98','M100'],
-    ['M102'], 2);
-
-  // ── SF→Final connectors: top SF(M101)→ft1, bot SF(M102)→ft2 ──
-  ['T','B'].forEach(row => {
-    const conn = document.getElementById(`hkb-c4-${row}`);
-    if(!conn) return;
-    const sfEl = document.querySelector(`[data-mid="${row==='T'?'M101':'M102'}"]`);
-    const ftEl = document.getElementById(row==='T'?'hkb-ft1':'hkb-ft2');
-    if(!sfEl||!conn) return;
-    const parentH = conn.parentElement ? conn.parentElement.offsetHeight : 400;
-    conn.style.height = parentH + 'px';
-    conn.style.position = 'relative';
-    const yf = midY(sfEl, conn);
-    const svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
-    svg.setAttribute('width','100%');svg.setAttribute('height','100%');
-    svg.style.cssText='position:absolute;top:0;left:0;overflow:visible;pointer-events:none';
-    const p = document.createElementNS('http://www.w3.org/2000/svg','path');
-    p.setAttribute('d',`M0,${yf} H${conn.offsetWidth}`);
-    p.setAttribute('stroke',stroke);p.setAttribute('stroke-width','1.5');p.setAttribute('fill','none');
+  var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  var stroke = isDark ? 'rgba(255,255,255,0.28)' : 'rgba(0,0,0,0.40)';
+  var old = document.getElementById('hkb-conn-overlay');
+  if (old) old.remove();
+  var wrap = document.getElementById('hkb-vwrap');
+  if (!wrap) return;
+  var svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
+  svg.id = 'hkb-conn-overlay';
+  svg.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;overflow:visible;z-index:0';
+  wrap.appendChild(svg);
+  var wrapRect = wrap.getBoundingClientRect();
+  function cx(el){ var r=el.getBoundingClientRect(); return r.left+r.width/2-wrapRect.left; }
+  function top_(el){ return el.getBoundingClientRect().top-wrapRect.top; }
+  function bot_(el){ return el.getBoundingClientRect().bottom-wrapRect.top; }
+  function line(fromId, toId, dir) {
+    var fe=document.querySelector('[data-mid="'+fromId+'"]');
+    var te=document.querySelector('[data-mid="'+toId+'"]');
+    if(!fe||!te) return;
+    var fx=cx(fe), tx=cx(te);
+    var fy=(dir==='down')?bot_(fe):top_(fe);
+    var ty=(dir==='down')?top_(te):bot_(te);
+    var my=(fy+ty)/2;
+    var p=document.createElementNS('http://www.w3.org/2000/svg','path');
+    p.setAttribute('d','M'+fx+','+fy+' V'+my+' H'+tx+' V'+ty);
+    p.setAttribute('stroke',stroke); p.setAttribute('stroke-width','1.5');
+    p.setAttribute('fill','none'); p.setAttribute('stroke-linecap','round');
+    p.setAttribute('stroke-linejoin','round');
     svg.appendChild(p);
-    conn.innerHTML='';conn.appendChild(svg);
-  });
-}
-
-// ── Option A: Fit-to-screen toggle ───────────────────────────
-function toggleBracketFit(){
-  const wrap = document.getElementById('hkb-bracket-wrap');
-  const btn  = document.getElementById('hkb-fit-btn');
-  const stack = document.getElementById('hkb-stack');
-  if(!wrap||!stack) return;
-  const isActive = btn.classList.contains('active');
-  if(isActive){
-    wrap.style.transform = '';
-    wrap.style.width = '';
-    btn.classList.remove('active');
-    btn.textContent = '⤢ Fit to screen';
-  } else {
-    const naturalW = stack.scrollWidth;
-    const availW   = wrap.parentElement.clientWidth;
-    const scale    = Math.min(1, availW / naturalW);
-    wrap.style.transform = `scale(${scale})`;
-    wrap.style.width = naturalW + 'px';
-    btn.classList.add('active');
-    btn.textContent = '⤡ Restore size';
   }
+  line('M74','M89','down'); line('M77','M89','down');
+  line('M73','M90','down'); line('M75','M90','down');
+  line('M76','M91','down'); line('M78','M91','down');
+  line('M79','M92','down'); line('M80','M92','down');
+  line('M89','M97','down'); line('M90','M97','down');
+  line('M91','M99','down'); line('M92','M99','down');
+  line('M97','M101','down'); line('M99','M101','down');
+  line('M83','M93','up'); line('M84','M93','up');
+  line('M81','M94','up'); line('M82','M94','up');
+  line('M86','M95','up'); line('M88','M95','up');
+  line('M85','M96','up'); line('M87','M96','up');
+  line('M93','M98','up'); line('M94','M98','up');
+  line('M95','M100','up'); line('M96','M100','up');
+  line('M98','M102','up'); line('M100','M102','up');
 }
 
 function renderWCSW(){
