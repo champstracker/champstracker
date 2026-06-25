@@ -2902,7 +2902,7 @@ function computeQualStatus(team, position, groupTeams, groupFixtures, groupKey){
   });
 
   // Zero teams can possibly finish above → confirmed group winner (1st place locked)
-  if(possiblyAbove === 0)   return {qual:'winner',    label:'GROUP WINNER ✓'};
+  if(possiblyAbove === 0)   return {qual:'winner',    label:`Qualified · 1${(groupKey||'').toUpperCase()}`};
   // Fewer than 2 can possibly finish above → confirmed top-2 but position uncertain
   if(possiblyAbove < 2)     return {qual:'qualified', label:'QUALIFIED ✓'};
   // 3 guaranteed above → confirmed 4th, cannot advance even as best-3rd
