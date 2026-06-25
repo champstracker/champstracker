@@ -2765,8 +2765,8 @@ async function fetchFbData(silent){
   const activeTab = document.querySelector('.grp-tab.active');
   const activeGroup = activeTab ? activeTab.textContent.trim().toUpperCase() : 'ALL';
   updateProgressBar();
-  renderFbGroups(activeGroup);
   renderBest3rd();
+  renderFbGroups(activeGroup);
   renderBracket();
   renderWCSW();
   maybeStartLiveRefresh();
@@ -2824,18 +2824,22 @@ const fbQualStatus = {
 //   If 3 teams guaranteed above → confirmed 4th, cannot advance.
 //
 // Everything in between is IN CONTENTION or BEST 3RD ONLY.
-function computeQualStatus(team, position, groupTeams, groupFixtures){
+function computeQualStatus(team, position, groupTeams, groupFixtures, groupKey){
   const totalGames = 3;
   const myMax = team.pts + (totalGames - team.p) * 3;
 
   // ── Early exit: all group games played → use final standings position directly ──
   const groupDone = groupTeams.every(t => t.p >= totalGames);
   if(groupDone){
-    // position is 0-indexed rank in already-sorted groupTeams
-    if(position === 0) return {qual:'winner',    label:'GROUP WINNER ✓'};
-    if(position === 1) return {qual:'qualified', label:'QUALIFIED ✓'};
-    if(position === 2) return {qual:'danger',    label:'BEST 3RD ONLY'};
-    return                    {qual:'out',       label:'ELIMINATED'};
+    const gk = (groupKey||'').toUpperCase();
+    // Look up this team's rank among all 3rd-place teams (set by renderBest3rd)
+    const thirdsRanking = window.fbThirdsRanking || [];
+    const thirdRank = thirdsRanking.findIndex(r => r.grp === gk) + 1; // 1-based, 0 if not found yet
+    const thirdLabel = thirdRank > 0 ? `3RD PLACE · ${thirdRank} of 12` : '3RD PLACE';
+    if(position === 0) return {qual:'winner',    label:`Qualified · 1${gk}`};
+    if(position === 1) return {qual:'qualified', label:`Qualified · 2${gk}`};
+    if(position === 2) return {qual:'danger',    label:thirdLabel};
+    return                    {qual:'out',       label:'Eliminated'};
   }
 
   let possiblyAbove = 0;  // for QUALIFIED check
@@ -2951,7 +2955,7 @@ function renderFbGroups(filter){
     const sorted = sortGroup(g.teams, g.fixtures);
 
     const standing = sorted.map((t,i) => {
-      const qs = computeQualStatus(t, i, g.teams, g.fixtures);
+      const qs = computeQualStatus(t, i, g.teams, g.fixtures, key);
       const dotCls = (qs.qual==='winner' || qs.qual==='qualified') ? 'q-auto'
                    : qs.qual==='out'       ? 'q-out2'
                    : qs.qual==='danger'    ? 'q-poss'
@@ -3062,7 +3066,7 @@ function renderBracket(){
       const sorted = sg(slot.grp);
       const t = sorted[pos];
       if(!t) return {text:`${slot.type==='winner'?'W':'2nd'}-${slot.grp}`, state:'tbd'};
-      const qs = computeQualStatus(t, pos, g.teams, g.fixtures);
+      const qs = computeQualStatus(t, pos, g.teams, g.fixtures, slot.grp);
       const pending = hasPendingRivalGame(t, g);
 
       // Team is guaranteed in R32 (winner or qualified) — check if position is also locked
@@ -3505,7 +3509,7 @@ function renderWCSW(){
     // 4-column grid for this group's 4 teams
     html += '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">';
     sorted.forEach((t,i)=>{
-      const qs = computeQualStatus(t, i, g.teams, g.fixtures);
+      const qs = computeQualStatus(t, i, g.teams, g.fixtures, key);
       html += `<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:10px 12px;box-shadow:var(--shadow)">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px">
           <span style="font-weight:600;font-size:13px;line-height:1.3">${t.flag} ${t.name}</span>
@@ -3546,6 +3550,8 @@ function renderBest3rd(){
     (b.fp-a.fp) || // fair play: less negative = higher = better
     (a.so||99)-(b.so||99)
   );
+  // Expose ranked thirds globally so computeQualStatus can show live rank in group table
+  window.fbThirdsRanking = thirds;
 
   const gdColor = gd => gd > 0 ? 'var(--status-green-text)' : gd < 0 ? 'var(--status-red-text)' : 'var(--text-3)';
 
@@ -3708,8 +3714,8 @@ function sw(sport){
 function initFootball(){
   const el = document.getElementById('fb-groups-content');
   if(el.innerHTML === ''){
-    renderFbGroups('ALL');
     renderBest3rd();
+    renderFbGroups('ALL');
     renderBracket();
     renderWCSW();
     updateProgressBar();
