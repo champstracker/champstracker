@@ -2883,7 +2883,7 @@ function computeQualStatus(team, position, groupTeams, groupFixtures, groupKey){
         const rankStr = thirdRank > 0 ? ` · #${thirdRank}` : '';
         return {qual:'qualified', label:`Qualified · 3${gk}${rankStr}`};
       } else if(b3Status === 'eliminated'){
-        return {qual:'out', label:`Eliminated · 3${gk}`};
+        return {qual:'out', label:`Out of Top 8 · 3${gk}`};
       } else {
         const rankStr = thirdRank > 0 ? `${thirdRank} of 12` : '?';
         return {qual:'danger', label:`3RD PLACE · ${rankStr}`};
@@ -3501,6 +3501,17 @@ function renderWCSW(){
 // can possibly produce a 3rd-place team that finishes above X.
 // If that count < 8 → confirmed qualified.
 // If 8+ groups guaranteed above X → confirmed eliminated.
+// Apply exact score to a standings map — shared by computeBest3rdStatus and getBestCaseAsThird
+function applyScore(standings, home, away, hs, as_) {
+  var s = JSON.parse(JSON.stringify(standings));
+  s[home].gf += hs; s[home].gd += hs - as_;
+  s[away].gf += as_; s[away].gd += as_ - hs;
+  if (hs > as_)      s[home].pts += 3;
+  else if (hs < as_) s[away].pts += 3;
+  else               { s[home].pts += 1; s[away].pts += 1; }
+  return s;
+}
+
 function computeBest3rdStatus(X, allThirds, allGroups) {
   // Returns 'qualified' / 'eliminated' / 'contention'
   //
@@ -3523,26 +3534,6 @@ function computeBest3rdStatus(X, allThirds, allGroups) {
            (pts === X.pts && gd > X.gd) ||
            (pts === X.pts && gd === X.gd && gf > X.gf) ||
            (pts === X.pts && gd === X.gd && gf === X.gf && fp > (X.fp||0));
-  }
-
-  // Apply a match result to standings map
-  // result: 1=home win, 0=draw, -1=away win
-  function applyResult(standings, home, away, result) {
-    var s = JSON.parse(JSON.stringify(standings));
-    if (result === 1) {
-      // home win
-      s[home].pts += 3; s[home].gd += 1; s[home].gf += 1;
-      s[away].gd  -= 1;
-    } else if (result === -1) {
-      // away win
-      s[away].pts += 3; s[away].gd += 1; s[away].gf += 1;
-      s[home].gd  -= 1;
-    } else {
-      // draw
-      s[home].pts += 1; s[home].gf += 1;
-      s[away].pts += 1; s[away].gf += 1;
-    }
-    return s;
   }
 
   // Sort standings and return 3rd-place team
@@ -3595,35 +3586,35 @@ function computeBest3rdStatus(X, allThirds, allGroups) {
       return;
     }
 
-    // Enumerate scenarios
-    var RESULTS = [1, 0, -1]; // home win, draw, away win
+    // Enumerate scenarios using representative scores covering all GD outcomes
+    // Wins: 1-0,2-0,3-0,2-1,3-1  Draws: 0-0,1-1,2-2  Losses: 0-1,0-2,0-3,1-2,1-3
+    // This correctly handles GD variation vs fixed +1/-1 delta
+    var SCORE_SETS = [[1,0],[2,0],[3,0],[2,1],[3,1],[0,0],[1,1],[2,2],[0,1],[0,2],[0,3],[1,2],[1,3]];
     var scenariosAbove = 0;
     var totalScenarios = 0;
 
     if (pending.length === 1) {
-      // Only one match pending
       var f = pending[0];
-      RESULTS.forEach(function(r1) {
+      SCORE_SETS.forEach(function(sc) {
         totalScenarios++;
-        var s = applyResult(initStandings, f.home, f.away, r1);
+        var s = applyScore(initStandings, f.home, f.away, sc[0], sc[1]);
         var t3c = getThird(s);
         if (beatsX(t3c.stats.pts, t3c.stats.gd, t3c.stats.gf, t3c.stats.fp)) scenariosAbove++;
       });
     } else {
-      // Two matches pending (normal MD3)
       var f1 = pending[0], f2 = pending[1];
-      RESULTS.forEach(function(r1) {
-        RESULTS.forEach(function(r2) {
+      SCORE_SETS.forEach(function(sc1) {
+        SCORE_SETS.forEach(function(sc2) {
           totalScenarios++;
-          var s = applyResult(initStandings, f1.home, f1.away, r1);
-          s = applyResult(s, f2.home, f2.away, r2);
+          var s = applyScore(initStandings, f1.home, f1.away, sc1[0], sc1[1]);
+          s = applyScore(s, f2.home, f2.away, sc2[0], sc2[1]);
           var t3d = getThird(s);
           if (beatsX(t3d.stats.pts, t3d.stats.gd, t3d.stats.gf, t3d.stats.fp)) scenariosAbove++;
         });
       });
     }
 
-    if (scenariosAbove > 0)              possiblyAbove++;
+    if (scenariosAbove > 0)               possiblyAbove++;
     if (scenariosAbove === totalScenarios) guaranteedAbove++;
   });
 
@@ -3656,7 +3647,55 @@ function renderBest3rd(){
   window.fbThirdsRanking = thirds;
 
   // Compute status for each team
-  const statuses = thirds.map(t => computeBest3rdStatus(t, thirds, fbGroups));
+  // For QUALIFIED: use WORST case stats as 3rd (if worst case still makes top 8 → confirmed)
+  // For ELIMINATED: use BEST case stats as 3rd (if best case can't make top 8 → eliminated)
+  // For CONTENTION: neither extreme applies
+  function getCaseAsThird(t, g, wantBest) {
+    var groupDone = g.teams.every(function(tm){ return tm.p >= 3; });
+    if (groupDone) return t;
+
+    var pending = g.fixtures.filter(function(f){ return !f.done; });
+    if (!pending.length) return t;
+
+    var SCORE_SETS = [[1,0],[2,0],[3,0],[2,1],[3,1],[0,0],[1,1],[2,2],[0,1],[0,2],[0,3],[1,2],[1,3]];
+    var f1 = pending[0], f2 = pending[1];
+    var result = null;
+
+    SCORE_SETS.forEach(function(sc1) {
+      var ss2 = f2 ? SCORE_SETS : [[0,0]];
+      ss2.forEach(function(sc2) {
+        var initMap = {};
+        g.teams.forEach(function(tm){ initMap[tm.name] = {pts:tm.pts, gd:tm.gd, gf:tm.gf}; });
+        var s = applyScore(initMap, f1.home, f1.away, sc1[0], sc1[1]);
+        if (f2) s = applyScore(s, f2.home, f2.away, sc2[0], sc2[1]);
+        var names = Object.keys(s).sort(function(a,b){
+          return (s[b].pts-s[a].pts)||(s[b].gd-s[a].gd)||(s[b].gf-s[a].gf);
+        });
+        if (names[2] !== t.name) return;
+        var ts = s[t.name];
+        if (!result) { result = {pts:ts.pts, gd:ts.gd, gf:ts.gf}; return; }
+        var better = ts.pts>result.pts || (ts.pts===result.pts && ts.gd>result.gd) ||
+                     (ts.pts===result.pts && ts.gd===result.gd && ts.gf>result.gf);
+        if (wantBest  &&  better) result = {pts:ts.pts, gd:ts.gd, gf:ts.gf};
+        if (!wantBest && !better) result = {pts:ts.pts, gd:ts.gd, gf:ts.gf};
+      });
+    });
+
+    if (!result) return t;
+    return Object.assign({}, t, {pts:result.pts, gd:result.gd, gf:result.gf});
+  }
+
+  const statuses = thirds.map(t => {
+    var g = fbGroups[t.grp];
+    // Check QUALIFIED using worst-case (if worst case still qualifies → confirmed)
+    var worstT = getCaseAsThird(t, g, false);
+    if (computeBest3rdStatus(worstT, thirds, fbGroups) === 'qualified') return 'qualified';
+    // Check ELIMINATED using best-case (if best case still eliminated → confirmed out)
+    var bestT = getCaseAsThird(t, g, true);
+    if (computeBest3rdStatus(bestT, thirds, fbGroups) === 'eliminated') return 'eliminated';
+    // Otherwise in contention
+    return 'contention';
+  });
 
   const gdColor = gd => gd > 0 ? 'var(--status-green-text)' : gd < 0 ? 'var(--status-red-text)' : 'var(--text-3)';
 
@@ -3673,23 +3712,26 @@ function renderBest3rd(){
     const pending = !done ? '<span style="font-size:9px;color:var(--status-amber-text);margin-left:4px">⏳MD3</span>' : '';
 
     // Row background
+    // Row background — green for qualified, red for confirmed eliminated only
+    const confirmedElim = status === 'eliminated' && done;
     let rowBg = '';
     if (status === 'qualified') rowBg = 'background:rgba(22,101,52,0.10)';
-    else if (status === 'eliminated') rowBg = 'background:rgba(153,27,27,0.07)';
-    else if (inTop8) rowBg = 'background:var(--status-blue-bg)';
+    else if (confirmedElim)     rowBg = 'background:rgba(153,27,27,0.07)';
 
-    // Status badge
+    // Status badge — purely math-based, not rank position
+    // QUALIFIED ✓  : confirmed top 8
+    // IN CONTENTION: has mathematical chance of making top 8
+    // OUT OF TOP 8 : mathematically cannot qualify (only when group done)
     let badge = '';
     if (status === 'qualified') {
       badge = '<span style="font-size:9px;font-weight:700;color:var(--status-green-text);background:var(--status-green-bg);border:1px solid var(--status-green-border);border-radius:4px;padding:1px 5px;margin-left:6px;white-space:nowrap">QUALIFIED ✓</span>';
-    } else if (status === 'eliminated') {
+    } else if (confirmedElim) {
       badge = '<span style="font-size:9px;font-weight:700;color:var(--status-red-text);background:var(--status-red-bg);border:1px solid var(--status-red-border);border-radius:4px;padding:1px 5px;margin-left:6px;white-space:nowrap">ELIMINATED</span>';
-    } else if (inTop8) {
-      badge = '<span style="font-size:9px;font-weight:700;color:var(--football);background:var(--football-light);border:1px solid var(--football-border);border-radius:4px;padding:1px 5px;margin-left:6px;white-space:nowrap">IN TOP 8</span>';
     } else {
-      badge = '<span style="font-size:9px;font-weight:700;color:var(--status-amber-text);background:var(--status-amber-bg);border:1px solid var(--status-amber-border);border-radius:4px;padding:1px 5px;margin-left:6px;white-space:nowrap">ON BUBBLE</span>';
+      badge = '<span style="font-size:9px;font-weight:700;color:var(--status-amber-text);background:var(--status-amber-bg);border:1px solid var(--status-amber-border);border-radius:4px;padding:1px 5px;margin-left:6px;white-space:nowrap">IN CONTENTION</span>';
     }
 
+    // Cutline row before rank 9
     // Cutline row before rank 9
     if (i === 8) {
       rows += `<tr>
