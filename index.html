@@ -2467,8 +2467,8 @@ const fbGroups = {
   D:{ name:'Group D', teams:[
     {flag:'🇺🇸',name:'USA',        p:2,w:2,d:0,l:0,gf:6,ga:1,gd:5,pts:6,so:1,fp:0,status:'alive'},
     {flag:'🇦🇺',name:'Australia',  p:2,w:1,d:0,l:1,gf:2,ga:2,gd:0,pts:3,so:2,fp:0,status:'alive'},
-    {flag:'🇵🇾',name:'Paraguay',   p:2,w:1,d:0,l:1,gf:3,ga:2,gd:1,pts:3,so:3,fp:0,status:'alive'},
-    {flag:'🇹🇷',name:'Turkey',     p:2,w:0,d:0,l:2,gf:0,ga:6,gd:-6,pts:0,so:4,fp:0,status:'alive'},
+    {flag:'🇵🇾',name:'Paraguay',   p:2,w:1,d:0,l:1,gf:2,ga:4,gd:-2,pts:3,so:3,fp:0,status:'alive'},
+    {flag:'🇹🇷',name:'Turkey',     p:2,w:0,d:0,l:2,gf:0,ga:3,gd:-3,pts:0,so:4,fp:0,status:'alive'},
   ], fixtures:[
     {home:'USA',away:'Paraguay',hs:4,as:1,date:'Jun 13',done:true},
     {home:'Australia',away:'Turkey',hs:2,as:0,date:'Jun 13',done:true},
@@ -2545,7 +2545,7 @@ const fbGroups = {
   J:{ name:'Group J', teams:[
     {flag:'🇦🇷',name:'Argentina',  p:2,w:2,d:0,l:0,gf:5,ga:0,gd:5,pts:6,so:1,fp:0,status:'alive'},
     {flag:'🇦🇹',name:'Austria',    p:2,w:1,d:0,l:1,gf:3,ga:3,gd:0,pts:3,so:2,fp:0,status:'alive'},
-    {flag:'🇩🇿',name:'Algeria',    p:2,w:1,d:0,l:1,gf:2,ga:3,gd:-1,pts:3,so:3,fp:0,status:'alive'},
+    {flag:'🇩🇿',name:'Algeria',    p:2,w:1,d:0,l:1,gf:2,ga:4,gd:-2,pts:3,so:3,fp:0,status:'alive'},
     {flag:'🇯🇴',name:'Jordan',     p:2,w:0,d:0,l:2,gf:2,ga:5,gd:-3,pts:0,so:4,fp:0,status:'alive'},
   ], fixtures:[
     {home:'Argentina',away:'Algeria',hs:3,as:0,date:'Jun 16',done:true},
@@ -3299,12 +3299,15 @@ function renderBracket(){
                : as_.state==='third'     ? ' <span class="hkb-badge t3">3rd</span>' : '';
     var hseed = '<span style="font-size:8px;color:var(--text-4);margin-right:3px;font-weight:600">' + seedLabel(m.home) + '</span>';
     var aseed = '<span style="font-size:8px;color:var(--text-4);margin-right:3px;font-weight:600">' + seedLabel(m.away) + '</span>';
+    // Pool label shown on venue line: "Boston · (A/B/C/D/F)"
+    var pool = (m.home.type==='third' ? m.home.pool : m.away.type==='third' ? m.away.pool : null);
+    var poolStr = pool ? ' &middot; (' + pool.split('').join('/') + ')' : '';
     return '<div class="hkb-vcard" data-mid="' + mid + '" style="width:' + W + 'px;min-width:' + W + 'px;box-sizing:border-box">'
       + '<div class="hkb-vmid">' + mid + ' &middot; ' + m.date + '</div>'
       + '<div class="hkb-vteam ' + hs.state + '">' + hseed + stripFlag(hs.text) + hbadge + '</div>'
       + '<div class="hkb-vdivider"></div>'
       + '<div class="hkb-vteam ' + as_.state + '">' + aseed + stripFlag(as_.text) + abadge + '</div>'
-      + '<div class="hkb-vmeta">' + m.venue + '</div>'
+      + '<div class="hkb-vmeta">' + m.venue + poolStr + '</div>'
       + '</div>';
   }
 
@@ -3453,6 +3456,78 @@ function renderWCSW(){
 
 
 
+// ── Best-3rd confirmation status ─────────────────────────────────────────
+// For team X (current 3rd in their group), count how many OTHER groups
+// can possibly produce a 3rd-place team that finishes above X.
+// If that count < 8 → confirmed qualified.
+// If 8+ groups guaranteed above X → confirmed eliminated.
+function computeBest3rdStatus(X, allThirds, allGroups) {
+  // X: { grp, pts, gd, gf, p, ... }
+  var possiblyAbove = 0;
+  var guaranteedAbove = 0;
+
+  Object.keys(allGroups).forEach(function(gk) {
+    if (gk === X.grp) return; // skip own group
+
+    var g = allGroups[gk];
+    var groupDone = g.teams.every(function(t){ return t.p >= 3; });
+    var sorted = sortGroup(g.teams, g.fixtures);
+    var third = sorted[2];
+    if (!third) return;
+
+    if (groupDone) {
+      // Fixed — compare actual stats
+      var above = (third.pts > X.pts) ||
+                  (third.pts === X.pts && third.gd > X.gd) ||
+                  (third.pts === X.pts && third.gd === X.gd && third.gf > X.gf) ||
+                  (third.pts === X.pts && third.gd === X.gd && third.gf === X.gf && third.fp > X.fp);
+      if (above) { possiblyAbove++; guaranteedAbove++; }
+    } else {
+      // MD3 pending — check if ANY team in this group could finish 3rd AND above X
+      // A team T could be 3rd AND above X if:
+      //   their max reachable pts > X.pts  (definitely possibly above)
+      //   OR their max pts === X.pts AND they could have better GD
+      //     (possible unless the GD gap is structurally impossible to close)
+      var canPossiblyBeAbove = false;
+
+      g.teams.forEach(function(t) {
+        var gamesLeft = 3 - t.p;
+        var maxPts = t.pts + gamesLeft * 3;
+
+        // Could T finish 3rd? Only if there are 2 teams that could finish above T.
+        // Simplified: if T is currently 3rd or 4th, they could be 3rd.
+        // If T is currently 1st or 2nd, they could drop to 3rd if they lose.
+        // We allow any team to potentially finish 3rd.
+
+        if (maxPts > X.pts) {
+          // Can reach more pts than X → definitely possibly above
+          canPossiblyBeAbove = true;
+        } else if (maxPts === X.pts) {
+          // Same max pts → check GD
+          // In a win scenario, GD can improve by any margin (unbounded)
+          // So if they can reach X.pts, assume GD could also be better
+          // EXCEPT: if they're already done and GD is worse → can't improve
+          if (gamesLeft > 0) {
+            canPossiblyBeAbove = true; // GD unbounded with a win
+          } else {
+            var above = (t.gd > X.gd) ||
+                        (t.gd === X.gd && t.gf > X.gf) ||
+                        (t.gd === X.gd && t.gf === X.gf && t.fp > X.fp);
+            if (above) canPossiblyBeAbove = true;
+          }
+        }
+      });
+
+      if (canPossiblyBeAbove) possiblyAbove++;
+      // guaranteedAbove only increments for done groups (handled above)
+    }
+  });
+
+  if (possiblyAbove < 8)   return 'qualified';
+  if (guaranteedAbove >= 8) return 'eliminated';
+  return 'contention';
+}
+
 function renderBest3rd(){
   const el = document.getElementById('fb-best3rd-content');
   if(!el) return;
@@ -3461,31 +3536,72 @@ function renderBest3rd(){
   const thirds = Object.keys(fbGroups).map(gk => {
     const g = fbGroups[gk];
     const sorted = sortGroup(g.teams, g.fixtures);
-    const t = sorted[2]; // 3rd place
+    const t = sorted[2];
     return { ...t, grp: gk };
   });
 
-  // Sort all 3rd-place teams by FIFA official best-3rd criteria:
-  // pts → GD → GF → fair play (less negative = better) → FIFA ranking (so)
+  // Sort: pts → GD → GF → fair play → group seed order (so)
   thirds.sort((a,b) =>
     b.pts-a.pts ||
     b.gd-a.gd   ||
     b.gf-a.gf   ||
-    (b.fp-a.fp) || // fair play: less negative = higher = better
+    (b.fp-a.fp) ||
     (a.so||99)-(b.so||99)
   );
-  // Expose ranked thirds globally so computeQualStatus can show live rank in group table
+
+  // Expose ranked thirds globally
   window.fbThirdsRanking = thirds;
+
+  // Compute status for each team
+  const statuses = thirds.map(t => computeBest3rdStatus(t, thirds, fbGroups));
 
   const gdColor = gd => gd > 0 ? 'var(--status-green-text)' : gd < 0 ? 'var(--status-red-text)' : 'var(--text-3)';
 
-  const rows = thirds.map((t, i) => {
+  // Check if group is done
+  const groupDone = gk => fbGroups[gk].teams.every(t => t.p >= 3);
+
+  let rows = '';
+  thirds.forEach((t, i) => {
+    const status = statuses[i];
     const inTop8 = i < 8;
-    const rowBg = inTop8 ? 'background:var(--status-blue-bg)' : '';
-    const gdStr = t.gd > 0 ? '+'+t.gd : t.gd;
-    return `<tr style="${rowBg}">
+    const gdStr = t.gd > 0 ? '+'+t.gd : String(t.gd);
+    const fpStr = t.fp === 0 ? '0' : String(t.fp);
+    const done = groupDone(t.grp);
+    const pending = !done ? '<span style="font-size:9px;color:var(--status-amber-text);margin-left:4px">⏳MD3</span>' : '';
+
+    // Row background
+    let rowBg = '';
+    if (status === 'qualified') rowBg = 'background:rgba(22,101,52,0.10)';
+    else if (status === 'eliminated') rowBg = 'background:rgba(153,27,27,0.07)';
+    else if (inTop8) rowBg = 'background:var(--status-blue-bg)';
+
+    // Status badge
+    let badge = '';
+    if (status === 'qualified') {
+      badge = '<span style="font-size:9px;font-weight:700;color:var(--status-green-text);background:var(--status-green-bg);border:1px solid var(--status-green-border);border-radius:4px;padding:1px 5px;margin-left:6px;white-space:nowrap">QUALIFIED ✓</span>';
+    } else if (status === 'eliminated') {
+      badge = '<span style="font-size:9px;font-weight:700;color:var(--status-red-text);background:var(--status-red-bg);border:1px solid var(--status-red-border);border-radius:4px;padding:1px 5px;margin-left:6px;white-space:nowrap">ELIMINATED</span>';
+    } else if (inTop8) {
+      badge = '<span style="font-size:9px;font-weight:700;color:var(--football);background:var(--football-light);border:1px solid var(--football-border);border-radius:4px;padding:1px 5px;margin-left:6px;white-space:nowrap">IN TOP 8</span>';
+    } else {
+      badge = '<span style="font-size:9px;font-weight:700;color:var(--status-amber-text);background:var(--status-amber-bg);border:1px solid var(--status-amber-border);border-radius:4px;padding:1px 5px;margin-left:6px;white-space:nowrap">ON BUBBLE</span>';
+    }
+
+    // Cutline row before rank 9
+    if (i === 8) {
+      rows += `<tr>
+        <td colspan="13" style="padding:0;border:none;background:transparent">
+          <div style="display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--surface2);border-top:2px solid var(--football);border-bottom:2px solid var(--football)">
+            <span style="font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--football)">── CUTLINE · TOP 8 ADVANCE ──</span>
+            <span style="font-size:10px;color:var(--text-4)">Teams below need results to go their way</span>
+          </div>
+        </td>
+      </tr>`;
+    }
+
+    rows += `<tr style="${rowBg}">
       <td><span class="pos${i===0?' p1':''}">${i+1}</span></td>
-      <td><span class="team-flag">${t.flag}</span><span class="team-nm">${t.name}</span></td>
+      <td><span class="team-flag">${t.flag}</span><span class="team-nm">${t.name}</span>${badge}${pending}</td>
       <td style="color:var(--text-3);font-size:11px">${t.grp}</td>
       <td class="r">${t.p}</td>
       <td class="r">${t.w}</td>
@@ -3495,8 +3611,9 @@ function renderBest3rd(){
       <td class="r">${t.ga}</td>
       <td class="r" style="color:${gdColor(t.gd)}">${gdStr}</td>
       <td class="r pts-bold">${t.pts}</td>
+      <td class="r" style="color:${t.fp < 0 ? 'var(--status-red-text)' : 'var(--text-3)'};font-size:11px">${fpStr}</td>
     </tr>`;
-  }).join('');
+  });
 
   el.innerHTML = `<div class="tbl-wrap" style="margin-bottom:12px">
     <table>
@@ -3504,12 +3621,14 @@ function renderBest3rd(){
         <th>#</th><th>Team</th><th>Grp</th>
         <th class="r">P</th><th class="r">W</th><th class="r">D</th><th class="r">L</th>
         <th class="r">GF</th><th class="r">GA</th><th class="r">GD</th><th class="r">Pts</th>
+        <th class="r" title="Fair Play (cards)">FP</th>
       </tr></thead>
       <tbody>${rows}</tbody>
     </table>
   </div>
   <div style="font-size:11px;color:var(--text-3);margin-bottom:16px">
     ⚠️ Rankings update automatically after every match. Top 8 (blue) advance to Round of 32.
+    FP = Fair Play score (yellow=-1, indirect red=-3, direct red=-4).
   </div>`;
 }
 // ═══════════════════════════════════════════
