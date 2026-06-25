@@ -2872,12 +2872,24 @@ function computeQualStatus(team, position, groupTeams, groupFixtures, groupKey){
     const gk = (groupKey||'').toUpperCase();
     // Look up this team's rank among all 3rd-place teams (set by renderBest3rd)
     const thirdsRanking = window.fbThirdsRanking || [];
-    const thirdRank = thirdsRanking.findIndex(r => r.grp === gk) + 1; // 1-based, 0 if not found yet
-    const thirdLabel = thirdRank > 0 ? `3RD PLACE · ${thirdRank} of 12` : '3RD PLACE';
+    const thirdRank = thirdsRanking.findIndex(r => r.grp === gk) + 1; // 1-based
     if(position === 0) return {qual:'winner',    label:`Qualified · 1${gk}`};
     if(position === 1) return {qual:'qualified', label:`Qualified · 2${gk}`};
-    if(position === 2) return {qual:'danger',    label:thirdLabel};
-    return                    {qual:'out',       label:'Eliminated'};
+    if(position === 2){
+      // Check best-3rd confirmation status
+      const thisThird = thirdsRanking.find(r => r.grp === gk);
+      const b3Status = thisThird ? computeBest3rdStatus(thisThird, thirdsRanking, fbGroups) : 'contention';
+      if(b3Status === 'qualified'){
+        const rankStr = thirdRank > 0 ? ` · #${thirdRank}` : '';
+        return {qual:'qualified', label:`Qualified · 3${gk}${rankStr}`};
+      } else if(b3Status === 'eliminated'){
+        return {qual:'out', label:`Eliminated · 3${gk}`};
+      } else {
+        const rankStr = thirdRank > 0 ? `${thirdRank} of 12` : '?';
+        return {qual:'danger', label:`3RD PLACE · ${rankStr}`};
+      }
+    }
+    return {qual:'out', label:'Eliminated'};
   }
 
   let possiblyAbove = 0;  // for QUALIFIED check
@@ -3462,72 +3474,135 @@ function renderWCSW(){
 // If that count < 8 → confirmed qualified.
 // If 8+ groups guaranteed above X → confirmed eliminated.
 function computeBest3rdStatus(X, allThirds, allGroups) {
-  // X: { grp, pts, gd, gf, p, ... }
-  var possiblyAbove = 0;
+  // Returns 'qualified' / 'eliminated' / 'contention'
+  //
+  // For each group G (not X's group):
+  //   - If done: 3rd place is fixed, compare directly.
+  //   - If MD3 pending: enumerate all 9 outcome combinations (3 results x 3 results
+  //     for the two simultaneous MD3 matches), compute full final standings each time,
+  //     and check if the resulting 3rd-place team beats X.
+  //
+  // possiblyAbove: groups where at least one scenario produces a 3rd above X
+  // guaranteedAbove: groups where EVERY scenario produces a 3rd above X
+  // qualified if possiblyAbove < 8, eliminated if guaranteedAbove >= 8
+
+  var possiblyAbove  = 0;
   var guaranteedAbove = 0;
 
+  function beatsX(pts, gd, gf, fp) {
+    fp = fp || 0;
+    return (pts > X.pts) ||
+           (pts === X.pts && gd > X.gd) ||
+           (pts === X.pts && gd === X.gd && gf > X.gf) ||
+           (pts === X.pts && gd === X.gd && gf === X.gf && fp > (X.fp||0));
+  }
+
+  // Apply a match result to standings map
+  // result: 1=home win, 0=draw, -1=away win
+  function applyResult(standings, home, away, result) {
+    var s = JSON.parse(JSON.stringify(standings));
+    if (result === 1) {
+      // home win
+      s[home].pts += 3; s[home].gd += 1; s[home].gf += 1;
+      s[away].gd  -= 1;
+    } else if (result === -1) {
+      // away win
+      s[away].pts += 3; s[away].gd += 1; s[away].gf += 1;
+      s[home].gd  -= 1;
+    } else {
+      // draw
+      s[home].pts += 1; s[home].gf += 1;
+      s[away].pts += 1; s[away].gf += 1;
+    }
+    return s;
+  }
+
+  // Sort standings and return 3rd-place team
+  function getThird(standings) {
+    var names = Object.keys(standings);
+    names.sort(function(a,b){
+      var sa = standings[a], sb = standings[b];
+      return (sb.pts-sa.pts) || (sb.gd-sa.gd) || (sb.gf-sa.gf);
+    });
+    return { name: names[2], stats: standings[names[2]] };
+  }
+
+  // Get the two MD3 fixtures for a group (pairs of teams)
+  // We infer them from which teams have p < 3
+  function getMD3Fixtures(g) {
+    var pending = g.fixtures.filter(function(f){ return !f.done; });
+    return pending;
+  }
+
   Object.keys(allGroups).forEach(function(gk) {
-    if (gk === X.grp) return; // skip own group
+    if (gk === X.grp) return;
 
     var g = allGroups[gk];
     var groupDone = g.teams.every(function(t){ return t.p >= 3; });
-    var sorted = sortGroup(g.teams, g.fixtures);
-    var third = sorted[2];
-    if (!third) return;
+
+    // Build initial standings map
+    var initStandings = {};
+    g.teams.forEach(function(t){
+      initStandings[t.name] = { pts: t.pts, gd: t.gd, gf: t.gf, fp: t.fp || 0 };
+    });
 
     if (groupDone) {
-      // Fixed — compare actual stats
-      var above = (third.pts > X.pts) ||
-                  (third.pts === X.pts && third.gd > X.gd) ||
-                  (third.pts === X.pts && third.gd === X.gd && third.gf > X.gf) ||
-                  (third.pts === X.pts && third.gd === X.gd && third.gf === X.gf && third.fp > X.fp);
-      if (above) { possiblyAbove++; guaranteedAbove++; }
-    } else {
-      // MD3 pending — check if ANY team in this group could finish 3rd AND above X
-      // A team T could be 3rd AND above X if:
-      //   their max reachable pts > X.pts  (definitely possibly above)
-      //   OR their max pts === X.pts AND they could have better GD
-      //     (possible unless the GD gap is structurally impossible to close)
-      var canPossiblyBeAbove = false;
-
-      g.teams.forEach(function(t) {
-        var gamesLeft = 3 - t.p;
-        var maxPts = t.pts + gamesLeft * 3;
-
-        // Could T finish 3rd? Only if there are 2 teams that could finish above T.
-        // Simplified: if T is currently 3rd or 4th, they could be 3rd.
-        // If T is currently 1st or 2nd, they could drop to 3rd if they lose.
-        // We allow any team to potentially finish 3rd.
-
-        if (maxPts > X.pts) {
-          // Can reach more pts than X → definitely possibly above
-          canPossiblyBeAbove = true;
-        } else if (maxPts === X.pts) {
-          // Same max pts → check GD
-          // In a win scenario, GD can improve by any margin (unbounded)
-          // So if they can reach X.pts, assume GD could also be better
-          // EXCEPT: if they're already done and GD is worse → can't improve
-          if (gamesLeft > 0) {
-            canPossiblyBeAbove = true; // GD unbounded with a win
-          } else {
-            var above = (t.gd > X.gd) ||
-                        (t.gd === X.gd && t.gf > X.gf) ||
-                        (t.gd === X.gd && t.gf === X.gf && t.fp > X.fp);
-            if (above) canPossiblyBeAbove = true;
-          }
-        }
-      });
-
-      if (canPossiblyBeAbove) possiblyAbove++;
-      // guaranteedAbove only increments for done groups (handled above)
+      var t3 = getThird(initStandings);
+      if (beatsX(t3.stats.pts, t3.stats.gd, t3.stats.gf, t3.stats.fp)) {
+        possiblyAbove++;
+        guaranteedAbove++;
+      }
+      return;
     }
+
+    // Get pending fixtures
+    var pending = getMD3Fixtures(g);
+    if (pending.length === 0) {
+      // All done but p<3 discrepancy — treat as done
+      var t3b = getThird(initStandings);
+      if (beatsX(t3b.stats.pts, t3b.stats.gd, t3b.stats.gf, t3b.stats.fp)) {
+        possiblyAbove++;
+        guaranteedAbove++;
+      }
+      return;
+    }
+
+    // Enumerate scenarios
+    var RESULTS = [1, 0, -1]; // home win, draw, away win
+    var scenariosAbove = 0;
+    var totalScenarios = 0;
+
+    if (pending.length === 1) {
+      // Only one match pending
+      var f = pending[0];
+      RESULTS.forEach(function(r1) {
+        totalScenarios++;
+        var s = applyResult(initStandings, f.home, f.away, r1);
+        var t3c = getThird(s);
+        if (beatsX(t3c.stats.pts, t3c.stats.gd, t3c.stats.gf, t3c.stats.fp)) scenariosAbove++;
+      });
+    } else {
+      // Two matches pending (normal MD3)
+      var f1 = pending[0], f2 = pending[1];
+      RESULTS.forEach(function(r1) {
+        RESULTS.forEach(function(r2) {
+          totalScenarios++;
+          var s = applyResult(initStandings, f1.home, f1.away, r1);
+          s = applyResult(s, f2.home, f2.away, r2);
+          var t3d = getThird(s);
+          if (beatsX(t3d.stats.pts, t3d.stats.gd, t3d.stats.gf, t3d.stats.fp)) scenariosAbove++;
+        });
+      });
+    }
+
+    if (scenariosAbove > 0)              possiblyAbove++;
+    if (scenariosAbove === totalScenarios) guaranteedAbove++;
   });
 
-  if (possiblyAbove < 8)   return 'qualified';
+  if (possiblyAbove  < 8) return 'qualified';
   if (guaranteedAbove >= 8) return 'eliminated';
   return 'contention';
 }
-
 function renderBest3rd(){
   const el = document.getElementById('fb-best3rd-content');
   if(!el) return;
