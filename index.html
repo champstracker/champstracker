@@ -148,6 +148,13 @@ body{
   position:sticky;top:0;z-index:200;
   box-shadow:var(--shadow);
 }
+.hdr-sport-nav{
+  display:flex;gap:0;padding:0;border-bottom:none;
+  background:transparent;position:static;
+  flex:1;justify-content:center;
+}
+.hdr-sport-nav .snav{padding:0 16px;height:56px;display:flex;align-items:center;border-bottom:3px solid transparent;font-size:13px}
+.mobile-sport-nav{display:none!important}
 .logo{
   font-family:'Barlow Condensed',sans-serif;
   font-size:22px;font-weight:800;letter-spacing:.04em;
@@ -175,6 +182,7 @@ body{
   display:flex;gap:0;padding:0 24px;
   background:var(--surface);
   border-bottom:1px solid var(--border);
+  position:sticky;top:56px;z-index:180;
 }
 .snav{
   padding:12px 20px;font-size:13px;font-weight:600;
@@ -369,8 +377,12 @@ tr:hover td{background:var(--surface2)}
 /* Position change flash animations */
 @keyframes gainPos{0%{background:#dcfce7}100%{background:var(--surface)}}
 @keyframes losePos{0%{background:#fee2e2}100%{background:var(--surface)}}
+@keyframes gainPosDark{0%{background:rgba(22,163,74,0.25)}100%{background:var(--surface)}}
+@keyframes losePosDark{0%{background:rgba(220,38,38,0.25)}100%{background:var(--surface)}}
 .f1-lb-tbl tr.gained td{animation:gainPos .8s ease-out forwards}
 .f1-lb-tbl tr.lost   td{animation:losePos .8s ease-out forwards}
+[data-theme="dark"] .f1-lb-tbl tr.gained td{animation:gainPosDark .8s ease-out forwards}
+[data-theme="dark"] .f1-lb-tbl tr.lost   td{animation:losePosDark .8s ease-out forwards}
 
 /* Driver cell in leaderboard */
 .f1-drv-cell{display:flex;align-items:center;gap:8px}
@@ -829,8 +841,14 @@ tbody tr:hover td{background:var(--surface2)}
   /* Layout */
   .main{padding:12px 12px 40px}
   .hdr{padding:0 12px;height:50px}
-  .sport-nav{padding:0 12px}
-  .f1-subnav,.fb-subnav{padding:0 12px;top:50px}
+
+  /* On mobile: hide sport tabs from header, show standalone mobile nav */
+  .hdr-sport-nav{display:none}
+  .mobile-sport-nav{display:flex;position:sticky;top:50px;z-index:180;padding:0 12px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .mobile-sport-nav::-webkit-scrollbar{display:none}
+  .mobile-sport-nav .snav{padding:10px 14px;font-size:12px;white-space:nowrap;flex-shrink:0;height:auto;border-bottom:2px solid transparent}
+
+  .f1-subnav,.fb-subnav{padding:0 12px;top:86px}
 
   /* Header — hide date, compress */
   .hdr-date{display:none}
@@ -921,7 +939,13 @@ tbody tr:hover td{background:var(--surface2)}
 <body>
 
 <div class="hdr">
-  <div class="logo">CHAMPS <em>TRACKER</em></div>
+  <div class="logo" onclick="window.scrollTo({top:0,behavior:'smooth'})" style="cursor:pointer">CHAMPS <em>TRACKER</em></div>
+  <div class="sport-nav hdr-sport-nav">
+    <div class="snav football active" onclick="sw('football')">⚽ Football</div>
+    <div class="snav f1" onclick="sw('f1')">🏎 Formula 1</div>
+    <div class="snav cricket" onclick="sw('cricket')">🏏 Cricket</div>
+    <div class="snav tennis" onclick="sw('tennis')">🎾 Tennis</div>
+  </div>
   <div class="hdr-meta">
     <div class="live-dot"></div>
     <span class="hdr-date" id="hdrDate"></span>
@@ -931,7 +955,8 @@ tbody tr:hover td{background:var(--surface2)}
   </div>
 </div>
 
-<div class="sport-nav">
+<!-- Mobile-only sport nav (shown below header on small screens) -->
+<div class="sport-nav mobile-sport-nav" id="mobile-sport-nav">
   <div class="snav football active" onclick="sw('football')">⚽ Football</div>
   <div class="snav f1" onclick="sw('f1')">🏎 Formula 1</div>
   <div class="snav cricket" onclick="sw('cricket')">🏏 Cricket</div>
@@ -1599,6 +1624,7 @@ let f1LiveData    = null;   // current live timing snapshot
 let f1PrevPositions = {};   // {driver_number: pos} — for change detection
 let f1PollTimer   = null;
 let f1CDTimer     = null;   // countdown interval
+let f1LastFetch   = null;   // timestamp of last successful fetch
 let f1Initialised = false;
 let f1CurrentRound = null;  // selected round in horizontal view
 let f1ViewMode    = 'horizontal';
@@ -1619,7 +1645,7 @@ function f1PollRate() {
   const sessions = Object.values(weekend.sessions).filter(Boolean);
   const isLive = sessions.some(s => {
     const start = new Date(s.date + 'T' + (s.time || '00:00:00Z'));
-    const end   = new Date(start.getTime() + 2 * 60 * 60 * 1000); // +2h window
+    const end   = new Date(start.getTime() + (s.key === 'race' ? 3.5 : 2) * 60 * 60 * 1000); // +3.5h for race, +2h others
     return now >= start && now <= end;
   });
   if (isLive) return 5 * 1000;
@@ -1667,7 +1693,7 @@ function f1NextSession(weekend) {
 
   for (const s of sessions) {
     const dt = new Date(s.date + 'T' + (s.time || '14:00:00Z'));
-    const end = new Date(dt.getTime() + 2*60*60*1000);
+    const end = new Date(dt.getTime() + (s.key === 'race' ? 3.5 : 2)*60*60*1000);
     if (now <= end) return { ...s, dt, end, status: now >= dt ? 'live' : 'upcoming' };
   }
   return null; // all done
@@ -1682,7 +1708,14 @@ async function f1Fetch(type, extra = '') {
 
 // ── Main init + poll ──────────────────────────────────────
 async function initF1() {
-  if (f1Initialised) return;
+  if (f1Initialised) {
+    // Already initialised — check if data is stale (>5 min) and refresh
+    const staleMs = 5 * 60 * 1000;
+    if (!f1LastFetch || (Date.now() - f1LastFetch) > staleMs) {
+      await f1RefreshAll();
+    }
+    return;
+  }
   f1Initialised = true;
   await f1RefreshAll();
   f1SchedulePoll();
@@ -1699,6 +1732,7 @@ async function f1RefreshAll() {
     f1Schedule   = schedule;
     f1Standings  = standings;
     f1LastResult = lastResult;
+    f1LastFetch  = Date.now();
 
     // Try live data (may return null outside sessions)
     try {
@@ -1711,7 +1745,15 @@ async function f1RefreshAll() {
   } catch(e) {
     console.error('[F1] refresh error:', e);
     document.getElementById('f1-weekend-content').innerHTML =
-      `<div class="f1-no-session">⚠️ Could not load F1 data — ${e.message}</div>`;
+      `<div class="f1-no-session" style="padding:24px;text-align:center">
+        <div style="font-size:28px;margin-bottom:8px">⚠️</div>
+        <div style="font-weight:600;margin-bottom:4px">Could not load F1 data</div>
+        <div style="font-size:12px;color:var(--text-3);margin-bottom:16px">${e.message}</div>
+        <button onclick="f1Initialised=false;f1LastFetch=null;initF1()"
+          style="padding:8px 20px;border-radius:6px;border:1px solid var(--border-strong);background:var(--surface2);cursor:pointer;font-size:13px;font-weight:600">
+          ↻ Retry
+        </button>
+      </div>`;
   }
 }
 
@@ -1945,11 +1987,11 @@ function f1BuildLeaderboard(live) {
           <div class="f1-team-bar" style="background:${teamColor}"></div>
           <div>
             <span class="f1-drv-code">${d.code}</span>
-            <span class="f1-drv-name">${d.name}</span>
+            <span class="f1-drv-name">${d.name || d.driver || ''}</span>
           </div>
         </div>
       </td>
-      <td style="font-size:11px;color:var(--text-3);max-width:100px;overflow:hidden;text-overflow:ellipsis">${d.team}</td>
+      <td style="font-size:11px;color:var(--text-3);max-width:100px;overflow:hidden;text-overflow:ellipsis">${d.team || '—'}</td>
       ${cells}
     </tr>`;
   }).join('');
@@ -2342,8 +2384,11 @@ function f1RenderStandings() {
   // Team colour map (fallback since Jolpica doesn't give colours)
   const TEAM_COLOURS = {
     'Red Bull Racing':'#3671C6','Ferrari':'#E8002D','McLaren':'#FF8000',
-    'Mercedes':'#27F4D2','Aston Martin':'#229971','Alpine':'#FF87BC',
-    'Williams':'#64C4FF','RB':'#6692FF','Kick Sauber':'#52E252',
+    'Mercedes':'#27F4D2','Aston Martin':'#229971',
+    'Alpine':'#FF87BC','Alpine F1 Team':'#FF87BC',
+    'Williams':'#64C4FF',
+    'RB':'#6692FF','Racing Bulls':'#6692FF','Visa Cash App RB':'#6692FF',
+    'Kick Sauber':'#52E252','Sauber':'#52E252',
     'Haas F1 Team':'#B6BABD','Haas':'#B6BABD',
   };
   function teamBar(name) {
@@ -3903,7 +3948,7 @@ function toggleTheme(){
 function sw(sport){
   document.querySelectorAll('.snav').forEach(n=>n.classList.remove('active'));
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
-  document.querySelector('.snav.'+sport).classList.add('active');
+  document.querySelectorAll('.snav.'+sport).forEach(n=>n.classList.add('active'));
   document.getElementById('p-'+sport).classList.add('active');
   document.getElementById('f1-subnav').classList.toggle('visible', sport==='f1');
   document.getElementById('fb-subnav').classList.toggle('visible', sport==='football');
@@ -3931,8 +3976,8 @@ function scrollToFbSection(id){
 function scrollToSection(id){
   const el = document.getElementById(id);
   if(!el) return;
-  // offset for sticky header (54px) + sub-nav (36px) + small gap
-  const y = el.getBoundingClientRect().top + window.scrollY - 140;
+  // offset: header (56px) + subnav (36px) + gap
+  const y = el.getBoundingClientRect().top + window.scrollY - 100;
   window.scrollTo({top:y, behavior:'smooth'});
 }
 
