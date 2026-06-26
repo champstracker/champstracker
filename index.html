@@ -2191,7 +2191,7 @@ function f1BuildResultPanel(result, race) {
     const dnf = !d.time && d.status !== 'Finished';
     return `<tr>
       <td>${posIcon}<span style="font-variant-numeric:tabular-nums;font-weight:600">${d.pos}</span></td>
-      <td><strong>${d.code}</strong> <span style="color:var(--text-3);font-size:11px">${d.name}</span></td>
+      <td><strong>${d.code}</strong> <span style="color:var(--text-3);font-size:11px">${d.driver || ''}</span></td>
       <td style="font-size:11px;color:var(--text-3)">${d.team || '—'}</td>
       <td class="r">${d.grid}</td>
       <td class="r">${dnf ? `<span style="color:var(--f1);font-size:10px">DNF</span>` : (d.time || '—')}</td>
