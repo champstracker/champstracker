@@ -2002,7 +2002,7 @@ function f1StartCountdown(session) {
   if (f1CDTimer) clearInterval(f1CDTimer);
   function tick() {
     const now  = new Date();
-    const diff = session.dt - now;
+    const diff = (session.dt || session.start) - now;
     if (diff <= 0) {
       clearInterval(f1CDTimer);
       f1RefreshAll();
@@ -2030,7 +2030,7 @@ function f1BuildWeekendResult(weekend) {
       ${top3.map((d,i)=>`<div style="flex:1;min-width:120px;background:var(--surface2);border-radius:var(--r);padding:12px 14px;text-align:center">
         <div style="font-size:20px;margin-bottom:4px">${['🥇','🥈','🥉'][i]}</div>
         <div style="font-weight:700;font-size:14px;color:var(--text)">${d.code}</div>
-        <div style="font-size:11px;color:var(--text-3);margin-top:2px">${d.team}</div>
+        <div style="font-size:11px;color:var(--text-3);margin-top:2px">${d.team || '—'}</div>
         <div style="font-size:11px;color:var(--text-3);margin-top:4px">${d.pts} pts</div>
       </div>`).join('')}
     </div>
@@ -2192,7 +2192,7 @@ function f1BuildResultPanel(result, race) {
     return `<tr>
       <td>${posIcon}<span style="font-variant-numeric:tabular-nums;font-weight:600">${d.pos}</span></td>
       <td><strong>${d.code}</strong> <span style="color:var(--text-3);font-size:11px">${d.name}</span></td>
-      <td style="font-size:11px;color:var(--text-3)">${d.team}</td>
+      <td style="font-size:11px;color:var(--text-3)">${d.team || '—'}</td>
       <td class="r">${d.grid}</td>
       <td class="r">${dnf ? `<span style="color:var(--f1);font-size:10px">DNF</span>` : (d.time || '—')}</td>
       <td class="r">${d.pts}</td>
