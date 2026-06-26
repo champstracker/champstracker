@@ -1400,6 +1400,20 @@ tbody tr:hover td{background:var(--surface2)}
       </div>
     </div>
   </div>
+
+<!-- AI Panel — cricket only (no live worker for this sport) -->
+<div class="ai-panel">
+  <h3>🤖 AI Data Refresh</h3>
+  <p>Fetch the latest standings and analysis via live web search.</p>
+  <div class="ai-btns">
+    <button class="ab ab-pri" onclick="aiGo('Latest ICC World Test Championship 2025-27 points table standings and PCT percentages after the most recent Tests played in June 2026')">WTC Update</button>
+    <button class="ab ab-pri" onclick="aiGo('Current ICC Men ODI rankings June 2026, and which teams are on the bubble for 2027 ODI World Cup direct qualification')">ODI Rankings</button>
+    <button class="ab ab-sec" onclick="customQ()">Custom ↗</button>
+  </div>
+  <div class="ai-loading" id="aiLoad"><div class="dots"><span></span><span></span><span></span></div><span>Fetching latest data...</span></div>
+  <div class="ai-out" id="aiOut"></div>
+</div>
+
 </div><!-- /cricket -->
 
 <!-- ══════════════════════════════════════
@@ -1550,21 +1564,6 @@ tbody tr:hover td{background:var(--surface2)}
   </div>
 
 </div><!-- /tennis -->
-
-<!-- AI Panel -->
-<div class="ai-panel">
-  <h3>🤖 AI Data Refresh</h3>
-  <p>Fetch the latest standings and analysis via live web search.</p>
-  <div class="ai-btns">
-    <button class="ab ab-pri" onclick="aiGo('Latest F1 2026 driver and constructor standings after Barcelona GP round 7. Who leads, what are the gaps, and who is still mathematically in the title race?')">F1 Standings</button>
-    <button class="ab ab-pri" onclick="aiGo('Latest ICC World Test Championship 2025-27 points table standings and PCT percentages after the most recent Tests played in June 2026')">WTC Update</button>
-    <button class="ab ab-pri" onclick="aiGo('Current ICC Men ODI rankings June 2026, and which teams are on the bubble for 2027 ODI World Cup direct qualification')">ODI Rankings</button>
-    <button class="ab ab-pri" onclick="aiGo('Wimbledon 2026 preview: draws, top seeds, Sinner vs Alcaraz storyline, who are the favourites')">Wimbledon Preview</button>
-    <button class="ab ab-sec" onclick="customQ()">Custom ↗</button>
-  </div>
-  <div class="ai-loading" id="aiLoad"><div class="dots"><span></span><span></span><span></span></div><span>Fetching latest data...</span></div>
-  <div class="ai-out" id="aiOut"></div>
-</div>
 
 </div><!-- /main -->
 
@@ -4020,10 +4019,12 @@ function updateProgressBar(){
   // 12 groups × 2 fixtures per matchday = 24 per MD
   // MD1: 0-24, MD2: 25-48, MD3: 49-72
   const md = done <= 24 ? 1 : done <= 48 ? 2 : 3;
+  const gsComplete = done >= 72; // all 72 group stage fixtures done
   const nextMd = md === 1 ? ` · MD2 upcoming`
                : md === 2 ? (live > 0 ? ' · MD3 <strong style="color:var(--status-red-text)">LIVE NOW</strong>' : ' · MD3 upcoming tonight')
-               : live > 0 ? ' · MD3 <strong style="color:var(--status-red-text)">LIVE NOW</strong>'
-               : ' · Group stage complete';
+               : live > 0  ? ' · MD3 <strong style="color:var(--status-red-text)">LIVE NOW</strong>'
+               : gsComplete ? ' · Group stage complete'
+               : ` · MD3 in progress (${done - 48}/24 done)`;
   const pc = document.getElementById('fb-played-count');
   const rc = document.getElementById('fb-remaining-count');
   const pf = document.getElementById('fb-progress-fill');
@@ -4057,7 +4058,9 @@ function updateProgressBar(){
       ? 'After Matchday 1, <strong>no team is eliminated yet</strong> — every team has 2 matches remaining and a mathematical path to qualify. Elimination becomes possible from <strong>Matchday 2</strong> onwards.'
       : md === 2
       ? 'After Matchday 2, teams with <strong>0 pts from 2 games</strong> in strong groups are effectively eliminated. MD3 is the final group stage round — all matches simultaneous.'
-      : 'Group stage complete. All qualification places are decided. See Round of 32 below.';
+      : gsComplete
+      ? 'Group stage complete. All qualification places are decided. See Round of 32 below.'
+      : 'Matchday 3 in progress. Final group standings are still being decided.';
   }
 }
 
