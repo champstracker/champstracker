@@ -383,6 +383,27 @@ tr:hover td{background:var(--surface2)}
 .f1-lb-tbl tr.lost   td{animation:losePos .8s ease-out forwards}
 [data-theme="dark"] .f1-lb-tbl tr.gained td{animation:gainPosDark .8s ease-out forwards}
 [data-theme="dark"] .f1-lb-tbl tr.lost   td{animation:losePosDark .8s ease-out forwards}
+/* Qualifying segment shading */
+.f1-lb-tbl tr.f1-q2-out td{background:#fffbeb}
+.f1-lb-tbl tr.f1-q1-out td{background:#fff1f2}
+[data-theme="dark"] .f1-lb-tbl tr.f1-q2-out td{background:rgba(251,191,36,0.08)}
+[data-theme="dark"] .f1-lb-tbl tr.f1-q1-out td{background:rgba(220,38,38,0.08)}
+.f1-q-legend{display:flex;gap:12px;padding:8px 16px;font-size:10px;border-top:1px solid var(--border)}
+.f1-q-seg{padding:2px 8px;border-radius:3px;font-weight:600}
+.f1-q-seg.q2{background:#fffbeb;color:#92400e}
+.f1-q-seg.q1{background:#fff1f2;color:#9f1239}
+[data-theme="dark"] .f1-q-seg.q2{background:rgba(251,191,36,0.15);color:#fbbf24}
+[data-theme="dark"] .f1-q-seg.q1{background:rgba(220,38,38,0.15);color:#f87171}
+/* Live session label in strip */
+.f1-sess-live-label{font-size:9px;font-weight:800;color:var(--f1);letter-spacing:.05em;animation:pulse 1s infinite;margin-top:2px}
+/* Last updated in leaderboard */
+.f1-lb-updated{font-style:italic;opacity:.8}
+/* Mobile leaderboard - hide non-essential columns */
+@media(max-width:640px){
+  .f1-lb-tbl .f1-hide-mobile{display:none}
+  .f1-lb-tbl td,
+  .f1-lb-tbl th{padding:6px 5px;font-size:11px}
+}
 
 /* Driver cell in leaderboard */
 .f1-drv-cell{display:flex;align-items:center;gap:8px}
@@ -477,6 +498,7 @@ tr:hover td{background:var(--surface2)}
 .hpill-rnum{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:800;letter-spacing:.07em;color:var(--text-3);display:block}
 .hpill-name{font-size:12px;font-weight:600;color:var(--text);display:block;margin-top:2px;white-space:nowrap}
 .hdetail-panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--shadow);overflow:hidden}
+.hdetail-panel:empty{border:none;box-shadow:none}
 .hdetail-hd{display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--border);background:var(--surface2);flex-wrap:wrap}
 .hdetail-gp{font-weight:700;font-size:15px;color:var(--text)}
 .hdetail-meta{font-size:11px;color:var(--text-3);margin-top:2px}
@@ -1612,6 +1634,30 @@ tbody tr:hover td{background:var(--surface2)}
 
 const F1_WORKER = 'https://champstracker-f1.champstracker99.workers.dev';
 
+// IST formatter (UTC+5:30)
+function toIST(date) {
+  return date.toLocaleString('en-IN', {
+    timeZone: 'Asia/Kolkata',
+    weekday: 'short', month: 'short', day: 'numeric',
+    hour: '2-digit', minute: '2-digit', hour12: true
+  });
+}
+function toISTtime(date) {
+  return date.toLocaleTimeString('en-IN', {
+    timeZone: 'Asia/Kolkata',
+    hour: '2-digit', minute: '2-digit', hour12: true
+  }) + ' IST';
+}
+
+// Nationality → flag emoji
+const NAT_FLAG = {
+  'British':'🇬🇧','Dutch':'🇳🇱','Monegasque':'🇲🇨','Spanish':'🇪🇸','Mexican':'🇲🇽',
+  'Australian':'🇦🇺','Canadian':'🇨🇦','Finnish':'🇫🇮','French':'🇫🇷','German':'🇩🇪',
+  'Japanese':'🇯🇵','Danish':'🇩🇰','Chinese':'🇨🇳','Thai':'🇹🇭','American':'🇺🇸',
+  'Italian':'🇮🇹','Brazilian':'🇧🇷','Argentine':'🇦🇷','New Zealander':'🇳🇿','Swiss':'🇨🇭',
+  'Austrian':'🇦🇹','Belgian':'🇧🇪','Polish':'🇵🇱','Russian':'🇷🇺',
+};
+
 // ── Points systems ────────────────────────────────────────
 const PTS        = [25,18,15,12,10,8,6,4,2,1];
 const SPRINT_PTS = [8,7,6,5,4,3,2,1];
@@ -1834,12 +1880,14 @@ function f1RenderWeekend() {
 
   // Session strip
   const sessStrip = sessWithStatus.map(s => {
-    const timeStr = s.start.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',timeZoneName:'short'});
-    const dateStr = s.start.toLocaleDateString([], {weekday:'short',month:'short',day:'numeric'});
+    const dateStr = s.start.toLocaleDateString('en-IN', {timeZone:'Asia/Kolkata', weekday:'short', month:'short', day:'numeric'});
+    const timeStr = toISTtime(s.start);
+    const liveLabel = s.status === 'live' ? '<div class="f1-sess-live-label">🔴 LIVE</div>' : '';
     return `<div class="f1-sess ${s.status}">
       <div class="f1-sess-name">${s.name}</div>
       <div class="f1-sess-time">${dateStr}</div>
       <div class="f1-sess-time">${timeStr}</div>
+      ${liveLabel}
       <div class="f1-sess-dot"></div>
     </div>`;
   }).join('');
@@ -1929,22 +1977,23 @@ function f1BuildLeaderboard(live) {
   let headers = '';
   if (isRace) {
     headers = `<tr>
-      <th>#</th><th></th><th>Driver</th><th>Team</th>
-      <th class="r">Tyre</th><th class="r">Pits</th>
-      <th class="r">Lap</th><th class="r">Last Lap</th>
-      <th class="r">S1</th><th class="r">S2</th><th class="r">S3</th>
+      <th>#</th><th></th><th>Driver</th><th class="f1-hide-mobile">Team</th>
+      <th class="r">Tyre</th><th class="r f1-hide-mobile">Pits</th>
+      <th class="r f1-hide-mobile">Lap</th><th class="r f1-hide-mobile">Last Lap</th>
+      <th class="r f1-hide-mobile">Gap</th>
+      <th class="r f1-hide-mobile">S1</th><th class="r f1-hide-mobile">S2</th><th class="r f1-hide-mobile">S3</th>
     </tr>`;
   } else if (isQuali) {
     headers = `<tr>
-      <th>#</th><th></th><th>Driver</th><th>Team</th>
+      <th>#</th><th></th><th>Driver</th><th class="f1-hide-mobile">Team</th>
       <th class="r">Tyre</th><th class="r">Best Lap</th>
-      <th class="r">Gap</th><th class="r">S1</th><th class="r">S2</th><th class="r">S3</th>
+      <th class="r">Gap</th><th class="r f1-hide-mobile">S1</th><th class="r f1-hide-mobile">S2</th><th class="r f1-hide-mobile">S3</th>
     </tr>`;
   } else { // Practice
     headers = `<tr>
-      <th>#</th><th></th><th>Driver</th><th>Team</th>
+      <th>#</th><th></th><th>Driver</th><th class="f1-hide-mobile">Team</th>
       <th class="r">Tyre</th><th class="r">Best Lap</th>
-      <th class="r">Gap</th><th class="r">S1</th><th class="r">S2</th><th class="r">S3</th>
+      <th class="r">Gap</th><th class="r f1-hide-mobile">S1</th><th class="r f1-hide-mobile">S2</th><th class="r f1-hide-mobile">S3</th>
     </tr>`;
   }
 
@@ -1963,23 +2012,24 @@ function f1BuildLeaderboard(live) {
     if (isRace) {
       cells = `
         <td class="r">${tyreBadge(d.tyre)}${d.tyre_age != null ? `<span style="font-size:9px;color:var(--text-4);margin-left:2px">${d.tyre_age}L</span>` : ''}</td>
-        <td class="r">${d.pits}</td>
-        <td class="r">${d.lap_number || '—'}</td>
-        <td class="r">${fmtTime(d.last_lap)}</td>
-        <td class="r f1-sector">${fmtTime(d.sector_1)}</td>
-        <td class="r f1-sector">${fmtTime(d.sector_2)}</td>
-        <td class="r f1-sector">${fmtTime(d.sector_3)}</td>`;
+        <td class="r f1-hide-mobile">${d.pits}</td>
+        <td class="r f1-hide-mobile">${d.lap_number || '—'}</td>
+        <td class="r f1-hide-mobile">${fmtTime(d.last_lap)}</td>
+        <td class="r">${d.gap_to_leader != null ? (d.pos===1?'LEADER':'+'+d.gap_to_leader) : '—'}</td>
+        <td class="r f1-hide-mobile f1-sector">${fmtTime(d.sector_1)}</td>
+        <td class="r f1-hide-mobile f1-sector">${fmtTime(d.sector_2)}</td>
+        <td class="r f1-hide-mobile f1-sector">${fmtTime(d.sector_3)}</td>`;
     } else {
       cells = `
         <td class="r">${tyreBadge(d.tyre)}</td>
         <td class="r">${fmtTime(d.best_lap)}</td>
         <td class="r">${gap}</td>
-        <td class="r f1-sector">${fmtTime(d.sector_1)}</td>
-        <td class="r f1-sector">${fmtTime(d.sector_2)}</td>
-        <td class="r f1-sector">${fmtTime(d.sector_3)}</td>`;
+        <td class="r f1-hide-mobile f1-sector">${fmtTime(d.sector_1)}</td>
+        <td class="r f1-hide-mobile f1-sector">${fmtTime(d.sector_2)}</td>
+        <td class="r f1-hide-mobile f1-sector">${fmtTime(d.sector_3)}</td>`;
     }
 
-    return `<tr class="${chgClass}" data-dn="${d.driver_number}">
+    return `<tr class="${chgClass} ${qualiRowClass(d.pos)}" data-dn="${d.driver_number}">
       <td><span class="f1-pos-num ${posClass}">${d.pos}</span></td>
       <td>${posChg(d.driver_number)}</td>
       <td>
@@ -1991,13 +2041,26 @@ function f1BuildLeaderboard(live) {
           </div>
         </div>
       </td>
-      <td style="font-size:11px;color:var(--text-3);max-width:100px;overflow:hidden;text-overflow:ellipsis">${d.team || '—'}</td>
+      <td class="f1-hide-mobile" style="font-size:11px;color:var(--text-3);max-width:100px;overflow:hidden;text-overflow:ellipsis">${d.team || '—'}</td>
       ${cells}
     </tr>`;
   }).join('');
 
   const lapInfo = isRace && total_laps
     ? `<span class="f1-lb-lap">Lap ${total_laps}</span>` : '';
+
+  // Last updated timestamp
+  const updatedStr = f1LastFetch
+    ? `Updated ${Math.round((Date.now()-f1LastFetch)/1000)}s ago`
+    : 'Live';
+
+  // Qualifying segment row shading
+  function qualiRowClass(pos) {
+    if (!isQuali) return '';
+    if (pos >= 16) return 'f1-q1-out';
+    if (pos >= 11) return 'f1-q2-out';
+    return '';
+  }
 
   // Remove animation classes after 900ms so they don't re-trigger
   setTimeout(() => {
@@ -2009,7 +2072,7 @@ function f1BuildLeaderboard(live) {
   return `<div class="f1-lb-hd">
     <div>
       <div class="f1-lb-session">${session.name} — ${session.meeting}</div>
-      <div class="f1-lb-meta">${session.circuit} · ${session.country} · ${session.is_live ? '🔴 LIVE' : 'Latest data'}</div>
+      <div class="f1-lb-meta">${session.circuit} · ${session.country} · ${session.is_live ? '🔴 LIVE' : 'Latest data'} · <span class="f1-lb-updated">${updatedStr}</span></div>
     </div>
     ${lapInfo}
   </div>
@@ -2018,7 +2081,11 @@ function f1BuildLeaderboard(live) {
       <thead>${headers}</thead>
       <tbody>${rows}</tbody>
     </table>
-  </div>`;
+  </div>
+  ${isQuali ? `<div class="f1-q-legend">
+    <span class="f1-q-seg q2">Q2 eliminated (P11–15)</span>
+    <span class="f1-q-seg q1">Q1 eliminated (P16–20)</span>
+  </div>` : ''}`;
 }
 
 // ── Countdown builder ─────────────────────────────────────
@@ -2035,7 +2102,7 @@ function f1BuildCountdown(session) {
       <div class="f1-cd-unit"><div class="f1-cd-num" id="cd-s">—</div><div class="f1-cd-lbl">Secs</div></div>
     </div>
     <div style="font-size:11px;color:var(--text-3);margin-top:10px">
-      ${session.start.toLocaleString([],{weekday:'long',month:'long',day:'numeric',hour:'2-digit',minute:'2-digit',timeZoneName:'short'})}
+      ${toIST(session.start)} IST
     </div>
   </div>`;
 }
@@ -2153,7 +2220,7 @@ function f1RenderCompleted() {
   if (strip) {
     strip.innerHTML = done.map(r => {
       const isSprint = !!r.sessions.sprint;
-      const sel = (!f1CurrentRound && r === done[0]) || f1CurrentRound === r.round;
+      const sel = f1CurrentRound === r.round;
       return `<div class="hpill ${sel?'sel':''} ${isSprint?'sprint-pill':''}" onclick="f1SelectRound(${r.round})">
         <span class="hpill-rnum">R${r.round} ${isSprint ? '<span class="sprint-badge">S</span>' : ''}</span>
         <span class="hpill-name">${r.name.replace(' Grand Prix','').replace('Grand Prix','')}</span>
@@ -2161,8 +2228,7 @@ function f1RenderCompleted() {
     }).join('');
   }
 
-  // Auto-select first (most recent)
-  if (!f1CurrentRound && done.length) f1SelectRound(done[0].round);
+  // No auto-select — user clicks a pill to load result
 
   // Accordion
   const acc = document.getElementById('accordion-content');
@@ -2190,6 +2256,14 @@ function f1RenderCompleted() {
 }
 
 async function f1SelectRound(round) {
+  // Toggle — clicking same round collapses the panel
+  if (f1CurrentRound === round) {
+    f1CurrentRound = null;
+    document.querySelectorAll('.hpill').forEach(p => p.classList.remove('sel'));
+    const panel = document.getElementById('hdetail-panel');
+    if (panel) panel.innerHTML = '';
+    return;
+  }
   f1CurrentRound = round;
 
   // Update pill selection
@@ -2313,14 +2387,12 @@ function f1RenderUpcoming() {
     const isSprint = !!r.sessions.sprint;
     const racePts  = isSprint ? 33 : 25;
     const conPts   = isSprint ? 58 : 43;
-    const sessions = [];
-    if (r.sessions.fp1) sessions.push('FP1');
-    if (r.sessions.fp2) sessions.push('FP2');
-    if (r.sessions.fp3) sessions.push('FP3');
-    if (r.sessions.sprintQuali) sessions.push('Sprint Quali');
-    if (r.sessions.sprint)      sessions.push('Sprint Race');
-    if (r.sessions.quali) sessions.push('Qualifying');
-    sessions.push('Race');
+    const sessionTimes = [];
+    const smap = r.sessions;
+    [['fp1','FP1'],['fp2','FP2'],['fp3','FP3'],['sprintQuali','SQ'],['sprint','Sprint'],['quali','Quali']].forEach(([k,label]) => {
+      if (smap[k]) sessionTimes.push(`${label}: ${toISTtime(new Date(smap[k].date+'T'+(smap[k].time||'09:00:00Z')))}`);
+    });
+    sessionTimes.push(`Race: ${toISTtime(new Date(r.date+'T'+(r.time||'14:00:00Z')))}`);
 
     return `<div class="upc-card ${isNext?'next':''}">
       <div class="upc-rnum">R${r.round}${isNext?' · NEXT UP':''}</div>
@@ -2328,7 +2400,7 @@ function f1RenderUpcoming() {
       <div class="upc-circuit">${r.circuit}</div>
       <div class="upc-date">${r.locality}, ${r.country}</div>
       <div class="upc-date" style="margin-top:3px">Race: ${new Date(r.date).toLocaleDateString([],{weekday:'short',month:'short',day:'numeric'})}</div>
-      <div style="font-size:10px;color:var(--text-4);margin-top:4px">${sessions.join(' · ')}</div>
+      <div style="font-size:10px;color:var(--text-4);margin-top:4px;line-height:1.7">${sessionTimes.join('<br>')}</div>
       <div class="upc-pts-row">
         <span class="big">${racePts}</span>
         <span class="lbl">max pts per driver</span>
@@ -2408,7 +2480,7 @@ function f1RenderStandings() {
             ${teamBar(d.team)}
             <div>
               <div class="driver-name">${d.name}</div>
-              <div class="driver-team">${d.team} · ${d.nationality}</div>
+              <div class="driver-team">${NAT_FLAG[d.nationality]||''} ${d.team} · ${d.nationality}</div>
             </div>
           </div>
         </td>
@@ -3984,16 +4056,19 @@ function scrollToSection(id){
 // Scroll spy — highlight active sub-nav item
 window.addEventListener('scroll', ()=>{
   // ── F1 scroll spy ──
-  const rounds = document.getElementById('f1-rounds');
-  const champs = document.getElementById('f1-champs');
-  if(rounds && champs){
-    const champsTop = champs.getBoundingClientRect().top;
-    const items = document.querySelectorAll('.f1-subnav-item');
-    if(champsTop <= 150){
-      items[0].classList.remove('active'); items[1].classList.add('active');
-    } else {
-      items[0].classList.add('active');    items[1].classList.remove('active');
-    }
+  const f1Sections = [
+    {id:'f1-weekend', idx:0},
+    {id:'f1-rounds',  idx:1},
+    {id:'f1-champs',  idx:2},
+  ];
+  const f1Items = document.querySelectorAll('.f1-subnav-item');
+  if(f1Items.length){
+    let activeIdx = 0;
+    f1Sections.forEach(s => {
+      const el = document.getElementById(s.id);
+      if(el && el.getBoundingClientRect().top <= 110) activeIdx = s.idx;
+    });
+    f1Items.forEach((it, i) => it.classList.toggle('active', i === activeIdx));
   }
   // ── Football scroll spy ──
   const fbSections = [
