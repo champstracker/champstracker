@@ -2633,17 +2633,17 @@ const fbGroups = {
     {home:'Egypt',away:'Iran',hs:null,as:null,date:'Jun 26',kt:'2026-06-26T17:00:00Z',done:false},
   ]},
   H:{ name:'Group H', teams:[
-    {flag:'🇪🇸',name:'Spain',      p:2,w:1,d:1,l:0,gf:4,ga:0,gd:4,pts:4,so:1,fp:0,wr:2,status:'alive'},
-    {flag:'🇨🇻',name:'Cape Verde', p:2,w:0,d:2,l:0,gf:2,ga:2,gd:0,pts:2,so:2,fp:0,wr:73,status:'alive'},
-    {flag:'🇺🇾',name:'Uruguay',    p:2,w:0,d:2,l:0,gf:3,ga:3,gd:0,pts:2,so:3,fp:0,wr:18,status:'alive'},
-    {flag:'🇸🇦',name:'Saudi Arabia',p:2,w:0,d:1,l:1,gf:1,ga:5,gd:-4,pts:1,so:4,fp:0,wr:56,status:'alive'},
+    {flag:'🇪🇸',name:'Spain',      p:3,w:2,d:1,l:0,gf:5,ga:0,gd:5,pts:7,so:1,fp:0,wr:2,status:'alive'},
+    {flag:'🇨🇻',name:'Cape Verde', p:3,w:0,d:3,l:0,gf:2,ga:2,gd:0,pts:3,so:2,fp:0,wr:73,status:'alive'},
+    {flag:'🇺🇾',name:'Uruguay',    p:3,w:0,d:2,l:1,gf:3,ga:4,gd:-1,pts:2,so:3,fp:0,wr:18,status:'alive'},
+    {flag:'🇸🇦',name:'Saudi Arabia',p:3,w:0,d:1,l:2,gf:1,ga:5,gd:-4,pts:1,so:4,fp:0,wr:56,status:'alive'},
   ], fixtures:[
     {home:'Spain',away:'Cape Verde',hs:0,as:0,date:'Jun 15',done:true},
     {home:'Uruguay',away:'Saudi Arabia',hs:1,as:1,date:'Jun 15',done:true},
     {home:'Spain',away:'Saudi Arabia',hs:4,as:0,date:'Jun 21',done:true},
     {home:'Uruguay',away:'Cape Verde',hs:2,as:2,date:'Jun 21',done:true},
-    {home:'Cape Verde',away:'Saudi Arabia',hs:null,as:null,date:'Jun 26',kt:'2026-06-26T20:00:00Z',done:false},
-    {home:'Uruguay',away:'Spain',hs:null,as:null,date:'Jun 26',kt:'2026-06-26T20:00:00Z',done:false},
+    {home:'Cape Verde',away:'Saudi Arabia',hs:0,as:0,date:'Jun 26',kt:'2026-06-26T20:00:00Z',done:true},
+    {home:'Uruguay',away:'Spain',hs:0,as:1,date:'Jun 26',kt:'2026-06-26T20:00:00Z',done:true},
   ]},
   I:{ name:'Group I', teams:[
     {flag:'🇫🇷',name:'France',     p:3,w:3,d:0,l:0,gf:10,ga:2,gd:8,pts:9,so:1,fp:0,wr:3,status:'alive'},
@@ -2964,7 +2964,7 @@ function computeQualStatus(team, position, groupTeams, groupFixtures, groupKey){
   const myMax = team.pts + (totalGames - team.p) * 3;
 
   // ── Early exit: all group games played → use final standings position directly ──
-  const groupDone = groupTeams.every(t => t.p >= totalGames);
+  const groupDone = groupFixtures.every(f => f.done);
   if(groupDone){
     const gk = (groupKey||'').toUpperCase();
     // Look up this team's rank among all 3rd-place teams (set by renderBest3rd)
@@ -3678,7 +3678,7 @@ function computeBest3rdStatus(X, allThirds, allGroups) {
     if (gk === X.grp) return;
 
     var g = allGroups[gk];
-    var groupDone = g.teams.every(function(t){ return t.p >= 3; });
+    var groupDone = g.fixtures.every(function(f){ return f.done; });
 
     // Build initial standings map
     var initStandings = {};
@@ -3780,7 +3780,7 @@ function renderBest3rd(){
   // For ELIMINATED: use BEST case stats as 3rd (if best case can't make top 8 → eliminated)
   // For CONTENTION: neither extreme applies
   function getCaseAsThird(t, g, wantBest) {
-    var groupDone = g.teams.every(function(tm){ return tm.p >= 3; });
+    var groupDone = g.fixtures.every(function(f){ return f.done; });
     if (groupDone) return t;
 
     var pending = g.fixtures.filter(function(f){ return !f.done; });
@@ -3828,8 +3828,8 @@ function renderBest3rd(){
 
   const gdColor = gd => gd > 0 ? 'var(--status-green-text)' : gd < 0 ? 'var(--status-red-text)' : 'var(--text-3)';
 
-  // Check if group is done
-  const groupDone = gk => fbGroups[gk].teams.every(t => t.p >= 3);
+  // Check if group is done — use fixtures not t.p, since live API updates p mid-match
+  const groupDone = gk => fbGroups[gk].fixtures.every(f => f.done);
 
   let rows = '';
   thirds.forEach((t, i) => {
@@ -3885,7 +3885,6 @@ function renderBest3rd(){
       <td class="r">${t.ga}</td>
       <td class="r" style="color:${gdColor(t.gd)}">${gdStr}</td>
       <td class="r pts-bold">${t.pts}</td>
-      <td class="r" style="color:${t.fp < 0 ? 'var(--status-red-text)' : 'var(--text-3)'};font-size:11px">${fpStr}</td>
     </tr>`;
   });
 
@@ -3895,14 +3894,12 @@ function renderBest3rd(){
         <th>#</th><th>Team</th><th>Grp</th>
         <th class="r">P</th><th class="r">W</th><th class="r">D</th><th class="r">L</th>
         <th class="r">GF</th><th class="r">GA</th><th class="r">GD</th><th class="r">Pts</th>
-        <th class="r" title="Fair Play (cards)">FP</th>
       </tr></thead>
       <tbody>${rows}</tbody>
     </table>
   </div>
   <div style="font-size:11px;color:var(--text-3);margin-bottom:16px">
     ⚠️ Rankings update automatically after every match. Top 8 (blue) advance to Round of 32.
-    FP = Fair Play score (yellow=-1, indirect red=-3, direct red=-4).
   </div>`;
 }
 // ═══════════════════════════════════════════
