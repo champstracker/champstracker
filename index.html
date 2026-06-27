@@ -2714,7 +2714,7 @@ function normaliseGroupKey(raw){
 function matchFlags(status){
   const s = (status||'').toUpperCase();
   if(['FINISHED','FT'].includes(s))          return {done:true,  live:false};
-  if(['IN_PLAY','PAUSED','HALFTIME'].includes(s)) return {done:false, live:true};
+  if(['IN_PLAY','PAUSED','HALFTIME','LIVE'].includes(s)) return {done:false, live:true};
   return {done:false, live:false};
 }
 
