@@ -2980,7 +2980,7 @@ function computeQualStatus(team, position, groupTeams, groupFixtures, groupKey){
         const rankStr = thirdRank > 0 ? ` · #${thirdRank}` : '';
         return {qual:'qualified', label:`Qualified · 3${gk}${rankStr}`};
       } else if(b3Status === 'eliminated'){
-        return {qual:'out', label:`Out of Top 8 · 3${gk}`};
+        return {qual:'out', label:`Eliminated`};
       } else {
         const rankStr = thirdRank > 0 ? `${thirdRank} of 12` : '?';
         return {qual:'danger', label:`3RD PLACE · ${rankStr}`};
