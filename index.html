@@ -3263,7 +3263,9 @@ function renderBracket(){
     }
     // Best 3rd slot
     const r = getThirdSlot(matchId, slot.pool);
-    return {...r, state: r.isTBD ? 'tbd' : 'third'};
+    const allGroupsDone = Object.keys(fbGroups).every(gk => fbGroups[gk].fixtures.every(f => f.done));
+    const thirdState = r.isTBD ? 'tbd' : (allGroupsDone ? 'confirmed' : 'third');
+    return {...r, state: thirdState};
   }
 
   // ── Best 8 thirds ─────────────────────────────────────────
