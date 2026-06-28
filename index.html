@@ -820,6 +820,10 @@ tbody tr:hover td{background:var(--surface2)}
 [data-theme="dark"] .grp-tbl tr.row-out td{background:rgba(248,113,113,0.07)!important}
 [data-theme="dark"] .grp-tbl tr.row-danger td{background:rgba(251,191,36,0.07)!important}
 
+/* Archive mode: details toggle */
+details[open] summary span:first-child { transform: rotate(90deg); display:inline-block; }
+details summary::-webkit-details-marker { display:none; }
+
 /* bracket-tree styles replaced by .hkb-* */
 
 /* ── Vertical bracket layout ── */
@@ -1127,10 +1131,10 @@ tbody tr:hover td{background:var(--surface2)}
     <div class="fb-sec-label">
       <span class="fb-sec-num">01</span>
       <span class="fb-sec-title">FIFA World Cup 2026</span>
-      <span class="chip chip-fb">GROUP STAGE</span>
-      <span class="chip chip-live-green">🔴 LIVE</span>
+      <span class="chip chip-fb" id="fb-stage-chip">GROUP STAGE</span>
+      <span class="chip chip-live-green" id="fb-live-chip">🔴 LIVE</span>
     </div>
-    <div style="font-size:11px;color:var(--muted);line-height:1.8">
+    <div style="font-size:11px;color:var(--muted);line-height:1.8" id="fb-stage-meta">
       🇺🇸🇲🇽🇨🇦 Hosted across USA, Mexico & Canada · Jun 11 – Jul 19, 2026 · 48 teams · 12 groups · 104 matches
       · <strong style="color:var(--text)">Group stage ends Jun 27</strong> · Round of 32 starts Jun 28 · Final Jul 19 at MetLife Stadium, New York
     </div>
@@ -2700,6 +2704,85 @@ const fbGroups = {
 };
 
 // ── Live API fetch + merge ──────────────────────────────────────
+// ── Knockout Results ─────────────────────────────────────────
+// Keyed by match ID (M73..M88 for R32, M89..M96 for R16, etc.)
+// Each entry: { hs, as, done, live }
+// Seeded with known results; updated by API fetch
+window.koResults = window.koResults || {};
+
+// Team name aliases for knockout matching (same as canonicalTeam)
+function koCanonical(name){
+  if(!name) return '';
+  const aliases = {
+    'USA':'United States','US':'United States','Ivory Coast':"Côte d'Ivoire",
+    'Cote d\'Ivoire':"Côte d'Ivoire","Cote d'Ivoire":"Côte d'Ivoire",
+    'IR Iran':'Iran','Korea Republic':'S. Korea','South Korea':'S. Korea',
+    'Republic of Korea':'S. Korea','Czech Republic':'Czech Rep.',
+    'Czechia':'Czech Rep.','Bosnia Herzegovina':'Bosnia','Bosnia & Herzegovina':'Bosnia',
+    'Bosnia and Herzegovina':'Bosnia','DR Congo':'DR Congo',
+    'Congo DR':'DR Congo','Democratic Republic of Congo':'DR Congo',
+    'Cape Verde':'Cape Verde','Cabo Verde':'Cape Verde',
+    'Saudi Arabia':'Saudi Arabia','New Zealand':'New Zealand',
+    'Uzbekistan':'Uzbekistan','Jordan':'Jordan',
+    'England':'England','Croatia':'Croatia','Ghana':'Ghana','Panama':'Panama',
+  };
+  return aliases[name] || name;
+}
+
+// Build a map from team name → match ID for all resolved R32 slots
+function buildKoTeamMap(){
+  if(!window._r32map) return {};
+  const map = {};
+  Object.keys(window._r32map).forEach(mid => {
+    const m = window._r32map[mid];
+    if(m.homeSlot && !m.homeSlot.isTBD && m.homeSlot.text){
+      // Extract team name from slot text (remove flag emoji prefix)
+      const name = m.homeSlot.text.replace(/^[^a-zA-Z0-9À-ɏ\u00C0-\u024F]+/, '').trim();
+      map[name] = {mid, side:'home'};
+    }
+    if(m.awaySlot && !m.awaySlot.isTBD && m.awaySlot.text){
+      const name = m.awaySlot.text.replace(/^[^a-zA-Z0-9À-ɏ\u00C0-\u024F]+/, '').trim();
+      map[name] = {mid, side:'away'};
+    }
+  });
+  return map;
+}
+
+function mergeKoMatches(matches){
+  if(!Array.isArray(matches) || !matches.length) return;
+  const LIVE_STATUSES = ['IN_PLAY','PAUSED','HALFTIME','LIVE'];
+  const teamMap = buildKoTeamMap();
+
+  matches.forEach(m => {
+    const s = (m.status||'').toUpperCase();
+    const isDone = s==='FINISHED' || s==='FT';
+    const isLive = LIVE_STATUSES.includes(s);
+    if(!isDone && !isLive) return;
+    if(m.homeScore===null || m.homeScore===undefined) return;
+
+    const home = koCanonical(m.homeTeam);
+    const away = koCanonical(m.awayTeam);
+
+    // Find which R32 match this is
+    let mid = null, hs = m.homeScore, as_ = m.awayScore;
+    if(teamMap[home] && teamMap[home].mid){
+      mid = teamMap[home].mid;
+      // Verify away team matches too
+      const slot = window._r32map[mid];
+      if(!slot) return;
+    } else if(teamMap[away] && teamMap[away].mid){
+      mid = teamMap[away].mid;
+    }
+    if(!mid) return;
+
+    // Skip group stage matches — knockout matches have stage != GROUP_STAGE and group == null
+    const stage = (m.stage || '').toUpperCase();
+    if(stage === 'GROUP_STAGE' || m.group) return;
+
+    window.koResults[mid] = { hs, as: as_, done: isDone, live: isLive };
+  });
+}
+
 let fbDataLoaded = false;
 let fbFetchTimer = null;
 
@@ -2887,6 +2970,7 @@ async function fetchFbData(silent){
       const matches = Array.isArray(mJson) ? mJson : mJson.data || mJson.matches || [];
       mergeMatches(matches);
       computeStandingsFromMatches(matches);
+      mergeKoMatches(matches); // pick up any knockout stage results
     }
     // Also fetch live endpoint (30s cache) to catch in-progress matches
     // without waiting for the 60s matches cache to bust
@@ -2895,7 +2979,7 @@ async function fetchFbData(silent){
       if(lRes.ok){
         const lJson = await lRes.json();
         const lm = Array.isArray(lJson) ? lJson : lJson.data || lJson.matches || [];
-        if(lm.length) mergeMatches(lm);
+        if(lm.length){ mergeMatches(lm); mergeKoMatches(lm); }
       }
     } catch(le){ /* live fetch is best-effort */ }
 
@@ -3168,11 +3252,29 @@ function renderFbGroups(filter){
       </div>`;
     }).join('');
 
-    return `<div class="grp-panel active" style="margin-bottom:14px">
+    // Archive mode: fixtures collapsed when group stage is complete
+    const gsComplete = g.fixtures.every(f => f.done);
+    const qual1 = sorted[0], qual2 = sorted[1], third = sorted[2], elim = sorted[3];
+    const subLine = gsComplete
+      ? `<span style="color:var(--football);font-weight:600">${qual1.flag} ${qual1.name}</span> &amp;
+         <span style="color:var(--football);font-weight:600">${qual2.flag} ${qual2.name}</span> advance
+         &middot; <span style="color:var(--text-3)">${elim.flag} ${elim.name} eliminated</span>`
+      : 'Top 2 qualify automatically · Best 3rd may advance';
+
+    const fixturesBlock = gsComplete
+      ? `<details style="margin-top:8px">
+           <summary style="font-size:11px;color:var(--text-3);cursor:pointer;list-style:none;display:flex;align-items:center;gap:4px;padding:4px 0">
+             <span style="font-size:9px">▶</span> Show all results
+           </summary>
+           <div class="grp-fixtures" style="margin-top:6px">${fixtures}</div>
+         </details>`
+      : `<div class="grp-fixtures"><div class="fix-hd">Fixtures &amp; Results</div>${fixtures}</div>`;
+
+    return `<div class="grp-panel active" style="margin-bottom:${gsComplete?'10':'14'}px">
       <div class="grp-card">
         <div class="grp-card-hd">
           <span class="grp-name">${g.name}</span>
-          <span class="grp-teams">Top 2 qualify automatically · Best 3rd may advance</span>
+          <span class="grp-teams" style="font-size:11px">${subLine}</span>
         </div>
         <table class="grp-tbl">
           <thead><tr>
@@ -3181,10 +3283,7 @@ function renderFbGroups(filter){
           </tr></thead>
           <tbody>${standing}</tbody>
         </table>
-        <div class="grp-fixtures">
-          <div class="fix-hd">Fixtures & Results</div>
-          ${fixtures}
-        </div>
+        ${fixturesBlock}
       </div>
     </div>`;
   }).join('');
@@ -3301,22 +3400,22 @@ function renderBracket(){
 
   // ── Official R32 match definitions ───────────────────────
   const r32defs = [
-    {id:'M73',date:'Jun 28',venue:'Los Angeles',   home:{type:'runner',grp:'A'}, away:{type:'runner',grp:'B'}},
-    {id:'M74',date:'Jun 29',venue:'Boston',         home:{type:'winner',grp:'E'}, away:{type:'third',pool:'ABCDF'}},
-    {id:'M75',date:'Jun 29',venue:'Guadalupe, MX', home:{type:'winner',grp:'F'}, away:{type:'runner',grp:'C'}},
-    {id:'M76',date:'Jun 29',venue:'Houston',        home:{type:'winner',grp:'C'}, away:{type:'runner',grp:'F'}},
-    {id:'M77',date:'Jun 30',venue:'New York-NJ',   home:{type:'winner',grp:'I'}, away:{type:'third',pool:'CDFGH'}},
-    {id:'M78',date:'Jun 30',venue:'Dallas',         home:{type:'runner',grp:'E'}, away:{type:'runner',grp:'I'}},
-    {id:'M79',date:'Jun 30',venue:'Mexico City',   home:{type:'winner',grp:'A'}, away:{type:'third',pool:'CEFHI'}},
-    {id:'M80',date:'Jul 1', venue:'Atlanta',        home:{type:'winner',grp:'L'}, away:{type:'third',pool:'EHIJK'}},
-    {id:'M81',date:'Jul 1', venue:'San Francisco', home:{type:'winner',grp:'D'}, away:{type:'third',pool:'BEFIJ'}},
-    {id:'M82',date:'Jul 1', venue:'Seattle',        home:{type:'winner',grp:'G'}, away:{type:'third',pool:'AEHIJ'}},
-    {id:'M83',date:'Jul 2', venue:'Toronto',        home:{type:'runner',grp:'K'}, away:{type:'runner',grp:'L'}},
-    {id:'M84',date:'Jul 2', venue:'Los Angeles',   home:{type:'winner',grp:'H'}, away:{type:'runner',grp:'J'}},
-    {id:'M85',date:'Jul 2', venue:'Vancouver',      home:{type:'winner',grp:'B'}, away:{type:'third',pool:'EFGIJ'}},
-    {id:'M86',date:'Jul 2', venue:'Miami',          home:{type:'winner',grp:'J'}, away:{type:'runner',grp:'H'}},
-    {id:'M87',date:'Jul 2', venue:'Kansas City',   home:{type:'winner',grp:'K'}, away:{type:'third',pool:'DEIJL'}},
-    {id:'M88',date:'Jul 3', venue:'Dallas',         home:{type:'runner',grp:'D'}, away:{type:'runner',grp:'G'}},
+    {id:'M73',date:'Jun 28',kt:'2026-06-28T17:00:00Z',venue:'Los Angeles',   home:{type:'runner',grp:'A'}, away:{type:'runner',grp:'B'}},
+    {id:'M74',date:'Jun 29',kt:'2026-06-29T17:00:00Z',venue:'Boston',         home:{type:'winner',grp:'E'}, away:{type:'third',pool:'ABCDF'}},
+    {id:'M75',date:'Jun 29',kt:'2026-06-29T21:00:00Z',venue:'Guadalupe, MX', home:{type:'winner',grp:'F'}, away:{type:'runner',grp:'C'}},
+    {id:'M76',date:'Jun 29',kt:'2026-06-29T17:00:00Z',venue:'Houston',        home:{type:'winner',grp:'C'}, away:{type:'runner',grp:'F'}},
+    {id:'M77',date:'Jun 30',kt:'2026-06-30T17:00:00Z',venue:'New York-NJ',   home:{type:'winner',grp:'I'}, away:{type:'third',pool:'CDFGH'}},
+    {id:'M78',date:'Jun 30',kt:'2026-06-30T21:00:00Z',venue:'Dallas',         home:{type:'runner',grp:'E'}, away:{type:'runner',grp:'I'}},
+    {id:'M79',date:'Jun 30',kt:'2026-06-30T17:00:00Z',venue:'Mexico City',   home:{type:'winner',grp:'A'}, away:{type:'third',pool:'CEFHI'}},
+    {id:'M80',date:'Jul 1',kt:'2026-07-01T16:00:00Z',venue:'Atlanta',        home:{type:'winner',grp:'L'}, away:{type:'third',pool:'EHIJK'}},
+    {id:'M81',date:'Jul 1',kt:'2026-07-02T00:00:00Z',venue:'San Francisco', home:{type:'winner',grp:'D'}, away:{type:'third',pool:'BEFIJ'}},
+    {id:'M82',date:'Jul 1',kt:'2026-07-01T20:00:00Z',venue:'Seattle',        home:{type:'winner',grp:'G'}, away:{type:'third',pool:'AEHIJ'}},
+    {id:'M83',date:'Jul 2',kt:'2026-07-02T19:00:00Z',venue:'Toronto',        home:{type:'runner',grp:'K'}, away:{type:'runner',grp:'L'}},
+    {id:'M84',date:'Jul 2',kt:'2026-07-02T15:00:00Z',venue:'Los Angeles',   home:{type:'winner',grp:'H'}, away:{type:'runner',grp:'J'}},
+    {id:'M85',date:'Jul 2',kt:'2026-07-03T03:00:00Z',venue:'Vancouver',      home:{type:'winner',grp:'B'}, away:{type:'third',pool:'EFGIJ'}},
+    {id:'M86',date:'Jul 2',kt:'2026-07-03T22:00:00Z',venue:'Miami',          home:{type:'winner',grp:'J'}, away:{type:'runner',grp:'H'}},
+    {id:'M87',date:'Jul 2',kt:'2026-07-04T01:30:00Z',venue:'Kansas City',   home:{type:'winner',grp:'K'}, away:{type:'third',pool:'DEIJL'}},
+    {id:'M88',date:'Jul 3',kt:'2026-07-03T18:00:00Z',venue:'Dallas',         home:{type:'runner',grp:'D'}, away:{type:'runner',grp:'G'}},
   ];
   const r32map = {};
   r32defs.forEach(m => {
@@ -3325,6 +3424,7 @@ function renderBracket(){
       awaySlot: resolveSlot(m.away, m.id)
     };
   });
+  window._r32map = r32map; // expose for koResults team matching
 
   // ── Official R32→R16 pairings (FIFA confirmed) ────────────
   const r16defs = [
@@ -3438,18 +3538,46 @@ function renderBracket(){
                : as_.state==='third'     ? ' <span class="hkb-badge t3">3rd</span>' : '';
     var hseed = '<span style="font-size:8px;color:var(--text-4);margin-right:3px;font-weight:600">' + seedLabel(m.home) + '</span>';
     var aseed = '<span style="font-size:8px;color:var(--text-4);margin-right:3px;font-weight:600">' + seedLabel(m.away) + '</span>';
-    // Pool label shown on venue line: "Boston · (A/B/C/D/F)"
     var pool = (m.home.type==='third' ? m.home.pool : m.away.type==='third' ? m.away.pool : null);
     var poolStr = pool ? ' &middot; (' + pool.split('').join('/') + ')' : '';
+
+    var timeStrip = '';
+    if(m.kt){
+      var ko = new Date(m.kt);
+      var now = new Date();
+      var diff = ko - now;
+      var koResult = window.koResults && window.koResults[mid];
+      if(koResult && (koResult.done || koResult.live)){
+        var sc = koResult.live ? 'color:var(--status-red-text);animation:pulse 1.4s infinite' : 'color:var(--football)';
+        var lt = koResult.live ? ' <span style="font-size:7px;color:var(--status-red-text)">LIVE</span>' : '';
+        timeStrip = '<div style="text-align:center;font-size:13px;font-weight:700;margin:3px 0;' + sc + '">'
+          + (koResult.hs != null ? koResult.hs : 0) + ' - ' + (koResult.as != null ? koResult.as : 0) + lt + '</div>';
+      } else if(diff <= 0){
+        timeStrip = '<div style="text-align:center;font-size:9px;font-weight:700;color:var(--status-red-text);animation:pulse 1.4s infinite;margin:3px 0">LIVE</div>';
+      } else if(diff < 86400000){
+        var h = Math.floor(diff/3600000);
+        var mn = Math.floor((diff%3600000)/60000);
+        timeStrip = '<div class="r32-countdown" data-kt="' + m.kt + '" style="text-align:center;font-size:9px;font-weight:600;color:var(--status-amber-text);margin:3px 0">in '
+          + (h > 0 ? h + 'h ' : '') + mn + 'm</div>';
+      } else {
+        var ist = new Date(ko.getTime() + 19800000);
+        var ih = ist.getUTCHours(), im = ist.getUTCMinutes();
+        var ap = ih >= 12 ? 'PM' : 'AM';
+        var h12 = ih % 12 || 12;
+        timeStrip = '<div style="text-align:center;font-size:9px;color:var(--text-3);margin:3px 0">'
+          + h12 + ':' + String(im).padStart(2,'0') + ' ' + ap + ' IST</div>';
+      }
+    }
+
     return '<div class="hkb-vcard" data-mid="' + mid + '" style="width:' + W + 'px;min-width:' + W + 'px;box-sizing:border-box">'
-      + '<div class="hkb-vmid">' + mid + ' &middot; ' + m.date + '</div>'
+      + '<div class="hkb-vmid">' + mid + ' · ' + m.date + '</div>'
       + '<div class="hkb-vteam ' + hs.state + '">' + hseed + stripFlag(hs.text) + hbadge + '</div>'
       + '<div class="hkb-vdivider"></div>'
       + '<div class="hkb-vteam ' + as_.state + '">' + aseed + stripFlag(as_.text) + abadge + '</div>'
+      + timeStrip
       + '<div class="hkb-vmeta">' + m.venue + poolStr + '</div>'
       + '</div>';
   }
-
   function vTbdCard(id, date, venue, w, feedA, feedB) {
     var ta = feedA ? 'W·' + feedA : 'Winner';
     var tb = feedB ? 'W·' + feedB : 'Winner';
@@ -3510,17 +3638,78 @@ function renderBracket(){
     + '<div class="hkb-vrow" id="hkb-vrow-r32b">' + vLbl('R32','Jun 28-Jul 3') + '<div class="hkb-vcells">' + botR32html + '</div></div>'
     + '</div></div></div></div>';
 
-  el.innerHTML = desktopHtml;
+  // ── Mobile bracket (pod layout) ──────────────────────────
+  function mobMatch(mid) {
+    var m = r32map[mid];
+    var hs = m.homeSlot, as_ = m.awaySlot;
+    var koResult = window.koResults && window.koResults[mid];
+    var scoreHtml = '';
+    if(koResult && (koResult.done || koResult.live)){
+      var sc = koResult.live ? 'color:var(--status-red-text);animation:pulse 1.4s infinite' : 'color:var(--football)';
+      scoreHtml = '<div style="text-align:center;font-size:12px;font-weight:700;' + sc + ';margin:2px 0">'
+        + (koResult.hs != null ? koResult.hs : 0) + ' - ' + (koResult.as != null ? koResult.as : 0)
+        + (koResult.live ? ' <span style="font-size:7px">LIVE</span>' : '') + '</div>';
+    } else if(m.kt) {
+      var diff = new Date(m.kt) - new Date();
+      if(diff > 0 && diff < 86400000){
+        var h = Math.floor(diff/3600000), mn = Math.floor((diff%3600000)/60000);
+        scoreHtml = '<div style="text-align:center;font-size:9px;color:var(--status-amber-text);margin:2px 0">in ' + (h>0?h+'h ':'') + mn + 'm</div>';
+      }
+    }
+    return '<div class="hkb-pod-match">'
+      + '<div class="hkb-pod-match-id">' + mid + ' · ' + m.date + '</div>'
+      + '<div class="hkb-pod-team ' + hs.state + '">' + stripFlag(hs.text || 'TBD') + '</div>'
+      + scoreHtml
+      + '<div class="hkb-pod-team ' + as_.state + '">' + stripFlag(as_.text || 'TBD') + '</div>'
+      + '<div class="hkb-pod-venue">' + m.venue + '</div>'
+      + '</div>';
+  }
+
+  function mobR16(r) {
+    return '<div class="hkb-pod-match" style="border:2px dashed var(--border-strong)">'
+      + '<div class="hkb-pod-match-id">' + r.id + ' · ' + r.date + '</div>'
+      + '<div class="hkb-pod-team tbd">W·' + r.r32a + '</div>'
+      + '<div class="hkb-pod-team tbd">W·' + r.r32b + '</div>'
+      + '<div class="hkb-pod-venue">' + r.venue + '</div>'
+      + '</div>';
+  }
+
+  function mobPod(label, date, r32pairs, r16match) {
+    var matches = r32pairs.map(function(pair){
+      return '<div>' + mobMatch(pair[0]) + '<div class="hkb-pod-arrow">↓</div>' + mobMatch(pair[1]) + '</div>';
+    });
+    return '<div class="hkb-pod">'
+      + '<div class="hkb-pod-hd"><span>' + label + '</span><span style="font-weight:400;font-size:9px">' + date + '</span></div>'
+      + '<div class="hkb-pod-r32">' + matches.join('') + '</div>'
+      + '<div class="hkb-pod-arrow" style="color:var(--football)">↓ R16</div>'
+      + mobR16(r16match)
+      + '</div>';
+  }
+
+  var mobileHtml = '<div class="hkb-mobile">'
+    + legend
+    + mobPod('M74+M77 → M89', 'Jun 29-30 → Jul 4', [['M74','M77']], r16defs[0])
+    + mobPod('M73+M75 → M90', 'Jun 28-29 → Jul 4', [['M73','M75']], r16defs[1])
+    + mobPod('M76+M78 → M91', 'Jun 29-30 → Jul 5', [['M76','M78']], r16defs[2])
+    + mobPod('M79+M80 → M92', 'Jun 30-Jul 1 → Jul 5', [['M79','M80']], r16defs[3])
+    + mobPod('M83+M84 → M93', 'Jul 2 → Jul 6', [['M83','M84']], r16defs[4])
+    + mobPod('M81+M82 → M94', 'Jul 1 → Jul 6', [['M81','M82']], r16defs[5])
+    + mobPod('M86+M88 → M95', 'Jul 2-3 → Jul 7', [['M86','M88']], r16defs[6])
+    + mobPod('M85+M87 → M96', 'Jul 2 → Jul 7', [['M85','M87']], r16defs[7])
+    + '</div>';
+
+  el.innerHTML = mobileHtml + desktopHtml;
   requestAnimationFrame(function(){ requestAnimationFrame(drawBracketConnectors); });
 }
 
 function drawBracketConnectors(){
   var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-  var stroke = isDark ? 'rgba(255,255,255,0.28)' : 'rgba(0,0,0,0.40)';
+  var stroke = isDark ? 'rgba(255,255,255,0.25)' : 'rgba(0,0,0,0.35)';
   var old = document.getElementById('hkb-conn-overlay');
   if (old) old.remove();
   var wrap = document.getElementById('hkb-vwrap');
-  if (!wrap) return;
+  // Skip if desktop bracket is hidden (mobile view)
+  if (!wrap || wrap.offsetParent === null) return;
   var svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
   svg.id = 'hkb-conn-overlay';
   svg.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;overflow:visible;z-index:0';
@@ -4030,10 +4219,25 @@ function sw(sport){
 }
 
 function initFootball(){
-  // Fetch first — seed data renders as fallback only if fetch fails
   if(!fbFetchTimer){
-    fetchFbData(false);
+    fetchFbData(false).then(() => {
+      const gsComplete = Object.values(fbGroups).every(g => g.fixtures.every(f => f.done));
+      if(gsComplete){
+        setTimeout(() => {
+          scrollToFbSection('fb-bracket');
+          document.querySelectorAll('.fb-subnav-item').forEach((it,i) => it.classList.toggle('active', i===2));
+        }, 400);
+      }
+    });
     scheduleFbPoll();
+  } else {
+    const gsComplete = Object.values(fbGroups).every(g => g.fixtures.every(f => f.done));
+    if(gsComplete){
+      setTimeout(() => {
+        scrollToFbSection('fb-bracket');
+        document.querySelectorAll('.fb-subnav-item').forEach((it,i) => it.classList.toggle('active', i===2));
+      }, 200);
+    }
   }
 }
 
@@ -4053,6 +4257,11 @@ function scrollToSection(id){
 }
 
 // Scroll spy — highlight active sub-nav item
+window.addEventListener('resize', function(){
+  clearTimeout(window._resizeTimer);
+  window._resizeTimer = setTimeout(drawBracketConnectors, 150);
+});
+
 window.addEventListener('scroll', ()=>{
   // ── F1 scroll spy ──
   const f1Sections = [
@@ -4166,7 +4375,19 @@ function updateProgressBar(){
   const liveNote = live > 0
     ? `<div style="margin-top:5px;display:flex;flex-wrap:wrap;gap:6px">${livePills}</div>`
     : '';
-  if(pl) pl.innerHTML = `Matchday <strong>${md}</strong>${nextMd}${liveNote}`;
+  if(gsComplete){
+    if(rc) rc.textContent = 32;
+    if(pl) pl.innerHTML = `<strong>Group stage complete</strong> · 72 matches played · <span style="color:var(--football);font-weight:700">Round of 32 starts Jun 28</span>`;
+    const lc = document.getElementById('fb-live-chip');
+    const sm = document.getElementById('fb-stage-meta');
+    if(lc){ lc.textContent = '\u2705 COMPLETE'; lc.style.background='var(--status-green-bg)'; lc.style.color='var(--status-green-text)'; }
+    if(sm) sm.innerHTML = `\uD83C\uDDFA\uD83C\uDDF8\uD83C\uDDF2\uD83C\uDDFD\uD83C\uDDE8\uD83C\uDDE6 Hosted across USA, Mexico &amp; Canada &middot; Jun 11 – Jul 19, 2026 &middot; 48 teams &middot; 12 groups &middot; 104 matches
+      &middot; <strong style="color:var(--football)">Group stage complete \u2713</strong> &middot; <strong style="color:var(--text)">Round of 32 underway from Jun 28</strong> &middot; Final Jul 19 at MetLife Stadium, New York`;
+  } else {
+    if(rc) rc.textContent = remaining;
+    if(pl) pl.innerHTML = `Matchday <strong>${md}</strong>${nextMd}${liveNote}`;
+    if(live > 0){ const lc=document.getElementById('fb-live-chip'); if(lc){lc.textContent='\uD83D\uDD34 LIVE';lc.style.background='';lc.style.color='';} }
+  }
   // Update Who Can Still Win chip
   const chip = document.getElementById('wcsw-chip');
   const info = document.getElementById('wcsw-info');
@@ -4190,6 +4411,18 @@ function customQ(){
 
 // ── AUTO-REFRESH: polls every 60s while live matches are on, stops when none ──
 let _liveRefreshTimer = null;
+
+// Tick countdown timers every 30s
+setInterval(function(){
+  document.querySelectorAll('.r32-countdown[data-kt]').forEach(function(el){
+    var ko = new Date(el.getAttribute('data-kt'));
+    var diff = ko - new Date();
+    if(diff <= 0){ el.textContent = 'LIVE'; el.style.color='var(--status-red-text)'; return; }
+    var h = Math.floor(diff/3600000);
+    var mn = Math.floor((diff%3600000)/60000);
+    el.textContent = 'in ' + (h>0?h+'h ':'') + mn + 'm';
+  });
+}, 30000);
 
 function hasLiveMatches(){
   return Object.values(fbGroups).some(g => g.fixtures.some(f => f.live));
