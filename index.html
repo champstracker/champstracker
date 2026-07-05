@@ -3473,7 +3473,7 @@ function buildR32Map(){
   });
   window._r32map = r32map; // expose for koResults team matching
 
-  return r32map;
+  return { r32map, mapping };
 }
 
 // ── Official R32→R16 pairings (FIFA confirmed) ────────────
@@ -3508,7 +3508,7 @@ function renderBracket(){
   const el = document.getElementById('fb-bracket-content');
   if(!el) return;
 
-  const r32map = buildR32Map();
+  const { r32map, mapping } = buildR32Map();
 
   // ── Build a team box ─────────────────────────────────────
   function teamBox(slot){
