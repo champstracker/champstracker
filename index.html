@@ -1136,7 +1136,7 @@ details summary::-webkit-details-marker { display:none; }
     </div>
     <div style="font-size:11px;color:var(--muted);line-height:1.8" id="fb-stage-meta">
       🇺🇸🇲🇽🇨🇦 Hosted across USA, Mexico & Canada · Jun 11 – Jul 19, 2026 · 48 teams · 12 groups · 104 matches
-      · <strong style="color:var(--text)">Group stage ends Jun 27</strong> · Round of 32 starts Jun 28 · Final Jul 19 at MetLife Stadium, New York
+      · <strong style="color:var(--text)">Group stage ends Jun 27</strong> · Round of 32 underway from Jun 28 · Final Jul 19 at MetLife Stadium, New York
     </div>
   </div>
 
@@ -2710,23 +2710,10 @@ const fbGroups = {
 // Seeded with known results; updated by API fetch
 window.koResults = window.koResults || {};
 
-// Team name aliases for knockout matching (same as canonicalTeam)
+// Team name aliases for knockout matching — reuses the single, actively-maintained
+// TEAM_ALIAS table instead of keeping a second list that can drift out of sync.
 function koCanonical(name){
-  if(!name) return '';
-  const aliases = {
-    'USA':'United States','US':'United States','Ivory Coast':"Côte d'Ivoire",
-    'Cote d\'Ivoire':"Côte d'Ivoire","Cote d'Ivoire":"Côte d'Ivoire",
-    'IR Iran':'Iran','Korea Republic':'S. Korea','South Korea':'S. Korea',
-    'Republic of Korea':'S. Korea','Czech Republic':'Czech Rep.',
-    'Czechia':'Czech Rep.','Bosnia Herzegovina':'Bosnia','Bosnia & Herzegovina':'Bosnia',
-    'Bosnia and Herzegovina':'Bosnia','DR Congo':'DR Congo',
-    'Congo DR':'DR Congo','Democratic Republic of Congo':'DR Congo',
-    'Cape Verde':'Cape Verde','Cabo Verde':'Cape Verde',
-    'Saudi Arabia':'Saudi Arabia','New Zealand':'New Zealand',
-    'Uzbekistan':'Uzbekistan','Jordan':'Jordan',
-    'England':'England','Croatia':'Croatia','Ghana':'Ghana','Panama':'Panama',
-  };
-  return aliases[name] || name;
+  return canonicalTeam(name);
 }
 
 // Build a map from team name → match ID for all resolved R32 slots
@@ -2763,15 +2750,16 @@ function mergeKoMatches(matches){
     const home = koCanonical(m.homeTeam);
     const away = koCanonical(m.awayTeam);
 
-    // Find which R32 match this is
+    // Resolve each side independently — a home-side match must not silently
+    // short-circuit and hide a conflicting (or confirming) away-side match.
     let mid = null, hs = m.homeScore, as_ = m.awayScore;
-    if(teamMap[home] && teamMap[home].mid){
-      mid = teamMap[home].mid;
-      // Verify away team matches too
-      const slot = window._r32map[mid];
-      if(!slot) return;
-    } else if(teamMap[away] && teamMap[away].mid){
-      mid = teamMap[away].mid;
+    const homeMid = teamMap[home] && teamMap[home].mid;
+    const awayMid = teamMap[away] && teamMap[away].mid;
+    if(homeMid && awayMid){
+      if(homeMid !== awayMid) return; // conflicting slots — don't guess, don't corrupt either
+      mid = homeMid;
+    } else {
+      mid = homeMid || awayMid || null;
     }
     if(!mid) return;
 
@@ -2868,77 +2856,56 @@ function mergeMatches(matches){
     const keySwapped = gk+'|'+away+'|'+home;
 
     if(fxIndex[key]){
-      Object.assign(fxIndex[key], flags, {hs, as: as_});
+      Object.assign(fxIndex[key], flags, {hs, as: as_,
+        homeYellows: m.homeYellows, awayYellows: m.awayYellows,
+        homeReds: m.homeReds, awayReds: m.awayReds,
+        homeYellowReds: m.homeYellowReds, awayYellowReds: m.awayYellowReds});
     } else if(fxIndex[keySwapped]){
       // Home/away order is reversed — swap scores accordingly
-      Object.assign(fxIndex[keySwapped], flags, {hs: as_, as: hs});
+      Object.assign(fxIndex[keySwapped], flags, {hs: as_, as: hs,
+        homeYellows: m.awayYellows, awayYellows: m.homeYellows,
+        homeReds: m.awayReds, awayReds: m.homeReds,
+        homeYellowReds: m.awayYellowReds, awayYellowReds: m.homeYellowReds});
     }
     // Note: unrecognised fixtures are intentionally ignored.
     // All 72 fixtures are pre-seeded; API only updates existing ones.
   });
 }
 
-// Compute standings from match results — drop unreliable standings API entirely
-function computeStandingsFromMatches(matches){
-  if(!Array.isArray(matches)||!matches.length) return;
-
-  // Only recompute from API if we get enough finished matches to be trustworthy
-  // (guards against partial/empty API responses wiping seed data)
-  const finishedCount = matches.filter(m => m.status === 'FINISHED').length;
-  if(finishedCount < 1) return;
-
-  // Reset all team stats to zero before recomputing
+// Compute standings purely from fbGroups[gk].fixtures — the same group-scoped
+// source mergeMatches() maintains. Never reads the raw/unfiltered match list,
+// so knockout-round results (a different stage entirely) can't leak in.
+function computeStandingsFromFixtures(){
   Object.keys(fbGroups).forEach(gk => {
-    fbGroups[gk].teams.forEach(t => {
+    const g = fbGroups[gk];
+    const teamIndex = {};
+    g.teams.forEach(t => {
       t.p=0; t.w=0; t.d=0; t.l=0; t.gf=0; t.ga=0; t.gd=0; t.pts=0; t.fp=0;
+      teamIndex[t.name] = t;
     });
-  });
 
-  // Build team lookup: canonicalName → team object
-  const teamIndex = {};
-  Object.keys(fbGroups).forEach(gk => {
-    fbGroups[gk].teams.forEach(t => { teamIndex[t.name] = t; });
-  });
+    g.fixtures.forEach(f => {
+      if(!f.done || f.hs === null || f.as === null) return;
+      const ht = teamIndex[f.home];
+      const at = teamIndex[f.away];
+      if(!ht || !at) return;
 
-  const LIVE_STATUSES = ['IN_PLAY','PAUSED','HALFTIME','LIVE'];
+      ht.p++; ht.gf += f.hs; ht.ga += f.as; ht.gd = ht.gf - ht.ga;
+      at.p++; at.gf += f.as; at.ga += f.hs; at.gd = at.gf - at.ga;
 
-  matches.forEach(m => {
-    const s = (m.status||'').toUpperCase();
-    const isFinished = s === 'FINISHED' || s === 'FT';
-    const isLive     = LIVE_STATUSES.includes(s);
-    if(!isFinished && !isLive) return;
-    if(m.homeScore === null || m.awayScore === null) return;
+      if(f.hs > f.as){ ht.w++; ht.pts+=3; at.l++; }
+      else if(f.hs < f.as){ at.w++; at.pts+=3; ht.l++; }
+      else { ht.d++; ht.pts++; at.d++; at.pts++; }
 
-    const home = canonicalTeam(m.homeTeam);
-    const away = canonicalTeam(m.awayTeam);
-    const ht = teamIndex[home];
-    const at = teamIndex[away];
-    if(!ht || !at) return;
-
-    const hs = m.homeScore, as_ = m.awayScore;
-
-    // Home team
-    ht.p++; ht.gf += hs; ht.ga += as_; ht.gd = ht.gf - ht.ga;
-    // Away team
-    at.p++; at.gf += as_; at.ga += hs; at.gd = at.gf - at.ga;
-
-    if(hs > as_){
-      ht.w++; ht.pts+=3; at.l++;
-    } else if(hs < as_){
-      at.w++; at.pts+=3; ht.l++;
-    } else {
-      ht.d++; ht.pts++; at.d++; at.pts++;
-    }
-
-    // Fair play: accumulate card deductions if API provides them
-    // FIFA scoring: yellow=-1, yellow+red=-3, direct red=-4, yellow+direct red=-5
-    // API fields: homeYellows, awayYellows, homeReds, awayReds, homeYellowReds, awayYellowReds
-    if(m.homeYellows != null) ht.fp += m.homeYellows * -1;
-    if(m.awayYellows != null) at.fp += m.awayYellows * -1;
-    if(m.homeReds    != null) ht.fp += m.homeReds    * -4;
-    if(m.awayReds    != null) at.fp += m.awayReds    * -4;
-    if(m.homeYellowReds != null) ht.fp += m.homeYellowReds * -3;
-    if(m.awayYellowReds != null) at.fp += m.awayYellowReds * -3;
+      // Fair play: accumulate card deductions if the API provided them
+      // FIFA scoring: yellow=-1, yellow+red=-3, direct red=-4, yellow+direct red=-5
+      if(f.homeYellows != null) ht.fp += f.homeYellows * -1;
+      if(f.awayYellows != null) at.fp += f.awayYellows * -1;
+      if(f.homeReds    != null) ht.fp += f.homeReds    * -4;
+      if(f.awayReds    != null) at.fp += f.awayReds    * -4;
+      if(f.homeYellowReds != null) ht.fp += f.homeYellowReds * -3;
+      if(f.awayYellowReds != null) at.fp += f.awayYellowReds * -3;
+    });
   });
 }
 
@@ -2969,7 +2936,7 @@ async function fetchFbData(silent){
       const mJson = await mRes.json();
       const matches = Array.isArray(mJson) ? mJson : mJson.data || mJson.matches || [];
       mergeMatches(matches);
-      computeStandingsFromMatches(matches);
+      computeStandingsFromFixtures();
       mergeKoMatches(matches); // pick up any knockout stage results
     }
     // Also fetch live endpoint (30s cache) to catch in-progress matches
@@ -2979,7 +2946,7 @@ async function fetchFbData(silent){
       if(lRes.ok){
         const lJson = await lRes.json();
         const lm = Array.isArray(lJson) ? lJson : lJson.data || lJson.matches || [];
-        if(lm.length){ mergeMatches(lm); mergeKoMatches(lm); }
+        if(lm.length){ mergeMatches(lm); computeStandingsFromFixtures(); mergeKoMatches(lm); }
       }
     } catch(le){ /* live fetch is best-effort */ }
 
@@ -4377,7 +4344,7 @@ function updateProgressBar(){
     : '';
   if(gsComplete){
     if(rc) rc.textContent = 32;
-    if(pl) pl.innerHTML = `<strong>Group stage complete</strong> · 72 matches played · <span style="color:var(--football);font-weight:700">Round of 32 starts Jun 28</span>`;
+    if(pl) pl.innerHTML = `<strong>Group stage complete</strong> · 72 matches played · <span style="color:var(--football);font-weight:700">Round of 32 underway from Jun 28</span>`;
     const lc = document.getElementById('fb-live-chip');
     const sm = document.getElementById('fb-stage-meta');
     if(lc){ lc.textContent = '\u2705 COMPLETE'; lc.style.background='var(--status-green-bg)'; lc.style.color='var(--status-green-text)'; }
