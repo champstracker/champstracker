@@ -2789,6 +2789,25 @@ function matchFlags(status){
   return {done:false, live:false};
 }
 
+// Single source of truth for "what do we actually know about this match right now."
+// Never assumes LIVE just because kickoff has passed with no confirmed result —
+// absence of data means unknown, not live. Generic: works for any sport/tournament
+// that has a {done,live,hs,as} result object and an ISO kickoff time string.
+function matchStatusDisplay(koResult, kt){
+  if(koResult && (koResult.done || koResult.live)){
+    return {
+      kind: koResult.live ? 'live' : 'finished',
+      hs: koResult.hs != null ? koResult.hs : 0,
+      as: koResult.as != null ? koResult.as : 0,
+    };
+  }
+  if(!kt) return {kind:'unknown'};
+  const diff = new Date(kt) - new Date();
+  if(diff <= 0) return {kind:'unknown'};        // kickoff passed, no confirmed data — NOT live
+  if(diff < 86400000) return {kind:'soon', diff};
+  return {kind:'scheduled', kt};
+}
+
 // ── Team name aliases: API name → seed name ────────────────────
 // Covers football-data.org, api-sports.io, and common variants
 const TEAM_ALIAS = {
@@ -3510,23 +3529,22 @@ function renderBracket(){
 
     var timeStrip = '';
     if(m.kt){
-      var ko = new Date(m.kt);
-      var now = new Date();
-      var diff = ko - now;
       var koResult = window.koResults && window.koResults[mid];
-      if(koResult && (koResult.done || koResult.live)){
-        var sc = koResult.live ? 'color:var(--status-red-text);animation:pulse 1.4s infinite' : 'color:var(--football)';
-        var lt = koResult.live ? ' <span style="font-size:7px;color:var(--status-red-text)">LIVE</span>' : '';
+      var status = matchStatusDisplay(koResult, m.kt);
+      if(status.kind === 'live' || status.kind === 'finished'){
+        var sc = status.kind==='live' ? 'color:var(--status-red-text);animation:pulse 1.4s infinite' : 'color:var(--football)';
+        var lt = status.kind==='live' ? ' <span style="font-size:7px;color:var(--status-red-text)">LIVE</span>' : '';
         timeStrip = '<div style="text-align:center;font-size:13px;font-weight:700;margin:3px 0;' + sc + '">'
-          + (koResult.hs != null ? koResult.hs : 0) + ' - ' + (koResult.as != null ? koResult.as : 0) + lt + '</div>';
-      } else if(diff <= 0){
-        timeStrip = '<div style="text-align:center;font-size:9px;font-weight:700;color:var(--status-red-text);animation:pulse 1.4s infinite;margin:3px 0">LIVE</div>';
-      } else if(diff < 86400000){
-        var h = Math.floor(diff/3600000);
-        var mn = Math.floor((diff%3600000)/60000);
+          + status.hs + ' - ' + status.as + lt + '</div>';
+      } else if(status.kind === 'unknown'){
+        timeStrip = '<div style="text-align:center;font-size:9px;font-weight:600;color:var(--text-4);margin:3px 0">&mdash;</div>';
+      } else if(status.kind === 'soon'){
+        var h = Math.floor(status.diff/3600000);
+        var mn = Math.floor((status.diff%3600000)/60000);
         timeStrip = '<div class="r32-countdown" data-kt="' + m.kt + '" style="text-align:center;font-size:9px;font-weight:600;color:var(--status-amber-text);margin:3px 0">in '
           + (h > 0 ? h + 'h ' : '') + mn + 'm</div>';
       } else {
+        var ko = new Date(m.kt);
         var ist = new Date(ko.getTime() + 19800000);
         var ih = ist.getUTCHours(), im = ist.getUTCMinutes();
         var ap = ih >= 12 ? 'PM' : 'AM';
@@ -3610,18 +3628,18 @@ function renderBracket(){
     var m = r32map[mid];
     var hs = m.homeSlot, as_ = m.awaySlot;
     var koResult = window.koResults && window.koResults[mid];
+    var status = matchStatusDisplay(koResult, m.kt);
     var scoreHtml = '';
-    if(koResult && (koResult.done || koResult.live)){
-      var sc = koResult.live ? 'color:var(--status-red-text);animation:pulse 1.4s infinite' : 'color:var(--football)';
+    if(status.kind === 'live' || status.kind === 'finished'){
+      var sc = status.kind==='live' ? 'color:var(--status-red-text);animation:pulse 1.4s infinite' : 'color:var(--football)';
       scoreHtml = '<div style="text-align:center;font-size:12px;font-weight:700;' + sc + ';margin:2px 0">'
-        + (koResult.hs != null ? koResult.hs : 0) + ' - ' + (koResult.as != null ? koResult.as : 0)
-        + (koResult.live ? ' <span style="font-size:7px">LIVE</span>' : '') + '</div>';
-    } else if(m.kt) {
-      var diff = new Date(m.kt) - new Date();
-      if(diff > 0 && diff < 86400000){
-        var h = Math.floor(diff/3600000), mn = Math.floor((diff%3600000)/60000);
-        scoreHtml = '<div style="text-align:center;font-size:9px;color:var(--status-amber-text);margin:2px 0">in ' + (h>0?h+'h ':'') + mn + 'm</div>';
-      }
+        + status.hs + ' - ' + status.as
+        + (status.kind==='live' ? ' <span style="font-size:7px">LIVE</span>' : '') + '</div>';
+    } else if(status.kind === 'unknown'){
+      scoreHtml = '<div style="text-align:center;font-size:9px;color:var(--text-4);margin:2px 0">&mdash;</div>';
+    } else if(status.kind === 'soon'){
+      var h = Math.floor(status.diff/3600000), mn = Math.floor((status.diff%3600000)/60000);
+      scoreHtml = '<div style="text-align:center;font-size:9px;color:var(--status-amber-text);margin:2px 0">in ' + (h>0?h+'h ':'') + mn + 'm</div>';
     }
     return '<div class="hkb-pod-match">'
       + '<div class="hkb-pod-match-id">' + mid + ' · ' + m.date + '</div>'
@@ -4384,7 +4402,7 @@ setInterval(function(){
   document.querySelectorAll('.r32-countdown[data-kt]').forEach(function(el){
     var ko = new Date(el.getAttribute('data-kt'));
     var diff = ko - new Date();
-    if(diff <= 0){ el.textContent = 'LIVE'; el.style.color='var(--status-red-text)'; return; }
+    if(diff <= 0){ el.textContent = '—'; el.style.color='var(--text-4)'; return; }
     var h = Math.floor(diff/3600000);
     var mn = Math.floor((diff%3600000)/60000);
     el.textContent = 'in ' + (h>0?h+'h ':'') + mn + 'm';
@@ -4392,7 +4410,9 @@ setInterval(function(){
 }, 30000);
 
 function hasLiveMatches(){
-  return Object.values(fbGroups).some(g => g.fixtures.some(f => f.live));
+  const groupLive = Object.values(fbGroups).some(g => g.fixtures.some(f => f.live));
+  const koLive = window.koResults && Object.values(window.koResults).some(r => r.live);
+  return groupLive || !!koLive;
 }
 
 function scheduleLiveRefresh(){
