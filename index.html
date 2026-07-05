@@ -2735,10 +2735,69 @@ function buildKoTeamMap(){
   return map;
 }
 
+// Strip leading flag/emoji from a team name (same convention as buildKoTeamMap)
+function stripKoFlag(text){
+  return (text||'').replace(/^[^a-zA-Z0-9À-ɏ]+/, '').trim();
+}
+
+// Resolve the two team names playing in a given bracket match id (R32/R16/QF/SF),
+// as far as earlier rounds have been decided. Either slot is null if not yet known.
+function getMatchParticipants(mid){
+  const r32 = window._r32map && window._r32map[mid];
+  if(r32){
+    const home = (r32.homeSlot && !r32.homeSlot.isTBD) ? stripKoFlag(r32.homeSlot.text) : null;
+    const away = (r32.awaySlot && !r32.awaySlot.isTBD) ? stripKoFlag(r32.awaySlot.text) : null;
+    return [home, away];
+  }
+  const r16 = r16defs.find(r => r.id===mid);
+  if(r16) return [resolveWinner(r16.r32a), resolveWinner(r16.r32b)];
+  const qf = qfdefs.find(q => q.id===mid);
+  if(qf) return [resolveWinner(qf.r16a), resolveWinner(qf.r16b)];
+  const sf = sfdefs.find(s => s.id===mid);
+  if(sf) return [resolveWinner(sf.qfa), resolveWinner(sf.qfb)];
+  return [null, null];
+}
+
+// Resolve the winning team's name for any bracket match id, once decided.
+// SAFEGUARD (non-negotiable — this is exactly what caused the earlier revert):
+// only ever returns a name when koResults marks the match confirmed done, the
+// score is unambiguous (not a draw — no penalty-shootout data exists yet), and
+// both participants independently resolved to two DIFFERENT teams. Any other
+// case — undecided, in progress, drawn, or a participant still unknown —
+// returns null so the caller falls back to its neutral placeholder. Never guess.
+function resolveWinner(mid){
+  const kr = window.koResults && window.koResults[mid];
+  if(!kr || !kr.done || kr.hs === kr.as) return null;
+  const [home, away] = getMatchParticipants(mid);
+  if(!home || !away || home === away) return null;
+  return kr.hs > kr.as ? home : away;
+}
+
+// Map team name → the bracket match (any round) they're currently waiting on or
+// playing live, so an incoming API result gets attributed to the right match id
+// instead of always the team's original R32 slot.
+function buildKoAwaitingMap(){
+  if(!window._r32map) return {};
+  const map = {};
+  const allMids = Object.keys(window._r32map)
+    .concat(r16defs.map(r => r.id))
+    .concat(qfdefs.map(q => q.id))
+    .concat(sfdefs.map(s => s.id));
+  allMids.forEach(mid => {
+    const kr = window.koResults[mid];
+    if(kr && kr.done) return; // already finalized, don't remap
+    const [home, away] = getMatchParticipants(mid);
+    if(!home || !away) return;
+    map[home] = {mid, side:'home'};
+    map[away] = {mid, side:'away'};
+  });
+  return map;
+}
+
 function mergeKoMatches(matches){
   if(!Array.isArray(matches) || !matches.length) return;
   const LIVE_STATUSES = ['IN_PLAY','PAUSED','HALFTIME','LIVE'];
-  const teamMap = buildKoTeamMap();
+  const teamMap = buildKoAwaitingMap();
 
   matches.forEach(m => {
     const s = (m.status||'').toUpperCase();
@@ -2949,6 +3008,11 @@ function setFbLoading(on){
 async function fetchFbData(silent){
   if(!silent) setFbLoading(true);
   try {
+    // Build the R32 bracket slot map (purely from already-seeded fbGroups data)
+    // BEFORE mergeKoMatches() needs it — otherwise koResults stays empty for this
+    // entire cycle, since it can only attribute results to teams it can find in
+    // the slot map. Rebuilt every cycle so it stays current with standings.
+    buildR32Map();
     const BASE = 'https://champstracker-football.champstracker99.workers.dev';
     const mRes = await fetch(BASE + '?type=matches');
     if(mRes.ok){
@@ -3289,10 +3353,7 @@ function showGroup(g){
 }
 
 
-function renderBracket(){
-  const el = document.getElementById('fb-bracket-content');
-  if(!el) return;
-
+function buildR32Map(){
   function sg(gk){ return sortGroup(fbGroups[gk].teams, fbGroups[gk].fixtures); }
 
   // ── resolveSlot ──────────────────────────────────────────
@@ -3412,33 +3473,42 @@ function renderBracket(){
   });
   window._r32map = r32map; // expose for koResults team matching
 
-  // ── Official R32→R16 pairings (FIFA confirmed) ────────────
-  const r16defs = [
-    {id:'M89',date:'Jul 4', venue:'Philadelphia', r32a:'M74', r32b:'M77'},
-    {id:'M90',date:'Jul 4', venue:'Houston',      r32a:'M73', r32b:'M75'},
-    {id:'M91',date:'Jul 5', venue:'New York-NJ',  r32a:'M76', r32b:'M78'},
-    {id:'M92',date:'Jul 5', venue:'Mexico City',  r32a:'M79', r32b:'M80'},
-    {id:'M93',date:'Jul 6', venue:'Dallas',       r32a:'M83', r32b:'M84'},
-    {id:'M94',date:'Jul 6', venue:'Seattle',      r32a:'M81', r32b:'M82'},
-    {id:'M95',date:'Jul 7', venue:'Atlanta',      r32a:'M86', r32b:'M88'},
-    {id:'M96',date:'Jul 7', venue:'Vancouver',    r32a:'M85', r32b:'M87'},
-  ];
+  return r32map;
+}
 
-  // ── Official QF pairings (FIFA confirmed) ─────────────────
-  // M97=W89vsW90, M98=W93vsW94, M99=W91vsW92, M100=W95vsW96
-  const qfdefs = [
-    {id:'M97', date:'Jul 9', venue:'Boston',      r16a:'M89', r16b:'M90'},
-    {id:'M98', date:'Jul 10',venue:'Los Angeles', r16a:'M93', r16b:'M94'},
-    {id:'M99', date:'Jul 11',venue:'Miami',       r16a:'M91', r16b:'M92'},
-    {id:'M100',date:'Jul 12',venue:'Kansas City', r16a:'M95', r16b:'M96'},
-  ];
+// ── Official R32→R16 pairings (FIFA confirmed) ────────────
+const r16defs = [
+  {id:'M89',date:'Jul 4', venue:'Philadelphia', r32a:'M74', r32b:'M77'},
+  {id:'M90',date:'Jul 4', venue:'Houston',      r32a:'M73', r32b:'M75'},
+  {id:'M91',date:'Jul 5', venue:'New York-NJ',  r32a:'M76', r32b:'M78'},
+  {id:'M92',date:'Jul 5', venue:'Mexico City',  r32a:'M79', r32b:'M80'},
+  {id:'M93',date:'Jul 6', venue:'Dallas',       r32a:'M83', r32b:'M84'},
+  {id:'M94',date:'Jul 6', venue:'Seattle',      r32a:'M81', r32b:'M82'},
+  {id:'M95',date:'Jul 7', venue:'Atlanta',      r32a:'M86', r32b:'M88'},
+  {id:'M96',date:'Jul 7', venue:'Vancouver',    r32a:'M85', r32b:'M87'},
+];
 
-  // ── Official SF pairings ──────────────────────────────────
-  // M101=W97vsW99 (Dallas), M102=W98vsW100 (Atlanta)
-  const sfdefs = [
-    {id:'M101',date:'Jul 14',venue:'Dallas',   qfa:'M97', qfb:'M99'},
-    {id:'M102',date:'Jul 15',venue:'Atlanta',  qfa:'M98', qfb:'M100'},
-  ];
+// ── Official QF pairings (FIFA confirmed) ─────────────────
+// M97=W89vsW90, M98=W93vsW94, M99=W91vsW92, M100=W95vsW96
+const qfdefs = [
+  {id:'M97', date:'Jul 9', venue:'Boston',      r16a:'M89', r16b:'M90'},
+  {id:'M98', date:'Jul 10',venue:'Los Angeles', r16a:'M93', r16b:'M94'},
+  {id:'M99', date:'Jul 11',venue:'Miami',       r16a:'M91', r16b:'M92'},
+  {id:'M100',date:'Jul 12',venue:'Kansas City', r16a:'M95', r16b:'M96'},
+];
+
+// ── Official SF pairings ──────────────────────────────────
+// M101=W97vsW99 (Dallas), M102=W98vsW100 (Atlanta)
+const sfdefs = [
+  {id:'M101',date:'Jul 14',venue:'Dallas',   qfa:'M97', qfb:'M99'},
+  {id:'M102',date:'Jul 15',venue:'Atlanta',  qfa:'M98', qfb:'M100'},
+];
+
+function renderBracket(){
+  const el = document.getElementById('fb-bracket-content');
+  if(!el) return;
+
+  const r32map = buildR32Map();
 
   // ── Build a team box ─────────────────────────────────────
   function teamBox(slot){
@@ -3564,13 +3634,17 @@ function renderBracket(){
       + '</div>';
   }
   function vTbdCard(id, date, venue, w, feedA, feedB) {
-    var ta = feedA ? 'W·' + feedA : 'Winner';
-    var tb = feedB ? 'W·' + feedB : 'Winner';
+    var wa = feedA ? resolveWinner(feedA) : null;
+    var wb = feedB ? resolveWinner(feedB) : null;
+    var ta = wa || (feedA ? 'W·' + feedA : 'Winner');
+    var tb = wb || (feedB ? 'W·' + feedB : 'Winner');
+    var clsA = wa ? 'confirmed' : 'tbd';
+    var clsB = wb ? 'confirmed' : 'tbd';
     return '<div class="hkb-vcard" data-mid="' + id + '" style="width:' + w + 'px;min-width:' + w + 'px;box-sizing:border-box">'
       + '<div class="hkb-vmid">' + id + ' &middot; ' + date + '</div>'
-      + '<div class="hkb-vteam tbd">' + ta + '</div>'
+      + '<div class="hkb-vteam ' + clsA + '">' + ta + '</div>'
       + '<div class="hkb-vdivider"></div>'
-      + '<div class="hkb-vteam tbd">' + tb + '</div>'
+      + '<div class="hkb-vteam ' + clsB + '">' + tb + '</div>'
       + '<div class="hkb-vmeta">' + venue + '</div>'
       + '</div>';
   }
@@ -3651,10 +3725,16 @@ function renderBracket(){
   }
 
   function mobR16(r) {
+    var wa = resolveWinner(r.r32a);
+    var wb = resolveWinner(r.r32b);
+    var ta = wa || ('W·' + r.r32a);
+    var tb = wb || ('W·' + r.r32b);
+    var clsA = wa ? 'confirmed' : 'tbd';
+    var clsB = wb ? 'confirmed' : 'tbd';
     return '<div class="hkb-pod-match" style="border:2px dashed var(--border-strong)">'
       + '<div class="hkb-pod-match-id">' + r.id + ' · ' + r.date + '</div>'
-      + '<div class="hkb-pod-team tbd">W·' + r.r32a + '</div>'
-      + '<div class="hkb-pod-team tbd">W·' + r.r32b + '</div>'
+      + '<div class="hkb-pod-team ' + clsA + '">' + ta + '</div>'
+      + '<div class="hkb-pod-team ' + clsB + '">' + tb + '</div>'
       + '<div class="hkb-pod-venue">' + r.venue + '</div>'
       + '</div>';
   }
@@ -4213,8 +4293,12 @@ function initFootball(){
           document.querySelectorAll('.fb-subnav-item').forEach((it,i) => it.classList.toggle('active', i===2));
         }, 400);
       }
+      // Schedule the recurring poll only after the first fetch resolves, so the
+      // very first interval decision (60s vs 5min) reflects real post-fetch
+      // data (including any knockout match that's actually live right now)
+      // instead of the pre-fetch/empty state.
+      scheduleFbPoll();
     });
-    scheduleFbPoll();
   } else {
     const gsComplete = Object.values(fbGroups).every(g => g.fixtures.every(f => f.done));
     if(gsComplete){
