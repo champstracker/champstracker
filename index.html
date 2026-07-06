@@ -2716,24 +2716,28 @@ function koCanonical(name){
   return canonicalTeam(name);
 }
 
-// Team name -> eliminated, for every team that has LOST a decided knockout match at
-// ANY round (R32/R16/QF/SF). Generalizes the old R32-only concept (superseded
-// buildKoTeamMap, which only mapped teams to their original R32 slot and was never
-// wired into a display) - walks every finished bracket match via
+// Team name -> the round label ('R32'/'R16'/'QF'/'SF') they LOST at, for every team
+// eliminated in a decided knockout match at ANY round. Generalizes the old R32-only
+// concept (superseded buildKoTeamMap, which only mapped teams to their original R32
+// slot and was never wired into a display) - walks every finished bracket match via
 // getMatchParticipants(), so a loss at any round marks the team out, not just R32.
 function buildKoEliminatedSet(){
-  const out = new Set();
+  const out = new Map();
   if(!window._r32map) return out;
-  const allMids = Object.keys(window._r32map)
-    .concat(r16defs.map(r => r.id))
-    .concat(qfdefs.map(q => q.id))
-    .concat(sfdefs.map(s => s.id));
-  allMids.forEach(mid => {
-    const kr = window.koResults[mid];
-    if(!kr || !kr.done || kr.hs === kr.as) return;
-    const [home, away] = getMatchParticipants(mid);
-    if(!home || !away || home === away) return;
-    out.add(kr.hs > kr.as ? away : home);
+  const rounds = [
+    {mids: Object.keys(window._r32map), label: 'R32'},
+    {mids: r16defs.map(r => r.id),      label: 'R16'},
+    {mids: qfdefs.map(q => q.id),       label: 'QF'},
+    {mids: sfdefs.map(s => s.id),       label: 'SF'},
+  ];
+  rounds.forEach(({mids, label}) => {
+    mids.forEach(mid => {
+      const kr = window.koResults[mid];
+      if(!kr || !kr.done || kr.hs === kr.as) return;
+      const [home, away] = getMatchParticipants(mid);
+      if(!home || !away || home === away) return;
+      out.set(kr.hs > kr.as ? away : home, label);
+    });
   });
   return out;
 }
@@ -3141,13 +3145,13 @@ function computeQualStatus(team, position, groupTeams, groupFixtures, groupKey){
         const rankStr = thirdRank > 0 ? ` · #${thirdRank}` : '';
         return {qual:'qualified', label:`Qualified · 3${gk}${rankStr}`};
       } else if(b3Status === 'eliminated'){
-        return {qual:'out', label:`Eliminated`};
+        return {qual:'out', label:`Eliminated · Group Stage`};
       } else {
         const rankStr = thirdRank > 0 ? `${thirdRank} of 12` : '?';
         return {qual:'danger', label:`3RD PLACE · ${rankStr}`};
       }
     }
-    return {qual:'out', label:'Eliminated'};
+    return {qual:'out', label:'Eliminated · Group Stage'};
   }
 
   let possiblyAbove = 0;  // for QUALIFIED check
@@ -3891,8 +3895,9 @@ function renderWCSW(){
     sorted.forEach((t,i)=>{
       let qs = computeQualStatus(t, i, g.teams, g.fixtures, key);
       // A team that has since lost a KO match must not keep showing its stale
-      // group-stage "Qualified"/"Winner" status here.
-      if(koEliminated.has(t.name)) qs = {qual:'out', label:'Eliminated'};
+      // group-stage "Qualified"/"Winner" status here — and the label names which
+      // round produced the loss (R32/R16/QF/SF), not just a flat "Eliminated".
+      if(koEliminated.has(t.name)) qs = {qual:'out', label:'Eliminated · ' + koEliminated.get(t.name)};
       html += `<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:10px 12px;box-shadow:var(--shadow)">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px">
           <span style="font-weight:600;font-size:13px;line-height:1.3">${t.flag} ${t.name}</span>
