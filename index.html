@@ -995,10 +995,10 @@ details summary::-webkit-details-marker { display:none; }
 
 <!-- Football sticky sub-nav -->
 <div class="fb-subnav" id="fb-subnav">
-  <a class="fb-subnav-item active" onclick="scrollToFbSection('fb-groups')">🗂 Groups</a>
-  <a class="fb-subnav-item" onclick="scrollToFbSection('fb-best3rd')">🏅 Best 3rd</a>
-  <a class="fb-subnav-item" onclick="scrollToFbSection('fb-bracket')">🏆 Knockouts</a>
+  <a class="fb-subnav-item active" onclick="scrollToFbSection('fb-bracket')">🏆 Knockouts</a>
   <a class="fb-subnav-item" onclick="scrollToFbSection('fb-wcsw')">🔮 Who Can Win?</a>
+  <a class="fb-subnav-item" onclick="scrollToFbSection('fb-groups')">🗂 Final Standings</a>
+  <a class="fb-subnav-item" onclick="scrollToFbSection('fb-best3rd')">🏅 Best 3rd</a>
 </div>
 
 <!-- F1 sticky sub-nav (only visible when F1 is active) -->
@@ -1131,9 +1131,10 @@ details summary::-webkit-details-marker { display:none; }
 ══════════════════════════════════════ -->
 <div id="p-football" class="panel active">
 
-  <div class="fb-section-hd" id="fb-groups">
+  <!-- Tournament-wide banner — not a numbered section, stays pinned above whichever
+       section is first regardless of section order below -->
+  <div class="fb-section-hd" id="fb-intro">
     <div class="fb-sec-label">
-      <span class="fb-sec-num">01</span>
       <span class="fb-sec-title">FIFA World Cup 2026</span>
       <span class="chip chip-fb" id="fb-stage-chip">GROUP STAGE</span>
       <span class="chip chip-live-green" id="fb-live-chip">🔴 LIVE</span>
@@ -1155,6 +1156,43 @@ details summary::-webkit-details-marker { display:none; }
     <div class="rb-stat"><div class="n" style="color:var(--amber)">104</div><div class="l">Total</div></div>
   </div>
 
+  <!-- Knockout Bracket -->
+  <div class="fb-section-hd" id="fb-bracket" style="margin-top:20px">
+    <div class="fb-sec-label">
+      <span class="fb-sec-num">01</span>
+      <span class="fb-sec-title">Knockouts</span>
+      <span class="chip chip-up">R32 → FINAL</span>
+    </div>
+    <div style="font-size:11px;color:var(--muted)">
+      32 teams · 5 rounds · Win every match to lift the trophy Jul 19 at MetLife Stadium, NJ.
+    </div>
+  </div>
+  <div id="fb-bracket-content"></div>
+
+  <!-- Who Can Still Win -->
+  <div class="fb-section-hd" id="fb-wcsw" style="margin-top:28px">
+    <div class="fb-sec-label">
+      <span class="fb-sec-num">02</span>
+      <span class="fb-sec-title">Who Can Still Win?</span>
+      <span class="chip chip-live-green">🔴 LIVE</span>
+    </div>
+    <div style="font-size:11px;color:var(--muted)">Live qualification status for all 48 teams based on current group standings.</div>
+  </div>
+  <div id="fb-wcsw-content"></div>
+
+  <!-- Final Group Standings (historical record — group stage is over) -->
+  <div class="fb-section-hd" id="fb-groups" style="margin-top:28px">
+    <div class="fb-sec-label">
+      <span class="fb-sec-num">03</span>
+      <span class="fb-sec-title">Final Group Standings</span>
+      <span class="chip chip-fb">GROUP STAGE COMPLETE</span>
+    </div>
+    <div style="font-size:11px;color:var(--muted)">
+      How each of the 12 groups finished — a historical record of the group stage. See Who Can
+      Still Win above for current knockout status.
+    </div>
+  </div>
+
   <!-- Group selector tabs -->
   <div class="grp-tabs" id="grp-tabs">
     <button class="grp-tab active" onclick="showGroup('ALL')">All</button>
@@ -1173,44 +1211,19 @@ details summary::-webkit-details-marker { display:none; }
   </div>
   <div id="fb-groups-content"></div>
 
-
-    <!-- Best 3rd Place Teams -->
-    <div class="fb-section-hd" id="fb-best3rd" style="margin-top:28px">
-      <div class="fb-sec-label">
-        <span class="fb-sec-num">02</span>
-        <span class="fb-sec-title">Best 3rd-Placed Teams</span>
-        <span class="chip chip-up">LIVE RACE</span>
-      </div>
-      <div style="font-size:11px;color:var(--muted)">
-        8 best 3rd-placed teams from the 12 groups advance to Round of 32.
-        Ranked by <strong style="color:var(--text)">Points → GD → GF → FIFA Ranking</strong>.
-        Top 8 highlighted in blue — updates automatically.
-      </div>
-    </div>
-    <div id="fb-best3rd-content"></div>
-  <!-- Knockout Bracket -->
-  <div class="fb-section-hd" id="fb-bracket" style="margin-top:28px">
-    <div class="fb-sec-label">
-      <span class="fb-sec-num">03</span>
-      <span class="fb-sec-title">Knockouts</span>
-      <span class="chip chip-up">R32 → FINAL</span>
-    </div>
-    <div style="font-size:11px;color:var(--muted)">
-      32 teams · 5 rounds · Win every match to lift the trophy Jul 19 at MetLife Stadium, NJ.
-    </div>
-  </div>
-  <div id="fb-bracket-content"></div>
-
-  <!-- Who Can Still Win -->
-  <div class="fb-section-hd" id="fb-wcsw" style="margin-top:28px">
+  <!-- Best 3rd Place Teams (final — group stage is over) -->
+  <div class="fb-section-hd" id="fb-best3rd" style="margin-top:28px">
     <div class="fb-sec-label">
       <span class="fb-sec-num">04</span>
-      <span class="fb-sec-title">Who Can Still Win?</span>
-      <span class="chip chip-live-green">🔴 LIVE</span>
+      <span class="fb-sec-title">Best 3rd-Placed Teams · Final</span>
+      <span class="chip chip-fb">FINAL</span>
     </div>
-    <div style="font-size:11px;color:var(--muted)">Live qualification status for all 48 teams based on current group standings.</div>
+    <div style="font-size:11px;color:var(--muted)">
+      The 8 best 3rd-placed teams from the 12 groups that advanced to Round of 32.
+      Ranked by <strong style="color:var(--text)">Points → GD → GF → FIFA Ranking</strong>.
+    </div>
   </div>
-  <div id="fb-wcsw-content"></div>
+  <div id="fb-best3rd-content"></div>
 
 </div><!-- /football panel -->
 
@@ -3056,6 +3069,11 @@ async function fetchFbData(silent){
       mergeMatches(matches);
       computeStandingsFromFixtures();
       mergeKoMatches(matches); // pick up any knockout stage results
+      // Snapshot for updateProgressBar()'s Final/Third-Place counts: those two matches
+      // have no bracket-def/mid (see getMatchParticipants — known issue), so they can't
+      // be counted via koResults like R32-SF. Counted directly by stage instead, since
+      // a done/live count doesn't need the team-name resolution the bracket defs give.
+      window._allMatches = matches;
     }
     // Also fetch live endpoint (30s cache) to catch in-progress matches
     // without waiting for the 60s matches cache to bust
@@ -4382,29 +4400,17 @@ function sw(sport){
 }
 
 function initFootball(){
+  // No longer auto-scrolls to Knockouts once group stage completes — Knockouts is
+  // now the first content section by default (see fb-subnav/fbSections reorder), so
+  // a fresh page load already lands there without needing a JS-driven jump.
   if(!fbFetchTimer){
     fetchFbData(false).then(() => {
-      const gsComplete = Object.values(fbGroups).every(g => g.fixtures.every(f => f.done));
-      if(gsComplete){
-        setTimeout(() => {
-          scrollToFbSection('fb-bracket');
-          document.querySelectorAll('.fb-subnav-item').forEach((it,i) => it.classList.toggle('active', i===2));
-        }, 400);
-      }
       // Schedule the recurring poll only after the first fetch resolves, so the
       // very first interval decision (60s vs 5min) reflects real post-fetch
       // data (including any knockout match that's actually live right now)
       // instead of the pre-fetch/empty state.
       scheduleFbPoll();
     });
-  } else {
-    const gsComplete = Object.values(fbGroups).every(g => g.fixtures.every(f => f.done));
-    if(gsComplete){
-      setTimeout(() => {
-        scrollToFbSection('fb-bracket');
-        document.querySelectorAll('.fb-subnav-item').forEach((it,i) => it.classList.toggle('active', i===2));
-      }, 200);
-    }
   }
 }
 
@@ -4447,10 +4453,10 @@ window.addEventListener('scroll', ()=>{
   }
   // ── Football scroll spy ──
   const fbSections = [
-    {id:'fb-groups',  idx:0},
-    {id:'fb-best3rd', idx:1},
-    {id:'fb-bracket', idx:2},
-    {id:'fb-wcsw',    idx:3},
+    {id:'fb-bracket', idx:0},
+    {id:'fb-wcsw',    idx:1},
+    {id:'fb-groups',  idx:2},
+    {id:'fb-best3rd', idx:3},
   ];
   const fbItems = document.querySelectorAll('.fb-subnav-item');
   if(fbItems.length){
@@ -4508,69 +4514,137 @@ function updateProgressBar(){
     });
   });
   const live = liveMatches.length;
-  const played = done + live;
-  const remaining = 104 - played;
-  const pct = Math.round((played / 104) * 100);
-  // 12 groups × 2 fixtures per matchday = 24 per MD
+  const gsComplete = done >= 72; // all 72 group stage fixtures done
+  // 12 groups x 2 fixtures per matchday = 24 per MD
   // MD1: 0-24, MD2: 25-48, MD3: 49-72
   const md = done <= 24 ? 1 : done <= 48 ? 2 : 3;
-  const gsComplete = done >= 72; // all 72 group stage fixtures done
-  const nextMd = md === 1 ? ` · MD2 upcoming`
-               : md === 2 ? (live > 0 ? ' · MD3 <strong style="color:var(--status-red-text)">LIVE NOW</strong>' : ' · MD3 upcoming tonight')
-               : live > 0  ? ' · MD3 <strong style="color:var(--status-red-text)">LIVE NOW</strong>'
-               : gsComplete ? ' · Group stage complete'
-               : ` · MD3 in progress (${done - 48}/24 done)`;
+
+  // Count each knockout round via koResults (mid-keyed) - same pattern as
+  // buildKoEliminatedSet/buildKoAwaitingMap. Final/Third-Place have no bracket-def
+  // mid yet (getMatchParticipants can't resolve their team names - known issue), so
+  // they're counted directly by stage from the last-fetched raw match list instead;
+  // a done/live count doesn't need the team-name resolution the bracket defs give.
+  function countRound(mids){
+    let d = 0, l = 0;
+    mids.forEach(mid => {
+      const kr = window.koResults[mid];
+      if(kr && kr.done) d++;
+      else if(kr && kr.live) l++;
+    });
+    return {done: d, live: l, total: mids.length};
+  }
+  function countStage(stageName){
+    const ms = (window._allMatches || []).filter(m => (m.stage||'').toUpperCase() === stageName);
+    let d = 0, l = 0;
+    ms.forEach(m => {
+      const s = (m.status||'').toUpperCase();
+      if(s==='FINISHED' || s==='FT') d++;
+      else if(['IN_PLAY','PAUSED','HALFTIME','LIVE'].includes(s)) l++;
+    });
+    return {done: d, live: l};
+  }
+
+  const r32 = countRound(window._r32map ? Object.keys(window._r32map) : []);
+  const r16 = countRound(r16defs.map(r => r.id));
+  const qf  = countRound(qfdefs.map(q => q.id));
+  const sf  = countRound(sfdefs.map(s => s.id));
+  const final = countStage('FINAL');
+  const thirdPlace = countStage('THIRD_PLACE');
+
+  const koDone = r32.done + r16.done + qf.done + sf.done + final.done + thirdPlace.done;
+  const koLive = r32.live + r16.live + qf.live + sf.live + final.live + thirdPlace.live;
+  const totalDone = done + koDone;
+  const totalLive = live + koLive;
+  const played = totalDone + totalLive;
+  const remaining = 104 - played;
+  const pct = Math.round((played / 104) * 100);
+
+  // Find the current knockout round: the first one not fully done yet. null once
+  // everything trackable (through Final/Third-Place) is done.
+  let current = null;
+  if(gsComplete){
+    if(r32.done < 16) current = {name:'Round of 32', prev:'Group stage', round:r32, total:16, start:'Jun 28'};
+    else if(r16.done < 8) current = {name:'Round of 16', prev:'Round of 32', round:r16, total:8, start:r16defs[0].date};
+    else if(qf.done < 4) current = {name:'Quarter-finals', prev:'Round of 16', round:qf, total:4, start:qfdefs[0].date};
+    else if(sf.done < 2) current = {name:'Semi-finals', prev:'Quarter-finals', round:sf, total:2, start:sfdefs[0].date};
+    else if(final.done < 1 || thirdPlace.done < 1) current = {name:'Final', prev:'Semi-finals', round:null, total:null, start:'Jul 19'};
+  }
+
   const pc = document.getElementById('fb-played-count');
   const rc = document.getElementById('fb-remaining-count');
   const pf = document.getElementById('fb-progress-fill');
   const pl = document.getElementById('fb-progress-label');
+  const chipEl = document.getElementById('fb-stage-chip');
+  const lc = document.getElementById('fb-live-chip');
+  const sm = document.getElementById('fb-stage-meta');
+
   if(pc){
-    if(live > 0){
-      pc.innerHTML = `${done}<span style="font-size:22px;color:var(--status-red-text);margin-left:6px;animation:pulse 1.4s infinite">+${live} 🔴</span>`;
+    if(totalLive > 0){
+      pc.innerHTML = `${totalDone}<span style="font-size:22px;color:var(--status-red-text);margin-left:6px;animation:pulse 1.4s infinite">+${totalLive} \uD83D\uDD34 </span>`;
     } else {
-      pc.textContent = done;
+      pc.textContent = totalDone;
     }
   }
   if(rc) rc.textContent = remaining;
   if(pf) pf.style.width = pct + '%';
-  // Build live match pills — show team names + score for each live game
+
+  // Build live match pills - show team names + score for each live group-stage game
+  // (knockout live scores already show on their own bracket cards)
   const livePills = liveMatches.map(f =>
     `<span style="display:inline-flex;align-items:center;gap:5px;background:var(--status-red-bg);border:1px solid var(--status-red-border);border-radius:6px;padding:3px 9px;font-size:11px;font-weight:700;color:var(--status-red-text);animation:pulse 1.4s infinite;white-space:nowrap">
-      🔴 ${f.home} ${f.hs ?? 0}–${f.as ?? 0} ${f.away}
+      \uD83D\uDD34  ${f.home} ${f.hs ?? 0}-${f.as ?? 0} ${f.away}
     </span>`
   ).join(' ');
   const liveNote = live > 0
     ? `<div style="margin-top:5px;display:flex;flex-wrap:wrap;gap:6px">${livePills}</div>`
     : '';
-  if(gsComplete){
-    if(rc) rc.textContent = 32;
-    if(pl) pl.innerHTML = `<strong>Group stage complete</strong> · 72 matches played · <span style="color:var(--football);font-weight:700">Round of 32 underway from Jun 28</span>`;
-    const lc = document.getElementById('fb-live-chip');
-    const sm = document.getElementById('fb-stage-meta');
-    if(lc){ lc.textContent = '\u2705 COMPLETE'; lc.style.background='var(--status-green-bg)'; lc.style.color='var(--status-green-text)'; }
-    if(sm) sm.innerHTML = `\uD83C\uDDFA\uD83C\uDDF8\uD83C\uDDF2\uD83C\uDDFD\uD83C\uDDE8\uD83C\uDDE6 Hosted across USA, Mexico &amp; Canada &middot; Jun 11 – Jul 19, 2026 &middot; 48 teams &middot; 12 groups &middot; 104 matches
-      &middot; <strong style="color:var(--football)">Group stage complete \u2713</strong> &middot; <strong style="color:var(--text)">Round of 32 underway from Jun 28</strong> &middot; Final Jul 19 at MetLife Stadium, New York`;
-  } else {
-    if(rc) rc.textContent = remaining;
+
+  if(!gsComplete){
+    const nextMd = md === 1 ? ` &middot; MD2 upcoming`
+                 : md === 2 ? (live > 0 ? ' &middot; MD3 <strong style="color:var(--status-red-text)">LIVE NOW</strong>' : ' &middot; MD3 upcoming tonight')
+                 : live > 0 ? ' &middot; MD3 <strong style="color:var(--status-red-text)">LIVE NOW</strong>'
+                 : ` &middot; MD3 in progress (${done - 48}/24 done)`;
     if(pl) pl.innerHTML = `Matchday <strong>${md}</strong>${nextMd}${liveNote}`;
-    if(live > 0){ const lc=document.getElementById('fb-live-chip'); if(lc){lc.textContent='\uD83D\uDD34 LIVE';lc.style.background='';lc.style.color='';} }
+    if(live > 0 && lc){ lc.textContent='\uD83D\uDD34 LIVE'; lc.style.background=''; lc.style.color=''; }
+    if(chipEl) chipEl.textContent = 'GROUP STAGE';
+  } else if(current){
+    const roundMsg = current.round === null ? `Final Jul 19 at MetLife Stadium, NJ`
+                    : (current.round.done + current.round.live === 0) ? `${current.name} underway from ${current.start}`
+                    : `${current.name} in progress (${current.round.done}/${current.total} done)`;
+    const trailingFinal = current.name === 'Final' ? '' : ' &middot; Final Jul 19 at MetLife Stadium, New York';
+    if(pl) pl.innerHTML = `<strong style="color:var(--football)">${current.prev} complete</strong> &middot; <strong>${roundMsg}</strong>${liveNote}`;
+    if(chipEl) chipEl.textContent = current.name.toUpperCase();
+    if(lc){
+      if(totalLive > 0){ lc.textContent='\uD83D\uDD34 LIVE'; lc.style.background=''; lc.style.color=''; }
+      else { lc.textContent='\u2705 COMPLETE'; lc.style.background='var(--status-green-bg)'; lc.style.color='var(--status-green-text)'; }
+    }
+    if(sm) sm.innerHTML = `\uD83C\uDDFA\uD83C\uDDF8\uD83C\uDDF2\uD83C\uDDFD\uD83C\uDDE8\uD83C\uDDE6 Hosted across USA, Mexico &amp; Canada &middot; Jun 11 - Jul 19, 2026 &middot; 48 teams &middot; 12 groups &middot; 104 matches
+      &middot; <strong style="color:var(--football)">${current.prev} complete \u2713</strong> &middot; <strong style="color:var(--text)">${roundMsg}</strong>${trailingFinal}`;
+  } else {
+    // Everything trackable (through Final/Third-Place) is done.
+    if(pl) pl.innerHTML = `<strong style="color:var(--football)">Tournament complete</strong> &middot; Champions crowned Jul 19`;
+    if(chipEl) chipEl.textContent = 'COMPLETE';
+    if(lc){ lc.textContent='\u2705 COMPLETE'; lc.style.background='var(--status-green-bg)'; lc.style.color='var(--status-green-text)'; }
+    if(sm) sm.innerHTML = `\uD83C\uDDFA\uD83C\uDDF8\uD83C\uDDF2\uD83C\uDDFD\uD83C\uDDE8\uD83C\uDDE6 Hosted across USA, Mexico &amp; Canada &middot; Jun 11 - Jul 19, 2026 &middot; 48 teams &middot; 12 groups &middot; 104 matches
+      &middot; <strong style="color:var(--football)">Tournament complete</strong>`;
   }
-  // Update Who Can Still Win chip
+
+  // Update Who Can Still Win chip/info
   const chip = document.getElementById('wcsw-chip');
   const info = document.getElementById('wcsw-info');
-  if(chip) chip.textContent = `AFTER MD${md}`;
+  if(chip) chip.textContent = !gsComplete ? `AFTER MD${md}` : current ? current.name.toUpperCase() : 'COMPLETE';
   if(info){
-    const eliminated = Object.values(fbGroups).some(g => g.teams.some(t => t.pts === 0 && t.p >= 2));
-    info.innerHTML = md === 1
-      ? 'After Matchday 1, <strong>no team is eliminated yet</strong> — every team has 2 matches remaining and a mathematical path to qualify. Elimination becomes possible from <strong>Matchday 2</strong> onwards.'
-      : md === 2
-      ? 'After Matchday 2, teams with <strong>0 pts from 2 games</strong> in strong groups are effectively eliminated. MD3 is the final group stage round — all matches simultaneous.'
-      : gsComplete
-      ? 'Group stage complete. All qualification places are decided. See Round of 32 below.'
-      : 'Matchday 3 in progress. Final group standings are still being decided.';
+    info.innerHTML = !gsComplete
+      ? (md === 1
+        ? 'After Matchday 1, <strong>no team is eliminated yet</strong> - every team has 2 matches remaining and a mathematical path to qualify. Elimination becomes possible from <strong>Matchday 2</strong> onwards.'
+        : md === 2
+        ? 'After Matchday 2, teams with <strong>0 pts from 2 games</strong> in strong groups are effectively eliminated. MD3 is the final group stage round - all matches simultaneous.'
+        : 'Matchday 3 in progress. Final group standings are still being decided.')
+      : current
+      ? `${current.prev} complete. ${current.name} underway - see Knockouts below for the latest.`
+      : 'Tournament complete. See Knockouts below for the final result.';
   }
 }
-
 function customQ(){
   const q = prompt('Enter your question:');
   if(q) aiGo(q);
