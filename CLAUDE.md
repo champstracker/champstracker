@@ -61,27 +61,49 @@ Hosted on Cloudflare Pages. No build step, no bundler — vanilla JS/HTML/CSS in
   `resolveWinner()` correctly refuses to guess a winner on a tie — so that match would stay
   unresolved in the bracket forever. Untested against a real shootout as of Jul 2026 (see
   CHANGES.md 2026-07-06).
-- `buildKoEliminatedSet()` — team name → eliminated, for any team that has lost a decided knockout
-  match at ANY round (R32/R16/QF/SF), via `getMatchParticipants()`/`koResults`. Replaces the old,
-  never-called `buildKoTeamMap()` (R32-slot-only, dead code). Feeds into both `renderFbGroups()`
-  (main standings table) and `renderWCSW()`, overriding `computeQualStatus()`'s group-stage-only
-  "Qualified"/"Winner" label once a team is knocked out. Do NOT wire it into `buildR32Map()`'s own
-  internal `computeQualStatus()` call (bracket seeding) — that one is intentionally about original
-  group qualification, not current knockout status.
+- `buildKoEliminatedSet()` — team name → round label (`'R32'`/`'R16'`/`'QF'`/`'SF'`) they LOST at, for
+  any team eliminated in a decided knockout match at ANY round, via
+  `getMatchParticipants()`/`koResults`. Returns a `Map`, not a `Set` (despite the name) — as of Jul
+  2026 it carries which round produced the loss, not just a boolean. Replaces the old, never-called
+  `buildKoTeamMap()` (R32-slot-only, dead code). Feeds ONLY into `renderWCSW()` — do NOT wire it
+  into `renderFbGroups()` (main standings table): that table is a historical record of group-stage
+  finish and must never be overridden by a later knockout result (see Jul 2026 "group vs current
+  status" incident below). Also do NOT wire it into `buildR32Map()`'s own internal
+  `computeQualStatus()` call (bracket seeding) — that one is intentionally about original group
+  qualification too.
+- `computeQualStatus()`'s own group-stage-elimination labels say `"Eliminated · Group Stage"` (not a
+  flat `"Eliminated"`, as of Jul 2026) — consistent with the `"Qualified · 1A"` style, and with
+  `renderWCSW()`'s KO-round labels (`"Eliminated · R32"` etc., built from `buildKoEliminatedSet()`).
+- `koOutcomeClass(koResult, isHome)` — local helper inside `renderBracket()`, shared by
+  `vR32Card`/`vTbdCard`/`mobMatch`/`mobR16` (every round, R32 through SF). Adds `ko-winner` (bold) or
+  `ko-loser` (muted grey, `.hkb-vteam`/`.hkb-pod-team` CSS) based on `koResults[mid].hs` vs `.as` —
+  returns `''` (no class) while undecided or a draw, same "never guess" rule as `resolveWinner()`.
+  Get this pattern right in one place; do not hand-roll a second win/loss color scheme elsewhere.
 - `koCanonical()` — knockout team-name aliasing; delegates to `canonicalTeam()`/`TEAM_ALIAS`
   (as of Jul 2026 — do not reintroduce a second, separately-maintained alias list here)
-- `renderWCSW()` — "Who Can Still Win" page; now knockout-aware via `buildKoEliminatedSet()` (Jul 2026)
+- `renderWCSW()` — "Who Can Still Win" page; knockout-aware via `buildKoEliminatedSet()` (Jul 2026).
+  This is deliberately the ONLY place that overrides group-stage qualification with current
+  knockout status — `renderFbGroups()` must not do this (see known issues history).
 
-## Known open issues (as of Jul 2026, post knockout-logic-audit session)
+## Known open issues (as of Jul 2026, post render/UX-fixes session)
 1. **Penalty-shootout results have no data path.** See `resolveWinner()` note above — the Worker
    payload has no winner/duration/penalties field, so a knockout match decided on penalties (tied
    score, `done:true`) can never resolve a winner and will sit as "TBD" in the bracket indefinitely.
    No real shootout has happened yet to confirm what football-data.org actually sends; may require
    a Worker-side change (separate deploy, not in this repo) to expose it. Test the first time a
    R16/QF match goes to penalties.
-2. **R32 card styling doesn't distinguish won/lost/TBD well.** Current `.hkb-vteam` states
-   (`confirmed`/`inR32`/`projected`/`third`/`tbd`) have no distinct visual treatment for "played
-   and lost" vs "not yet decided" — both currently read as plain/neutral.
+2. **Score corrections after `done:true` are silently dropped, forever.** `buildKoAwaitingMap()`
+   permanently excludes a mid from its team→slot map once `koResults[mid].done` is true ("already
+   finalized, don't remap") — so if football-data.org ever corrects an already-FINISHED knockout
+   score, the corrected match record has no `mid` to resolve to via `mergeKoMatches()`'s `teamMap`
+   lookup and is dropped without a trace. This is NOT the `processed` dedup set added for the
+   cascade fix (that's call-scoped, resets every poll, and isn't the blocker) — it's
+   `buildKoAwaitingMap`'s own done-exclusion, present since the Jul 2026 R16+ auto-advance work.
+   Deferred structural fix discussed: resolve `mid` by a canonical team-*pair* key (via
+   `getMatchParticipants()`, done or not) instead of by single team name, since two specific teams
+   can only ever meet at one bracket slot — this also happens to be immune to the cross-round
+   misattribution bug the `processed` set guards against today. Not implemented — needs the same
+   live-verification rigor as the cascade fix before shipping. No known real-world trigger yet.
 3. **R32 results have no static seed fallback, unlike group stage.** `fbGroups[gk].fixtures` bakes
    in real scores for every played group match, so the group table survives a slow or failed
    fetch. `r32defs` has no equivalent — result data (`window.koResults`) is 100% fetch-dependent,
@@ -94,6 +116,13 @@ Hosted on Cloudflare Pages. No build step, no bundler — vanilla JS/HTML/CSS in
 5. **No bracket definitions for Final/Third-Place beyond `sfdefs`.** `getMatchParticipants()` only
    handles R32/R16/QF/SF — there's no equivalent def for the Final or third-place playoff, so
    auto-advance stops at SF winners. Not urgent (Final is Jul 19), but worth adding before then.
+6. **`updateProgressBar()`'s header/progress-bar freezes at "group stage complete."** It only ever
+   counts `fbGroups[gk].fixtures` (72 group-stage matches) — once `done >= 72`, it hardcodes
+   "72 matches played · 32 remaining · Round of 32 underway from Jun 28" forever, regardless of how
+   many knockout matches have since been played (confirmed live Jul 6: R32 100% done, R16 mostly
+   done, banner still said "Round of 32 underway"). Explicitly out of scope for the Jul 6
+   render/UX-fixes session (part of the top-banner tournament-stage messaging, being handled
+   separately) — flagged here only, not fixed.
 
 ## Commit message convention
 One line, plain English, with a prefix:

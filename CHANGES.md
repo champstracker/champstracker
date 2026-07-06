@@ -45,6 +45,51 @@
   shape football-data.org sends for shootouts. Test this the first time a R16/QF match
   goes to penalties; fixing it may require changes in the Worker (separate deploy, not
   in this repo) to pass through the winner field.
+- Correction: the score-correction gap in `buildKoAwaitingMap()` (a match already marked
+  `done` is permanently excluded from remapping, so a later upstream score fix from
+  football-data.org would be silently dropped) was discussed at the end of this day's
+  earlier session but never actually written down — that session ended on an open
+  question rather than a commit. Documented properly now in CLAUDE.md's known issues.
+
+### Second session same day — bugs found from live production screenshots
+- fix: R16 (and, once played, QF/SF) bracket cards never rendered a score at all.
+  `vTbdCard()` (desktop) and `mobR16()` (mobile) only ever showed the resolved team
+  name via `resolveWinner()` — unlike `vR32Card()`/`mobMatch()`, they never read
+  `koResults` or called `matchStatusDisplay()`. Confirmed finished R16 matches (Canada
+  v Morocco, Paraguay v France, etc.) showed team names with no score line on
+  production. Added the same score-row logic R32 already had. Verified live.
+- fix: the main group standings table (`renderFbGroups()`) was showing "Eliminated"
+  for teams that had won their group but lost in the knockouts (e.g. Mexico, 1st in
+  Group A, shown "Eliminated" after their R16 loss) — conflating "how a team finished
+  the group stage" (a historical fact) with "are they still in the tournament" (current
+  status). This came from last session's `buildKoEliminatedSet()` override being wired
+  into both `renderFbGroups()` and `renderWCSW()`; it should only ever have been in the
+  latter. Removed the override from `renderFbGroups()` entirely — it now always shows
+  original group-stage qualification, never knockout elimination. `renderWCSW()` (which
+  IS about current status) keeps it. Verified live: Mexico shows "Qualified · 1A" in
+  standings, "Eliminated" in Who Can Still Win.
+- feat: elimination labels in Who Can Still Win (and the group-stage-only "Eliminated"
+  labels in the standings table) now name the round, e.g. "Eliminated · R32",
+  "Eliminated · R16", "Eliminated · Group Stage" — instead of a flat "Eliminated"
+  regardless of when a team went out. `buildKoEliminatedSet()` now returns a `Map` of
+  team → round label instead of a `Set`. Verified live across all rounds present in
+  current data (Group Stage/R32/R16).
+- feat: knockout cards now visually distinguish the winner from the loser of a decided
+  match. Every finished match previously showed both teams in the same green checkmark
+  style with no way to tell who actually won at a glance. Added `koOutcomeClass()`, a
+  shared helper used by every round's card renderer (`vR32Card`/`vTbdCard`/`mobMatch`/
+  `mobR16`) — winner renders bold, loser renders muted grey (same grey already used for
+  TBD slots). Presented 3 mockup options for review before implementing; went with the
+  bold-winner/muted-loser pattern (smallest diff from existing styling). No class is
+  applied while a match is undecided or drawn, consistent with `resolveWinner()`'s
+  "never guess" rule. Verified live on both desktop and mobile.
+- Sanity pass on production (since last session's fixes went straight to `main` without
+  a preview step) found one more issue, left unfixed and only flagged per this session's
+  scope: `updateProgressBar()`'s header/progress bar only counts group-stage fixtures,
+  so it's been frozen at "72 played · Round of 32 underway from Jun 28" since the moment
+  group stage ended, regardless of how far the knockouts have actually progressed. Out
+  of scope this session (top-banner tournament-stage messaging, being handled
+  separately) — logged in CLAUDE.md known issues.
 
 ## 2026-07-05
 - fix: shipped R16/QF/SF auto-advance from `koResults` plus a WCSW knockout-elimination check
