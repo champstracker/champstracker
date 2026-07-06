@@ -652,6 +652,32 @@ tbody tr:hover td{background:var(--surface2)}
 .hkb-legend{display:flex;gap:12px;flex-wrap:wrap;font-size:11px;color:var(--text-3);margin:0 0 12px;padding:8px 10px;background:var(--surface2);border-radius:var(--r);border:1px solid var(--border)}
 .hkb-leg-dot{display:inline-block;width:10px;height:10px;border-radius:2px;vertical-align:middle;margin-right:4px;flex-shrink:0}
 
+/* Round-progress stepper — shown once group stage is complete */
+.ko-stepper{display:flex;align-items:center;gap:6px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:10px 12px;margin:0 0 8px;flex-wrap:wrap}
+.ko-step{width:32px;height:32px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;flex-shrink:0}
+.ko-step.done{background:var(--football);color:#fff}
+.ko-step.next{background:transparent;border:2px solid var(--status-amber-text);color:var(--status-amber-text)}
+.ko-step.future{background:var(--surface2);border:1px solid var(--border);color:var(--text-4)}
+.ko-step-line{width:14px;height:2px;background:var(--football);flex-shrink:0}
+.ko-step-line.future{background:var(--border-strong)}
+.ko-stepper-note{margin-left:8px;font-size:12px;color:var(--text-2)}
+.ko-legend-mini{display:flex;gap:14px;margin:0 0 12px;font-size:11px;color:var(--text-3)}
+.ko-legend-dot{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px;vertical-align:middle}
+.ko-legend-dot.done{background:var(--football)}
+.ko-legend-dot.next{background:transparent;border:2px solid var(--status-amber-text);width:6px;height:6px}
+.ko-legend-dot.future{background:var(--surface2);border:1px solid var(--border)}
+
+/* Graduated round emphasis — current round highlighted, later rounds muted */
+.hkb-row-chip{font-size:9px;font-weight:700;background:var(--status-amber-bg);color:var(--status-amber-text);border:1px solid var(--status-amber-border);border-radius:4px;padding:1px 6px;text-transform:none;letter-spacing:0;margin-left:6px;vertical-align:middle}
+.hkb-vlabel.next{color:var(--status-amber-text)}
+.hkb-vlabel.future{color:var(--text-4)}
+.hkb-vcard.active-round{background:var(--status-amber-bg);border:2px solid var(--status-amber-border)}
+.hkb-vcard.active-round .hkb-vmid{color:var(--status-amber-text)}
+.hkb-vcard.future-round{border-style:dashed;opacity:.72}
+.hkb-pod-match.active-round{background:var(--status-amber-bg);border:2px solid var(--status-amber-border)}
+.hkb-pod-match.active-round .hkb-pod-match-id{color:var(--status-amber-text)}
+.hkb-pod-match.future-round{border-style:dashed;opacity:.72}
+
 /* ── Desktop two-sided bracket ── */
 .hkb-two-sided{display:flex;align-items:center;gap:0;overflow-x:auto;padding:8px 0 16px}
 .hkb-two-sided::-webkit-scrollbar{height:5px}
@@ -3604,12 +3630,82 @@ function renderBracket(){
     </div>`;
   }
 
+  // ── Round progress (stepper + graduated row emphasis) ─────
+  // Counts each round via koResults, same approach as updateProgressBar(). Used to
+  // find the "current" round (first not fully done) so its row/cards can be
+  // highlighted, later rounds muted, and a stepper shown summarizing where the
+  // bracket stands. Only meaningful once group stage is over — R32 hasn't started
+  // before that, so there's nothing yet to highlight.
+  function koRoundCounts(mids){
+    let d = 0, l = 0;
+    mids.forEach(mid => {
+      const kr = window.koResults[mid];
+      if(kr && kr.done) d++;
+      else if(kr && kr.live) l++;
+    });
+    return {done: d, live: l, total: mids.length};
+  }
+  const groupStageDone = Object.values(fbGroups).every(g => g.fixtures.every(f => f.done));
+  const r32Status = koRoundCounts(Object.keys(r32map));
+  const r16Status = koRoundCounts(r16defs.map(r => r.id));
+  const qfStatus  = koRoundCounts(qfdefs.map(q => q.id));
+  const sfStatus  = koRoundCounts(sfdefs.map(s => s.id));
+  const roundInfo = {
+    r32: {status: r32Status, name: 'Round of 32', start: 'Jun 28'},
+    r16: {status: r16Status, name: 'Round of 16', start: r16defs[0].date},
+    qf:  {status: qfStatus,  name: 'Quarter-finals', start: qfdefs[0].date},
+    sf:  {status: sfStatus,  name: 'Semi-finals', start: sfdefs[0].date},
+  };
+  const roundOrder = ['r32','r16','qf','sf'];
+  let currentRound = null;
+  if(groupStageDone){
+    currentRound = roundOrder.find(k => roundInfo[k].status.done < roundInfo[k].status.total) || null;
+  }
+  // '' for an already-decided round or while group stage is still in progress
+  // (existing styling untouched); 'active-round' for the current round; 'future-round'
+  // for a later round that hasn't started.
+  function roundCardClass(roundKey){
+    if(!groupStageDone) return '';
+    if(roundKey === currentRound) return ' active-round';
+    if(currentRound && roundOrder.indexOf(roundKey) > roundOrder.indexOf(currentRound)) return ' future-round';
+    return '';
+  }
+  function roundRowClass(roundKey){
+    if(!groupStageDone) return 'done';
+    if(roundKey === currentRound) return 'next';
+    if(currentRound && roundOrder.indexOf(roundKey) > roundOrder.indexOf(currentRound)) return 'future';
+    return 'done';
+  }
+  // Short chip text for the active round's row label / stepper note
+  function roundNote(roundKey){
+    const r = roundInfo[roundKey];
+    return (r.status.done + r.status.live === 0)
+      ? `Starts ${r.start}`
+      : `${r.status.done}/${r.status.total} done`;
+  }
+  const stepper = !groupStageDone ? '' : `<div class="ko-stepper">
+    <div class="ko-step ${roundRowClass('r32')}">R32</div>
+    <div class="ko-step-line ${r32Status.done>=16?'':'future'}"></div>
+    <div class="ko-step ${roundRowClass('r16')}">R16</div>
+    <div class="ko-step-line ${r16Status.done>=8?'':'future'}"></div>
+    <div class="ko-step ${roundRowClass('qf')}">QF</div>
+    <div class="ko-step-line ${qfStatus.done>=4?'':'future'}"></div>
+    <div class="ko-step ${roundRowClass('sf')}">SF</div>
+    <div class="ko-step-line future"></div>
+    <div class="ko-step future">F</div>
+    <div class="ko-stepper-note">${currentRound ? roundInfo[currentRound].name + ' <strong>' + roundNote(currentRound) + '</strong>' : 'Semi-finals complete · <strong>Final Jul 19</strong>'}</div>
+  </div>
+  <div class="ko-legend-mini">
+    <span><span class="ko-legend-dot done"></span>Complete</span>
+    <span><span class="ko-legend-dot next"></span>Up next</span>
+    <span><span class="ko-legend-dot future"></span>Not started</span>
+  </div>`;
+
   // ── Legend ────────────────────────────────────────────────
   // The seeding legend below (confirmed/in-R32-TBD/leading-slot/best-3rd/TBD) describes
   // group-stage qualification confidence — once group stage is fully over, every R32
   // slot is permanently "confirmed" and the other four states can never show again.
   // Swap to a compact won/lost legend instead, matching koOutcomeClass's styling.
-  const groupStageDone = Object.values(fbGroups).every(g => g.fixtures.every(f => f.done));
   const legend = groupStageDone
     ? `<div class="hkb-legend">
       <span><span class="hkb-leg-dot" style="background:var(--football)"></span>Won</span>
@@ -3707,7 +3803,7 @@ function renderBracket(){
       }
     }
 
-    return '<div class="hkb-vcard" data-mid="' + mid + '" style="width:' + W + 'px;min-width:' + W + 'px;box-sizing:border-box">'
+    return '<div class="hkb-vcard' + roundCardClass('r32') + '" data-mid="' + mid + '" style="width:' + W + 'px;min-width:' + W + 'px;box-sizing:border-box">'
       + '<div class="hkb-vmid">' + mid + ' · ' + m.date + '</div>'
       + '<div class="hkb-vteam ' + hs.state + koOutcomeClass(koResult, true) + '">' + hseed + stripFlag(hs.text) + hbadge + '</div>'
       + '<div class="hkb-vdivider"></div>'
@@ -3716,7 +3812,7 @@ function renderBracket(){
       + '<div class="hkb-vmeta">' + m.venue + poolStr + '</div>'
       + '</div>';
   }
-  function vTbdCard(id, date, venue, w, feedA, feedB) {
+  function vTbdCard(id, date, venue, w, feedA, feedB, roundKey) {
     var wa = feedA ? resolveWinner(feedA) : null;
     var wb = feedB ? resolveWinner(feedB) : null;
     var ta = wa || (feedA ? 'W·' + feedA : 'Winner');
@@ -3736,7 +3832,7 @@ function renderBracket(){
         + status.hs + ' - ' + status.as + lt + '</div>';
     }
 
-    return '<div class="hkb-vcard" data-mid="' + id + '" style="width:' + w + 'px;min-width:' + w + 'px;box-sizing:border-box">'
+    return '<div class="hkb-vcard' + roundCardClass(roundKey) + '" data-mid="' + id + '" style="width:' + w + 'px;min-width:' + w + 'px;box-sizing:border-box">'
       + '<div class="hkb-vmid">' + id + ' &middot; ' + date + '</div>'
       + '<div class="hkb-vteam ' + clsA + koOutcomeClass(koResult, true) + '">' + ta + '</div>'
       + '<div class="hkb-vdivider"></div>'
@@ -3746,8 +3842,10 @@ function renderBracket(){
       + '</div>';
   }
 
-  function vLbl(text, sub) {
-    return '<div class="hkb-vlabel">' + text + (sub ? '<small>' + sub + '</small>' : '') + '</div>';
+  function vLbl(text, sub, roundKey) {
+    var rowCls = roundKey ? roundRowClass(roundKey) : '';
+    var chip = (roundKey && rowCls === 'next') ? '<span class="hkb-row-chip">' + roundNote(roundKey) + '</span>' : '';
+    return '<div class="hkb-vlabel ' + rowCls + '">' + text + (sub ? '<small>' + sub + '</small>' : '') + chip + '</div>';
   }
 
   var topR32ids = ['M74','M77','M73','M75','M76','M78','M79','M80'];
@@ -3760,20 +3858,21 @@ function renderBracket(){
 
   var topR32html = topR32ids.map(vR32Card).join(SEP);
   var botR32html = botR32ids.map(vR32Card).join(SEP);
-  var topR16html = topR16arr.map(function(r){ return vTbdCard(r.id,r.date,r.venue,W16,r.r32a,r.r32b); }).join(SEP);
-  var botR16html = botR16arr.map(function(r){ return vTbdCard(r.id,r.date,r.venue,W16,r.r32a,r.r32b); }).join(SEP);
-  var topQFhtml  = topQFarr.map(function(q){ return vTbdCard(q.id,q.date,q.venue,W_QF,q.r16a,q.r16b); }).join(SEP);
-  var botQFhtml  = botQFarr.map(function(q){ return vTbdCard(q.id,q.date,q.venue,W_QF,q.r16a,q.r16b); }).join(SEP);
-  var topSFhtml  = vTbdCard(sfdefs[0].id, sfdefs[0].date, sfdefs[0].venue, W_SF, sfdefs[0].qfa, sfdefs[0].qfb);
-  var botSFhtml  = vTbdCard(sfdefs[1].id, sfdefs[1].date, sfdefs[1].venue, W_SF, sfdefs[1].qfa, sfdefs[1].qfb);
+  var topR16html = topR16arr.map(function(r){ return vTbdCard(r.id,r.date,r.venue,W16,r.r32a,r.r32b,'r16'); }).join(SEP);
+  var botR16html = botR16arr.map(function(r){ return vTbdCard(r.id,r.date,r.venue,W16,r.r32a,r.r32b,'r16'); }).join(SEP);
+  var topQFhtml  = topQFarr.map(function(q){ return vTbdCard(q.id,q.date,q.venue,W_QF,q.r16a,q.r16b,'qf'); }).join(SEP);
+  var botQFhtml  = botQFarr.map(function(q){ return vTbdCard(q.id,q.date,q.venue,W_QF,q.r16a,q.r16b,'qf'); }).join(SEP);
+  var topSFhtml  = vTbdCard(sfdefs[0].id, sfdefs[0].date, sfdefs[0].venue, W_SF, sfdefs[0].qfa, sfdefs[0].qfb, 'sf');
+  var botSFhtml  = vTbdCard(sfdefs[1].id, sfdefs[1].date, sfdefs[1].venue, W_SF, sfdefs[1].qfa, sfdefs[1].qfb, 'sf');
 
   var desktopHtml = '<div class="hkb-desktop">'
+    + stepper
     + legend
     + '<div class="hkb-bracket-wrap" id="hkb-bracket-wrap"><div class="hkb-vbracket"><div class="hkb-vwrap" id="hkb-vwrap">'
-    + '<div class="hkb-vrow" id="hkb-vrow-r32t">' + vLbl('R32','Jun 28-Jul 3') + '<div class="hkb-vcells">' + topR32html + '</div></div>'
-    + '<div class="hkb-vrow" id="hkb-vrow-r16t">' + vLbl('R16','Jul 4-7')      + '<div class="hkb-vcells">' + topR16html + '</div></div>'
-    + '<div class="hkb-vrow" id="hkb-vrow-qft">'  + vLbl('QF','Jul 9-12')      + '<div class="hkb-vcells">' + topQFhtml  + '</div></div>'
-    + '<div class="hkb-vrow" id="hkb-vrow-sft">'  + vLbl('SF','Jul 14')        + '<div class="hkb-vcells">' + topSFhtml  + '</div></div>'
+    + '<div class="hkb-vrow" id="hkb-vrow-r32t">' + vLbl('R32','Jun 28-Jul 3', 'r32') + '<div class="hkb-vcells">' + topR32html + '</div></div>'
+    + '<div class="hkb-vrow" id="hkb-vrow-r16t">' + vLbl('R16','Jul 4-7', 'r16')      + '<div class="hkb-vcells">' + topR16html + '</div></div>'
+    + '<div class="hkb-vrow" id="hkb-vrow-qft">'  + vLbl('QF','Jul 9-12', 'qf')       + '<div class="hkb-vcells">' + topQFhtml  + '</div></div>'
+    + '<div class="hkb-vrow" id="hkb-vrow-sft">'  + vLbl('SF','Jul 14', 'sf')         + '<div class="hkb-vcells">' + topSFhtml  + '</div></div>'
     + '<div class="hkb-vcenter-row" id="hkb-vrow-final">'
       + '<div class="hkb-vcard final-card" id="hkb-final-box">'
         + '<div class="hkb-final-title">&#127942; Final &middot; Jul 19 &middot; MetLife, NJ</div>'
@@ -3788,10 +3887,10 @@ function renderBracket(){
         + '<div class="hkb-vteam tbd" style="text-align:center">TBD</div>'
       + '</div>'
     + '</div>'
-    + '<div class="hkb-vrow" id="hkb-vrow-sfb">'  + vLbl('SF','Jul 15')        + '<div class="hkb-vcells">' + botSFhtml  + '</div></div>'
-    + '<div class="hkb-vrow" id="hkb-vrow-qfb">'  + vLbl('QF','Jul 9-12')      + '<div class="hkb-vcells">' + botQFhtml  + '</div></div>'
-    + '<div class="hkb-vrow" id="hkb-vrow-r16b">' + vLbl('R16','Jul 4-7')      + '<div class="hkb-vcells">' + botR16html + '</div></div>'
-    + '<div class="hkb-vrow" id="hkb-vrow-r32b">' + vLbl('R32','Jun 28-Jul 3') + '<div class="hkb-vcells">' + botR32html + '</div></div>'
+    + '<div class="hkb-vrow" id="hkb-vrow-sfb">'  + vLbl('SF','Jul 15', 'sf')         + '<div class="hkb-vcells">' + botSFhtml  + '</div></div>'
+    + '<div class="hkb-vrow" id="hkb-vrow-qfb">'  + vLbl('QF','Jul 9-12', 'qf')       + '<div class="hkb-vcells">' + botQFhtml  + '</div></div>'
+    + '<div class="hkb-vrow" id="hkb-vrow-r16b">' + vLbl('R16','Jul 4-7', 'r16')      + '<div class="hkb-vcells">' + botR16html + '</div></div>'
+    + '<div class="hkb-vrow" id="hkb-vrow-r32b">' + vLbl('R32','Jun 28-Jul 3', 'r32') + '<div class="hkb-vcells">' + botR32html + '</div></div>'
     + '</div></div></div></div>';
 
   // ── Mobile bracket (pod layout) ──────────────────────────
@@ -3812,7 +3911,7 @@ function renderBracket(){
       var h = Math.floor(status.diff/3600000), mn = Math.floor((status.diff%3600000)/60000);
       scoreHtml = '<div style="text-align:center;font-size:9px;color:var(--status-amber-text);margin:2px 0">in ' + (h>0?h+'h ':'') + mn + 'm</div>';
     }
-    return '<div class="hkb-pod-match">'
+    return '<div class="hkb-pod-match' + roundCardClass('r32') + '">'
       + '<div class="hkb-pod-match-id">' + mid + ' · ' + m.date + '</div>'
       + '<div class="hkb-pod-team ' + hs.state + koOutcomeClass(koResult, true) + '">' + stripFlag(hs.text || 'TBD') + '</div>'
       + scoreHtml
@@ -3841,7 +3940,7 @@ function renderBracket(){
         + (status.kind==='live' ? ' <span style="font-size:7px">LIVE</span>' : '') + '</div>';
     }
 
-    return '<div class="hkb-pod-match" style="border:2px dashed var(--border-strong)">'
+    return '<div class="hkb-pod-match' + roundCardClass('r16') + '" style="border:2px dashed var(--border-strong)">'
       + '<div class="hkb-pod-match-id">' + r.id + ' · ' + r.date + '</div>'
       + '<div class="hkb-pod-team ' + clsA + koOutcomeClass(koResult, true) + '">' + ta + '</div>'
       + scoreHtml
@@ -3863,6 +3962,7 @@ function renderBracket(){
   }
 
   var mobileHtml = '<div class="hkb-mobile">'
+    + stepper
     + legend
     + mobPod('M74+M77 → M89', 'Jun 29-30 → Jul 4', [['M74','M77']], r16defs[0])
     + mobPod('M73+M75 → M90', 'Jun 28-29 → Jul 4', [['M73','M75']], r16defs[1])
