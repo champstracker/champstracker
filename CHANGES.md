@@ -91,6 +91,32 @@
   of scope this session (top-banner tournament-stage messaging, being handled
   separately) — logged in CLAUDE.md known issues.
 
+### Third session same day — Bug 6 penalty-score investigation (diagnosed, deferred)
+- Confirmed a real, undiagnosed data bug: knockout matches decided on penalties display a summed,
+  incorrect score instead of the real result. Investigated a live example (M74, Germany v Paraguay,
+  R32) reported as showing "4-5" — cross-checked against official FIFA.com match center results,
+  which show the real result was Germany 1-1 Paraguay after regulation, Paraguay won 4-3 on
+  penalties. A second match (Netherlands v Morocco) showed the identical pattern: real result 1-1,
+  Morocco won 3-2 on pens, ours displayed "3-4". Both fit `displayed = regulation + penalties`,
+  summed independently per side — consistent across two unrelated matches, not a coincidence.
+- Ruled out: this is not a group-stage or static-seed-data issue (group stage can't have penalties;
+  R32+ has no static seed at all, confirmed 100% API-dependent). Not reproducible as a rendering bug
+  either — the Worker's payload has no `winner`/`duration`/`penalties` field anywhere (checked via
+  full-text search across the entire 104-match feed for `penalt|extraTime|winner|duration|shootout|
+  aet|pens` — zero hits), so `index.html` never receives separate components to render correctly in
+  the first place. Whatever is summing the two numbers happens upstream of anything visible from
+  this repo.
+- Could not pin down exactly where the summing happens: football-data.org's direct API returned 403
+  (needs a subscription/API key we don't have). Initially assumed "no access to the Worker
+  source" — that was wrong. The Worker's source IS reachable via the Cloudflare dashboard (Workers &
+  Pages → `champstracker-football`), just not opened this session. GitHub was a dead end (confirmed
+  via the GitHub API: the `champstracker` account has exactly one repo, this one) — don't re-check
+  GitHub for the Worker source next time, go straight to the Cloudflare dashboard instead.
+- Deliberately NOT fixed this session (Sai's call) — no code changed, no UI caption/workaround
+  applied either, since labeling a wrong number clearly is still shipping a wrong number. Documented
+  as known issue #1 in CLAUDE.md with full reasoning, so the next session can start at "open the
+  Cloudflare dashboard" instead of re-doing this diagnosis.
+
 ## 2026-07-05
 - fix: shipped R16/QF/SF auto-advance from `koResults` plus a WCSW knockout-elimination check
   (`394240b`) — reverted same night (`43cf4b3`) after production showed fabricated results (teams

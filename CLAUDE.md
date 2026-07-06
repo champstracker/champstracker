@@ -55,12 +55,15 @@ Hosted on Cloudflare Pages. No build step, no bundler — vanilla JS/HTML/CSS in
   and both participants resolved to two different teams — never guesses. This safeguard is
   non-negotiable; it's what the previous revert (`43cf4b3`) was missing. Verified live against real
   R16 results (Jul 2026): correctly resolves Paraguay/France/Canada/Morocco/Brazil/Norway/
-  Mexico/England into their real QF slots. **Known gap:** `koResults[mid].hs`/`.as` come straight
-  from the Worker's `homeScore`/`awayScore` — there is no `winner`/`duration`/`penalties` field in
-  that payload. A knockout match decided on penalties will report `FINISHED` with a tied score, and
-  `resolveWinner()` correctly refuses to guess a winner on a tie — so that match would stay
-  unresolved in the bracket forever. Untested against a real shootout as of Jul 2026 (see
-  CHANGES.md 2026-07-06).
+  Mexico/England into their real QF slots. **Confirmed bug (Jul 6, see known issues #1 below):**
+  a penalty-shootout match does NOT report a tied score as originally assumed — the Worker's
+  `homeScore`/`awayScore` for these matches is (probably) regulation + penalties summed per side, so
+  it comes through as a plausible-looking but fabricated non-tied score (e.g. Germany 1-1 Paraguay,
+  Paraguay won 4-3 on pens, renders as "4-5"). `resolveWinner()` still happens to pick the correct
+  winner (the shootout winner's summed total is always higher, since regulation is tied and their
+  penalty count is higher) — it does NOT get stuck refusing to guess, contrary to the original
+  assumption. Only the displayed *score* is wrong, not the advancement logic. See CHANGES.md
+  2026-07-06.
 - `buildKoEliminatedSet()` — team name → round label (`'R32'`/`'R16'`/`'QF'`/`'SF'`) they LOST at, for
   any team eliminated in a decided knockout match at ANY round, via
   `getMatchParticipants()`/`koResults`. Returns a `Map`, not a `Set` (despite the name) — as of Jul
@@ -86,12 +89,32 @@ Hosted on Cloudflare Pages. No build step, no bundler — vanilla JS/HTML/CSS in
   knockout status — `renderFbGroups()` must not do this (see known issues history).
 
 ## Known open issues (as of Jul 2026, post render/UX-fixes session)
-1. **Penalty-shootout results have no data path.** See `resolveWinner()` note above — the Worker
-   payload has no winner/duration/penalties field, so a knockout match decided on penalties (tied
-   score, `done:true`) can never resolve a winner and will sit as "TBD" in the bracket indefinitely.
-   No real shootout has happened yet to confirm what football-data.org actually sends; may require
-   a Worker-side change (separate deploy, not in this repo) to expose it. Test the first time a
-   R16/QF match goes to penalties.
+1. **CONFIRMED BUG (Jul 6): penalty-shootout matches show a summed, incorrect score.** Not a
+   theoretical gap anymore — verified against official FIFA.com match center results. M74 (Germany v
+   Paraguay, R32) really finished 1-1 after regulation, Paraguay won 4-3 on penalties — but our data
+   shows `homeScore:4, awayScore:5`, which the bracket renders as a flat "4-5". Same pattern on
+   Netherlands v Morocco (real: 1-1, Morocco won 3-2 on pens; ours: `3-4`). Both fit the exact
+   formula `displayed = regulation + penalties`, computed independently per side, across two
+   *unrelated* matches — too consistent to be coincidence.
+   - **Root cause: unknown, NOT diagnosable from this repo.** The Worker's response has no
+     `winner`/`duration`/`penalties` field at all (confirmed via raw payload + full-text search for
+     `penalt|extraTime|winner|duration|shootout|aet|pens` — zero hits across the entire 104-match
+     feed), so the frontend has no separate components to work with even in principle; whatever is
+     summing regulation + penalties happens upstream of what we can see from `index.html`.
+   - **Where to look next: the Worker's source IS accessible via the Cloudflare dashboard** (Workers
+     & Pages → `champstracker-football`), NOT GitHub — this repo's GitHub org has no second repo for
+     it (confirmed via the GitHub API this session). A prior investigation attempt dead-ended on "no
+     access to the Worker source," but that was because it was never actually opened via the
+     Cloudflare dashboard — start there next time instead of re-treading that dead end. Also worth
+     checking whether football-data.org's own raw response (needs an API key we don't have) already
+     has this problem, or if the Worker introduces it while flattening the response.
+   - **Impact:** every knockout match decided by penalties displays a plausible-looking but wrong
+     score, with the winner still correctly determined (higher combined number still picks the real
+     winner) but the actual scoreline is fabricated by omission — a fan reading "4-5" has no way to
+     know it was actually a 1-1 draw decided on penalties.
+   - Deliberately NOT fixed this session — diagnosed and documented per Sai's call; no UI workaround
+     (e.g. an "may include ET/penalties" caption) was applied either, since captioning a wrong number
+     doesn't fix a wrong number.
 2. **Score corrections after `done:true` are silently dropped, forever.** `buildKoAwaitingMap()`
    permanently excludes a mid from its team→slot map once `koResults[mid].done` is true ("already
    finalized, don't remap") — so if football-data.org ever corrects an already-FINISHED knockout
