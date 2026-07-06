@@ -82,6 +82,12 @@ Hosted on Cloudflare Pages. No build step, no bundler — vanilla JS/HTML/CSS in
   `ko-loser` (muted grey, `.hkb-vteam`/`.hkb-pod-team` CSS) based on `koResults[mid].hs` vs `.as` —
   returns `''` (no class) while undecided or a draw, same "never guess" rule as `resolveWinner()`.
   Get this pattern right in one place; do not hand-roll a second win/loss color scheme elsewhere.
+  `vR32Card()`'s seed-confirmation badge (`hbadge`/`abadge`, the ✓/~/3rd checkmark) is a SEPARATE
+  axis (pre-match seed confidence, not match outcome) and is suppressed entirely once
+  `koResult.done` — do not let the two conflate again; a decided match should show only the
+  win/loss styling, never the seed badge. The R32 legend also swaps to a compact "Won"/"Lost" pair
+  once group stage is complete (`Object.values(fbGroups).every(g => g.fixtures.every(f => f.done))`)
+  — the 5-item seeding legend's other 4 states are permanently unreachable from that point on.
 - `koCanonical()` — knockout team-name aliasing; delegates to `canonicalTeam()`/`TEAM_ALIAS`
   (as of Jul 2026 — do not reintroduce a second, separately-maintained alias list here)
 - `renderWCSW()` — "Who Can Still Win" page; knockout-aware via `buildKoEliminatedSet()` (Jul 2026).

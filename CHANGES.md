@@ -116,6 +116,18 @@
   applied either, since labeling a wrong number clearly is still shipping a wrong number. Documented
   as known issue #1 in CLAUDE.md with full reasoning, so the next session can start at "open the
   Cloudflare dashboard" instead of re-doing this diagnosis.
+- fix (Bug 5): the R32 card's seed-confirmation checkmark (✓) kept showing on both teams after a
+  match was decided, sitting right next to Bug 4's new win/loss styling and contradicting it — a
+  losing team could show a green ✓ right beside its own muted "lost" name. The checkmark answers a
+  pre-match question (is this team's group-stage-qualified identity locked into this R32 slot?),
+  unrelated to who won the actual match. Suppressed `hbadge`/`abadge` in `vR32Card()` entirely once
+  `koResult.done` is true — `koOutcomeClass()`'s bold/muted styling is the status indicator once a
+  match is decided. Also swapped the 5-item seeding legend (confirmed/in-R32-TBD/leading-slot/
+  best-3rd/TBD) for a compact 2-item "Won"/"Lost" legend once group stage is fully complete, since
+  4 of those 5 states have been permanently unreachable since group stage ended (every R32 slot
+  becomes "confirmed" the moment group stage locks in, not when R32 itself is played). Verified
+  live: M74 (Germany/Paraguay, decided) shows no badges, only win/loss styling; legend shows
+  "Won"/"Lost" instead of the seeding legend.
 
 ## 2026-07-05
 - fix: shipped R16/QF/SF auto-advance from `koResults` plus a WCSW knockout-elimination check
