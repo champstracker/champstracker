@@ -3671,11 +3671,25 @@ function renderBracket(){
     var tb = wb || (feedB ? 'W·' + feedB : 'Winner');
     var clsA = wa ? 'confirmed' : 'tbd';
     var clsB = wb ? 'confirmed' : 'tbd';
+
+    // Unlike R32 (vR32Card), this card had no score row at all — only the
+    // resolved team name — so a finished R16/QF/SF match never showed its score.
+    var koResult = window.koResults && window.koResults[id];
+    var status = matchStatusDisplay(koResult, null);
+    var timeStrip = '';
+    if(status.kind === 'live' || status.kind === 'finished'){
+      var sc = status.kind==='live' ? 'color:var(--status-red-text);animation:pulse 1.4s infinite' : 'color:var(--football)';
+      var lt = status.kind==='live' ? ' <span style="font-size:7px;color:var(--status-red-text)">LIVE</span>' : '';
+      timeStrip = '<div style="text-align:center;font-size:13px;font-weight:700;margin:3px 0;' + sc + '">'
+        + status.hs + ' - ' + status.as + lt + '</div>';
+    }
+
     return '<div class="hkb-vcard" data-mid="' + id + '" style="width:' + w + 'px;min-width:' + w + 'px;box-sizing:border-box">'
       + '<div class="hkb-vmid">' + id + ' &middot; ' + date + '</div>'
       + '<div class="hkb-vteam ' + clsA + '">' + ta + '</div>'
       + '<div class="hkb-vdivider"></div>'
       + '<div class="hkb-vteam ' + clsB + '">' + tb + '</div>'
+      + timeStrip
       + '<div class="hkb-vmeta">' + venue + '</div>'
       + '</div>';
   }
@@ -3762,9 +3776,23 @@ function renderBracket(){
     var tb = wb || ('W·' + r.r32b);
     var clsA = wa ? 'confirmed' : 'tbd';
     var clsB = wb ? 'confirmed' : 'tbd';
+
+    // Same gap as vTbdCard (desktop): no score row at all, so a finished R16
+    // match never showed its result on mobile either.
+    var koResult = window.koResults && window.koResults[r.id];
+    var status = matchStatusDisplay(koResult, null);
+    var scoreHtml = '';
+    if(status.kind === 'live' || status.kind === 'finished'){
+      var sc = status.kind==='live' ? 'color:var(--status-red-text);animation:pulse 1.4s infinite' : 'color:var(--football)';
+      scoreHtml = '<div style="text-align:center;font-size:12px;font-weight:700;' + sc + ';margin:2px 0">'
+        + status.hs + ' - ' + status.as
+        + (status.kind==='live' ? ' <span style="font-size:7px">LIVE</span>' : '') + '</div>';
+    }
+
     return '<div class="hkb-pod-match" style="border:2px dashed var(--border-strong)">'
       + '<div class="hkb-pod-match-id">' + r.id + ' · ' + r.date + '</div>'
       + '<div class="hkb-pod-team ' + clsA + '">' + ta + '</div>'
+      + scoreHtml
       + '<div class="hkb-pod-team ' + clsB + '">' + tb + '</div>'
       + '<div class="hkb-pod-venue">' + r.venue + '</div>'
       + '</div>';
