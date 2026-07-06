@@ -709,6 +709,8 @@ tbody tr:hover td{background:var(--surface2)}
 .hkb-pod-team.projected{color:var(--status-amber-text)}
 .hkb-pod-team.tbd{color:var(--text-4);font-style:italic;font-weight:400}
 .hkb-pod-team.third{color:var(--status-amber-text)}
+.hkb-pod-team.ko-winner{font-weight:800}
+.hkb-pod-team.ko-loser{color:var(--text-4)!important;font-weight:400}
 .hkb-pod-venue{font-size:9px;color:var(--text-3);margin-top:3px}
 .hkb-pod-arrow{text-align:center;font-size:11px;color:var(--text-3);margin:4px 0;font-weight:600}
 .hkb-pod-r16{background:var(--surface);border:2px dashed var(--border-strong);border-radius:var(--r);padding:7px 10px;text-align:center;font-size:11px;color:var(--text-3);font-style:italic}
@@ -847,6 +849,8 @@ details summary::-webkit-details-marker { display:none; }
 .hkb-vteam.projected{color:var(--status-amber-text)}
 .hkb-vteam.third{color:var(--status-amber-text)}
 .hkb-vteam.tbd{color:var(--text-4);font-style:italic;font-weight:400}
+.hkb-vteam.ko-winner{font-weight:800}
+.hkb-vteam.ko-loser{color:var(--text-4)!important;font-weight:400}
 .hkb-vdivider{height:1px;background:var(--border);margin:1px 0}
 .hkb-vmeta{font-size:8px;color:var(--text-4);margin-top:3px;white-space:nowrap}
 .hkb-vcenter-row{display:flex;align-items:center;padding:8px 0;padding-left:412px;gap:12px}
@@ -3618,9 +3622,19 @@ function renderBracket(){
     return text.replace(/^[^a-zA-Z0-9À-ɏ]+/, '').trim();
   }
 
+  // Returns ' ko-winner' / ' ko-loser' / '' for a decided match's home/away team div,
+  // so the winner reads bold and the loser reads muted — same treatment across every
+  // round (R32/R16/QF/SF) instead of a uniform checkmark that doesn't distinguish them.
+  function koOutcomeClass(koResult, isHome) {
+    if(!koResult || !koResult.done || koResult.hs === koResult.as) return '';
+    var homeWon = koResult.hs > koResult.as;
+    return (isHome === homeWon) ? ' ko-winner' : ' ko-loser';
+  }
+
   function vR32Card(mid) {
     var m = r32map[mid];
     var hs = m.homeSlot, as_ = m.awaySlot;
+    var koResult = window.koResults && window.koResults[mid];
     var hbadge = hs.state==='confirmed' ? ' <span class="hkb-badge ok">&#10003;</span>'
                : hs.state==='projected' ? ' <span class="hkb-badge proj">~</span>'
                : hs.state==='third'     ? ' <span class="hkb-badge t3">3rd</span>' : '';
@@ -3634,7 +3648,6 @@ function renderBracket(){
 
     var timeStrip = '';
     if(m.kt){
-      var koResult = window.koResults && window.koResults[mid];
       var status = matchStatusDisplay(koResult, m.kt);
       if(status.kind === 'live' || status.kind === 'finished'){
         var sc = status.kind==='live' ? 'color:var(--status-red-text);animation:pulse 1.4s infinite' : 'color:var(--football)';
@@ -3661,9 +3674,9 @@ function renderBracket(){
 
     return '<div class="hkb-vcard" data-mid="' + mid + '" style="width:' + W + 'px;min-width:' + W + 'px;box-sizing:border-box">'
       + '<div class="hkb-vmid">' + mid + ' · ' + m.date + '</div>'
-      + '<div class="hkb-vteam ' + hs.state + '">' + hseed + stripFlag(hs.text) + hbadge + '</div>'
+      + '<div class="hkb-vteam ' + hs.state + koOutcomeClass(koResult, true) + '">' + hseed + stripFlag(hs.text) + hbadge + '</div>'
       + '<div class="hkb-vdivider"></div>'
-      + '<div class="hkb-vteam ' + as_.state + '">' + aseed + stripFlag(as_.text) + abadge + '</div>'
+      + '<div class="hkb-vteam ' + as_.state + koOutcomeClass(koResult, false) + '">' + aseed + stripFlag(as_.text) + abadge + '</div>'
       + timeStrip
       + '<div class="hkb-vmeta">' + m.venue + poolStr + '</div>'
       + '</div>';
@@ -3690,9 +3703,9 @@ function renderBracket(){
 
     return '<div class="hkb-vcard" data-mid="' + id + '" style="width:' + w + 'px;min-width:' + w + 'px;box-sizing:border-box">'
       + '<div class="hkb-vmid">' + id + ' &middot; ' + date + '</div>'
-      + '<div class="hkb-vteam ' + clsA + '">' + ta + '</div>'
+      + '<div class="hkb-vteam ' + clsA + koOutcomeClass(koResult, true) + '">' + ta + '</div>'
       + '<div class="hkb-vdivider"></div>'
-      + '<div class="hkb-vteam ' + clsB + '">' + tb + '</div>'
+      + '<div class="hkb-vteam ' + clsB + koOutcomeClass(koResult, false) + '">' + tb + '</div>'
       + timeStrip
       + '<div class="hkb-vmeta">' + venue + '</div>'
       + '</div>';
@@ -3766,9 +3779,9 @@ function renderBracket(){
     }
     return '<div class="hkb-pod-match">'
       + '<div class="hkb-pod-match-id">' + mid + ' · ' + m.date + '</div>'
-      + '<div class="hkb-pod-team ' + hs.state + '">' + stripFlag(hs.text || 'TBD') + '</div>'
+      + '<div class="hkb-pod-team ' + hs.state + koOutcomeClass(koResult, true) + '">' + stripFlag(hs.text || 'TBD') + '</div>'
       + scoreHtml
-      + '<div class="hkb-pod-team ' + as_.state + '">' + stripFlag(as_.text || 'TBD') + '</div>'
+      + '<div class="hkb-pod-team ' + as_.state + koOutcomeClass(koResult, false) + '">' + stripFlag(as_.text || 'TBD') + '</div>'
       + '<div class="hkb-pod-venue">' + m.venue + '</div>'
       + '</div>';
   }
@@ -3795,9 +3808,9 @@ function renderBracket(){
 
     return '<div class="hkb-pod-match" style="border:2px dashed var(--border-strong)">'
       + '<div class="hkb-pod-match-id">' + r.id + ' · ' + r.date + '</div>'
-      + '<div class="hkb-pod-team ' + clsA + '">' + ta + '</div>'
+      + '<div class="hkb-pod-team ' + clsA + koOutcomeClass(koResult, true) + '">' + ta + '</div>'
       + scoreHtml
-      + '<div class="hkb-pod-team ' + clsB + '">' + tb + '</div>'
+      + '<div class="hkb-pod-team ' + clsB + koOutcomeClass(koResult, false) + '">' + tb + '</div>'
       + '<div class="hkb-pod-venue">' + r.venue + '</div>'
       + '</div>';
   }
