@@ -3284,7 +3284,6 @@ function renderFbGroups(filter){
   // Normalise filter — tab text 'All' must match 'ALL'
   const f = (filter||'ALL').toUpperCase();
   const groups = f === 'ALL' ? Object.keys(fbGroups) : [f];
-  const koEliminated = buildKoEliminatedSet();
 
   el.innerHTML = groups.map(key => {
     const g = fbGroups[key];
@@ -3292,10 +3291,11 @@ function renderFbGroups(filter){
     const sorted = sortGroup(g.teams, g.fixtures);
 
     const standing = sorted.map((t,i) => {
-      let qs = computeQualStatus(t, i, g.teams, g.fixtures, key);
-      // Group-stage status doesn't know about the knockouts — a team that has since
-      // lost a KO match must not keep showing its stale "Qualified"/"Winner" badge.
-      if(koEliminated.has(t.name)) qs = {qual:'out', label:'Eliminated'};
+      // Deliberately NOT knockout-aware: this table is a historical record of how each
+      // team finished the group stage, not their current tournament status. A team
+      // that finished 1st/2nd/qualified stays labelled that way here even after a
+      // later knockout loss — see renderWCSW() for current live status instead.
+      const qs = computeQualStatus(t, i, g.teams, g.fixtures, key);
       const dotCls = (qs.qual==='winner' || qs.qual==='qualified') ? 'q-auto'
                    : qs.qual==='out'       ? 'q-out2'
                    : qs.qual==='danger'    ? 'q-poss'
