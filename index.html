@@ -2797,37 +2797,46 @@ function buildKoAwaitingMap(){
 function mergeKoMatches(matches){
   if(!Array.isArray(matches) || !matches.length) return;
   const LIVE_STATUSES = ['IN_PLAY','PAUSED','HALFTIME','LIVE'];
-  const teamMap = buildKoAwaitingMap();
 
-  matches.forEach(m => {
-    const s = (m.status||'').toUpperCase();
-    const isDone = s==='FINISHED' || s==='FT';
-    const isLive = LIVE_STATUSES.includes(s);
-    if(!isDone && !isLive) return;
-    if(m.homeScore===null || m.homeScore===undefined) return;
+  // Re-derive teamMap and reprocess after each pass: a result that completes one
+  // round (e.g. R32) must be visible to buildKoAwaitingMap() before the next round
+  // (R16) can resolve, but a teamMap computed once up-front (before this same batch
+  // writes those R32 results) never sees the update — so the later round silently
+  // waits for the NEXT poll cycle instead of resolving in this one. Bounded to 4
+  // passes since there are only 4 knockout rounds to cascade through (R32→R16→QF→SF).
+  for(let pass=0; pass<4; pass++){
+    const teamMap = buildKoAwaitingMap();
 
-    const home = koCanonical(m.homeTeam);
-    const away = koCanonical(m.awayTeam);
+    matches.forEach(m => {
+      const s = (m.status||'').toUpperCase();
+      const isDone = s==='FINISHED' || s==='FT';
+      const isLive = LIVE_STATUSES.includes(s);
+      if(!isDone && !isLive) return;
+      if(m.homeScore===null || m.homeScore===undefined) return;
 
-    // Resolve each side independently — a home-side match must not silently
-    // short-circuit and hide a conflicting (or confirming) away-side match.
-    let mid = null, hs = m.homeScore, as_ = m.awayScore;
-    const homeMid = teamMap[home] && teamMap[home].mid;
-    const awayMid = teamMap[away] && teamMap[away].mid;
-    if(homeMid && awayMid){
-      if(homeMid !== awayMid) return; // conflicting slots — don't guess, don't corrupt either
-      mid = homeMid;
-    } else {
-      mid = homeMid || awayMid || null;
-    }
-    if(!mid) return;
+      const home = koCanonical(m.homeTeam);
+      const away = koCanonical(m.awayTeam);
 
-    // Skip group stage matches — knockout matches have stage != GROUP_STAGE and group == null
-    const stage = (m.stage || '').toUpperCase();
-    if(stage === 'GROUP_STAGE' || m.group) return;
+      // Resolve each side independently — a home-side match must not silently
+      // short-circuit and hide a conflicting (or confirming) away-side match.
+      let mid = null, hs = m.homeScore, as_ = m.awayScore;
+      const homeMid = teamMap[home] && teamMap[home].mid;
+      const awayMid = teamMap[away] && teamMap[away].mid;
+      if(homeMid && awayMid){
+        if(homeMid !== awayMid) return; // conflicting slots — don't guess, don't corrupt either
+        mid = homeMid;
+      } else {
+        mid = homeMid || awayMid || null;
+      }
+      if(!mid) return;
 
-    window.koResults[mid] = { hs, as: as_, done: isDone, live: isLive };
-  });
+      // Skip group stage matches — knockout matches have stage != GROUP_STAGE and group == null
+      const stage = (m.stage || '').toUpperCase();
+      if(stage === 'GROUP_STAGE' || m.group) return;
+
+      window.koResults[mid] = { hs, as: as_, done: isDone, live: isLive };
+    });
+  }
 }
 
 let fbDataLoaded = false;
