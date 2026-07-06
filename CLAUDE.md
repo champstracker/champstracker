@@ -40,42 +40,60 @@ Hosted on Cloudflare Pages. No build step, no bundler — vanilla JS/HTML/CSS in
 - `matchStatusDisplay()` — single source of truth for live/finished/soon/scheduled/unknown per
   match; "kickoff passed, no result yet" always resolves to unknown, never an assumed status.
   Sport-agnostic — reuse this for any future tournament's match cards instead of copying the logic.
-- `mergeKoMatches()` / `window.koResults` — knockout match results, keyed by match ID (`M74` etc.)
+- `mergeKoMatches()` / `window.koResults` — knockout match results, keyed by match ID (`M74` etc.).
+  Runs in a bounded loop (max 4 passes — one per knockout round, R32→R16→QF→SF), rebuilding
+  `buildKoAwaitingMap()`'s team→slot map fresh each pass, so a round that finishes mid-batch (e.g.
+  the last R32 match completing) unlocks the next round's team names within the SAME fetch cycle
+  instead of waiting for the next poll. Each API match record is tracked by id in a `processed` set
+  so it is never re-merged in a later pass — without that guard, a team that has since advanced
+  gets its OLD (already-finished) match record reattributed to its NEW round's mid on the next
+  pass, fabricating a result for a round that hasn't been played yet (caught live, Jul 2026, before
+  QF/SF had even started — see CHANGES.md). Do not remove either the loop or the `processed` guard
+  in isolation; they depend on each other.
 - `resolveWinner()` / `getMatchParticipants()` / `buildKoAwaitingMap()` — R16+ auto-advance chain.
   `resolveWinner()` only ever returns a team name when `koResults` is confirmed done, unambiguous,
   and both participants resolved to two different teams — never guesses. This safeguard is
-  non-negotiable; it's what the previous revert (`43cf4b3`) was missing.
+  non-negotiable; it's what the previous revert (`43cf4b3`) was missing. Verified live against real
+  R16 results (Jul 2026): correctly resolves Paraguay/France/Canada/Morocco/Brazil/Norway/
+  Mexico/England into their real QF slots. **Known gap:** `koResults[mid].hs`/`.as` come straight
+  from the Worker's `homeScore`/`awayScore` — there is no `winner`/`duration`/`penalties` field in
+  that payload. A knockout match decided on penalties will report `FINISHED` with a tied score, and
+  `resolveWinner()` correctly refuses to guess a winner on a tie — so that match would stay
+  unresolved in the bracket forever. Untested against a real shootout as of Jul 2026 (see
+  CHANGES.md 2026-07-06).
+- `buildKoEliminatedSet()` — team name → eliminated, for any team that has lost a decided knockout
+  match at ANY round (R32/R16/QF/SF), via `getMatchParticipants()`/`koResults`. Replaces the old,
+  never-called `buildKoTeamMap()` (R32-slot-only, dead code). Feeds into both `renderFbGroups()`
+  (main standings table) and `renderWCSW()`, overriding `computeQualStatus()`'s group-stage-only
+  "Qualified"/"Winner" label once a team is knocked out. Do NOT wire it into `buildR32Map()`'s own
+  internal `computeQualStatus()` call (bracket seeding) — that one is intentionally about original
+  group qualification, not current knockout status.
 - `koCanonical()` — knockout team-name aliasing; delegates to `canonicalTeam()`/`TEAM_ALIAS`
   (as of Jul 2026 — do not reintroduce a second, separately-maintained alias list here)
-- `renderWCSW()` — "Who Can Still Win" page
+- `renderWCSW()` — "Who Can Still Win" page; now knockout-aware via `buildKoEliminatedSet()` (Jul 2026)
 
-## Known open issues (as of Jul 2026, post live-status-loading merge)
-1. **R16 auto-advance is live but not yet visually confirmed against a real result.**
-   `resolveWinner`/`buildKoAwaitingMap` shipped in `6bfbcae`, but R16 only just started (Jul 5) —
-   worth checking champstracker.in once the first R16 match actually finishes, to confirm the real
-   team name (not a placeholder) shows correctly on its QF card.
-2. **"Who Can Still Win" only checks R32 losses, not R16+.** `renderWCSW()`'s elimination check
-   uses `buildKoTeamMap()`, which only maps team names to their original R32 slot — a team that
-   loses in R16 or later won't be caught, and keeps showing "Qualified" from their group-stage
-   state. Same category of gap as the original WCSW bug, just one round further along now that R32
-   auto-advance works correctly.
-3. **`resolveWinner`'s recursive resolution chain hasn't run on real multi-round data yet.** The
-   conflict-bailout in `mergeKoMatches()` and the "never guess" safeguard in `resolveWinner()` are
-   reasoned through and verified against R32 data, but QF doesn't start until Jul 9 — that's the
-   first point the R16→QF resolution actually executes on real (not hypothetical) results. Worth a
-   spot-check once QF kicks off.
-4. **R32 card styling doesn't distinguish won/lost/TBD well.** Current `.hkb-vteam` states
+## Known open issues (as of Jul 2026, post knockout-logic-audit session)
+1. **Penalty-shootout results have no data path.** See `resolveWinner()` note above — the Worker
+   payload has no winner/duration/penalties field, so a knockout match decided on penalties (tied
+   score, `done:true`) can never resolve a winner and will sit as "TBD" in the bracket indefinitely.
+   No real shootout has happened yet to confirm what football-data.org actually sends; may require
+   a Worker-side change (separate deploy, not in this repo) to expose it. Test the first time a
+   R16/QF match goes to penalties.
+2. **R32 card styling doesn't distinguish won/lost/TBD well.** Current `.hkb-vteam` states
    (`confirmed`/`inR32`/`projected`/`third`/`tbd`) have no distinct visual treatment for "played
    and lost" vs "not yet decided" — both currently read as plain/neutral.
-5. **R32 results have no static seed fallback, unlike group stage.** `fbGroups[gk].fixtures` bakes
+3. **R32 results have no static seed fallback, unlike group stage.** `fbGroups[gk].fixtures` bakes
    in real scores for every played group match, so the group table survives a slow or failed
    fetch. `r32defs` has no equivalent — result data (`window.koResults`) is 100% fetch-dependent,
    forever, even for matches that are now historical fact. Backfilling already-decided R32 results
    into `r32defs` the same way would make the bracket as resilient as group stage.
-6. **`aiGo()` (AI panel, cricket tab) is broken in production.** It calls `api.anthropic.com`
+4. **`aiGo()` (AI panel, cricket tab) is broken in production.** It calls `api.anthropic.com`
    directly from the browser with no auth — works only inside a Claude Artifact sandbox, fails
    with 401/CORS on the real deployed site. Also has a hardcoded stale date in the system prompt.
    Decide: cut it, or rebuild through the existing Worker pattern.
+5. **No bracket definitions for Final/Third-Place beyond `sfdefs`.** `getMatchParticipants()` only
+   handles R32/R16/QF/SF — there's no equivalent def for the Final or third-place playoff, so
+   auto-advance stops at SF winners. Not urgent (Final is Jul 19), but worth adding before then.
 
 ## Commit message convention
 One line, plain English, with a prefix:

@@ -1,5 +1,51 @@
 # CHANGES
 
+## 2026-07-06
+- fix: spot-checked `resolveWinner`/`mergeKoMatches` against live R16 data ahead of QF
+  (Jul 9) and found a real bug — verified against the actual running site, not just
+  read from code. `mergeKoMatches()` built its team→slot map (`buildKoAwaitingMap()`)
+  once per call, before its own `forEach` wrote that batch's results. When a whole
+  round finished within one fetch cycle (R32 completing, unlocking R16), the next
+  round's team names weren't resolvable yet at the time the map was built, so those
+  results got silently dropped for that cycle and only picked up on the *next* poll
+  (60s–5min later). Confirmed live: 4 already-finished R16 matches stayed unresolved
+  in `window.koResults` for multiple seconds on a fresh page load. Same class of bug
+  as the Jul 5 `buildR32Map()`-ordering fix, one round deeper — an untested
+  round-transition code path.
+- fix: the fix above (rebuilding the map and reprocessing in a bounded loop) had its
+  own bug, caught before commit by cross-checking against `buildKoEliminatedSet()`
+  (see below): reprocessing the *entire* matches array every pass meant that once a
+  team advanced and its round was marked done, `buildKoAwaitingMap()` remapped that
+  team's name to its *next* round's mid — so the old, already-merged match record for
+  that team got replayed against the new map and misattributed its score onto a
+  future round's slot. Caught live: `koResults['M97']` (a QF match) and `['M101']`
+  (a semifinal) had fabricated `done:true` results despite QF not starting until Jul 9
+  and SF not until Jul 14. Fixed by tracking merged records by match id so a record
+  is never reprocessed once successfully written.
+- fix: `renderWCSW()`'s and the main standings table's (`renderFbGroups()`)
+  "Qualified"/"Winner" badges never updated after a team lost a knockout match, at
+  any round — not just R32 as a since-superseded CLAUDE.md note described. Root
+  cause: `buildKoTeamMap()` (the function that note referred to) was dead code, never
+  called from anywhere; `computeQualStatus()` is pure group-stage math with no
+  knockout awareness at all. Replaced `buildKoTeamMap()` with
+  `buildKoEliminatedSet()`, which walks every decided bracket match at any round
+  (R32/R16/QF/SF) via `getMatchParticipants()`/`koResults` and collects the losers.
+  Wired into both `renderFbGroups()` and `renderWCSW()` (not `buildR32Map()`'s own
+  internal use of `computeQualStatus()` for bracket seeding, which is correctly about
+  original group qualification, not current status). Verified live: Germany (lost
+  R32) and Canada (lost R16) now show "Eliminated" in both views; Morocco and France
+  (won R16) correctly still show "Qualified".
+- Known issue, not fixed: the football Worker's match payload has no
+  `winner`/`duration`/`penalties` field — just `homeScore`/`awayScore`/`status`.
+  `resolveWinner()` correctly refuses to guess a winner when `hs === as` (to avoid
+  fabricating a result on a real draw), but a knockout match decided by penalties will
+  likely report `FINISHED` with a tied regulation/ET score, and there's currently no
+  data path to know who actually won — that match would silently stay "TBD" in the
+  bracket forever. No real knockout draw has happened yet to confirm the exact API
+  shape football-data.org sends for shootouts. Test this the first time a R16/QF match
+  goes to penalties; fixing it may require changes in the Worker (separate deploy, not
+  in this repo) to pass through the winner field.
+
 ## 2026-07-05
 - fix: shipped R16/QF/SF auto-advance from `koResults` plus a WCSW knockout-elimination check
   (`394240b`) — reverted same night (`43cf4b3`) after production showed fabricated results (teams
