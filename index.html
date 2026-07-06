@@ -3587,7 +3587,17 @@ function renderBracket(){
   }
 
   // ── Legend ────────────────────────────────────────────────
-  const legend = `<div class="hkb-legend">
+  // The seeding legend below (confirmed/in-R32-TBD/leading-slot/best-3rd/TBD) describes
+  // group-stage qualification confidence — once group stage is fully over, every R32
+  // slot is permanently "confirmed" and the other four states can never show again.
+  // Swap to a compact won/lost legend instead, matching koOutcomeClass's styling.
+  const groupStageDone = Object.values(fbGroups).every(g => g.fixtures.every(f => f.done));
+  const legend = groupStageDone
+    ? `<div class="hkb-legend">
+      <span><span class="hkb-leg-dot" style="background:var(--football)"></span>Won</span>
+      <span><span class="hkb-leg-dot" style="background:var(--text-4)"></span>Lost</span>
+    </div>`
+    : `<div class="hkb-legend">
     <span><span class="hkb-leg-dot" style="background:var(--football)"></span>Confirmed position ✓</span>
     <span><span class="hkb-leg-dot" style="background:var(--football-light);border:2px solid var(--football-border)"></span>In R32, position TBD</span>
     <span><span class="hkb-leg-dot" style="background:var(--status-amber-bg);border:2px dashed var(--status-amber-border)"></span>Leading slot, not yet qualified ~</span>
@@ -3635,10 +3645,17 @@ function renderBracket(){
     var m = r32map[mid];
     var hs = m.homeSlot, as_ = m.awaySlot;
     var koResult = window.koResults && window.koResults[mid];
-    var hbadge = hs.state==='confirmed' ? ' <span class="hkb-badge ok">&#10003;</span>'
+    // Seed-confirmation badges answer a pre-match question ("is this team's identity
+    // locked in?") — once the match itself is decided, that question is moot and the
+    // win/loss styling (koOutcomeClass) is the status indicator instead. Showing both
+    // at once reads as contradictory (e.g. a muted "loser" name next to a green ✓).
+    var koDecided = koResult && koResult.done;
+    var hbadge = koDecided ? ''
+               : hs.state==='confirmed' ? ' <span class="hkb-badge ok">&#10003;</span>'
                : hs.state==='projected' ? ' <span class="hkb-badge proj">~</span>'
                : hs.state==='third'     ? ' <span class="hkb-badge t3">3rd</span>' : '';
-    var abadge = as_.state==='confirmed' ? ' <span class="hkb-badge ok">&#10003;</span>'
+    var abadge = koDecided ? ''
+               : as_.state==='confirmed' ? ' <span class="hkb-badge ok">&#10003;</span>'
                : as_.state==='projected' ? ' <span class="hkb-badge proj">~</span>'
                : as_.state==='third'     ? ' <span class="hkb-badge t3">3rd</span>' : '';
     var hseed = '<span style="font-size:8px;color:var(--text-4);margin-right:3px;font-weight:600">' + seedLabel(m.home) + '</span>';
