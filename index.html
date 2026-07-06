@@ -2716,26 +2716,29 @@ function koCanonical(name){
   return canonicalTeam(name);
 }
 
-// Build a map from team name → match ID for all resolved R32 slots
-function buildKoTeamMap(){
-  if(!window._r32map) return {};
-  const map = {};
-  Object.keys(window._r32map).forEach(mid => {
-    const m = window._r32map[mid];
-    if(m.homeSlot && !m.homeSlot.isTBD && m.homeSlot.text){
-      // Extract team name from slot text (remove flag emoji prefix)
-      const name = m.homeSlot.text.replace(/^[^a-zA-Z0-9À-ɏ\u00C0-\u024F]+/, '').trim();
-      map[name] = {mid, side:'home'};
-    }
-    if(m.awaySlot && !m.awaySlot.isTBD && m.awaySlot.text){
-      const name = m.awaySlot.text.replace(/^[^a-zA-Z0-9À-ɏ\u00C0-\u024F]+/, '').trim();
-      map[name] = {mid, side:'away'};
-    }
+// Team name -> eliminated, for every team that has LOST a decided knockout match at
+// ANY round (R32/R16/QF/SF). Generalizes the old R32-only concept (superseded
+// buildKoTeamMap, which only mapped teams to their original R32 slot and was never
+// wired into a display) - walks every finished bracket match via
+// getMatchParticipants(), so a loss at any round marks the team out, not just R32.
+function buildKoEliminatedSet(){
+  const out = new Set();
+  if(!window._r32map) return out;
+  const allMids = Object.keys(window._r32map)
+    .concat(r16defs.map(r => r.id))
+    .concat(qfdefs.map(q => q.id))
+    .concat(sfdefs.map(s => s.id));
+  allMids.forEach(mid => {
+    const kr = window.koResults[mid];
+    if(!kr || !kr.done || kr.hs === kr.as) return;
+    const [home, away] = getMatchParticipants(mid);
+    if(!home || !away || home === away) return;
+    out.add(kr.hs > kr.as ? away : home);
   });
-  return map;
+  return out;
 }
 
-// Strip leading flag/emoji from a team name (same convention as buildKoTeamMap)
+// Strip leading flag/emoji from a team name (same convention as buildKoEliminatedSet)
 function stripKoFlag(text){
   return (text||'').replace(/^[^a-zA-Z0-9À-ɏ]+/, '').trim();
 }
@@ -2804,10 +2807,21 @@ function mergeKoMatches(matches){
   // writes those R32 results) never sees the update — so the later round silently
   // waits for the NEXT poll cycle instead of resolving in this one. Bounded to 4
   // passes since there are only 4 knockout rounds to cascade through (R32→R16→QF→SF).
+  // A match record already merged in an earlier pass must never be reprocessed in
+  // a later one: once a team advances (its round is marked done), buildKoAwaitingMap()
+  // remaps that team's name to its NEXT round's mid — so re-running the same old,
+  // already-finished match against the new map would misattribute its score onto a
+  // future round's (unplayed) slot. Track merged records by match id to prevent that.
+  const processed = new Set();
+
   for(let pass=0; pass<4; pass++){
     const teamMap = buildKoAwaitingMap();
+    let wroteAny = false;
 
     matches.forEach(m => {
+      const recordKey = m.id != null ? m.id : (m.homeTeam+'|'+m.awayTeam+'|'+(m.date||''));
+      if(processed.has(recordKey)) return;
+
       const s = (m.status||'').toUpperCase();
       const isDone = s==='FINISHED' || s==='FT';
       const isLive = LIVE_STATUSES.includes(s);
@@ -2835,7 +2849,11 @@ function mergeKoMatches(matches){
       if(stage === 'GROUP_STAGE' || m.group) return;
 
       window.koResults[mid] = { hs, as: as_, done: isDone, live: isLive };
+      processed.add(recordKey);
+      wroteAny = true;
     });
+
+    if(!wroteAny) break;
   }
 }
 
@@ -3266,6 +3284,7 @@ function renderFbGroups(filter){
   // Normalise filter — tab text 'All' must match 'ALL'
   const f = (filter||'ALL').toUpperCase();
   const groups = f === 'ALL' ? Object.keys(fbGroups) : [f];
+  const koEliminated = buildKoEliminatedSet();
 
   el.innerHTML = groups.map(key => {
     const g = fbGroups[key];
@@ -3273,7 +3292,10 @@ function renderFbGroups(filter){
     const sorted = sortGroup(g.teams, g.fixtures);
 
     const standing = sorted.map((t,i) => {
-      const qs = computeQualStatus(t, i, g.teams, g.fixtures, key);
+      let qs = computeQualStatus(t, i, g.teams, g.fixtures, key);
+      // Group-stage status doesn't know about the knockouts — a team that has since
+      // lost a KO match must not keep showing its stale "Qualified"/"Winner" badge.
+      if(koEliminated.has(t.name)) qs = {qual:'out', label:'Eliminated'};
       const dotCls = (qs.qual==='winner' || qs.qual==='qualified') ? 'q-auto'
                    : qs.qual==='out'       ? 'q-out2'
                    : qs.qual==='danger'    ? 'q-poss'
@@ -3826,6 +3848,7 @@ function drawBracketConnectors(){
 function renderWCSW(){
   const el = document.getElementById('fb-wcsw-content');
   if(!el) return;
+  const koEliminated = buildKoEliminatedSet();
   let html = '<div style="margin-top:10px">';
   Object.keys(fbGroups).forEach(key=>{
     const g = fbGroups[key];
@@ -3838,7 +3861,10 @@ function renderWCSW(){
     // 4-column grid for this group's 4 teams
     html += '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">';
     sorted.forEach((t,i)=>{
-      const qs = computeQualStatus(t, i, g.teams, g.fixtures, key);
+      let qs = computeQualStatus(t, i, g.teams, g.fixtures, key);
+      // A team that has since lost a KO match must not keep showing its stale
+      // group-stage "Qualified"/"Winner" status here.
+      if(koEliminated.has(t.name)) qs = {qual:'out', label:'Eliminated'};
       html += `<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:10px 12px;box-shadow:var(--shadow)">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px">
           <span style="font-weight:600;font-size:13px;line-height:1.3">${t.flag} ${t.name}</span>
