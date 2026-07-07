@@ -42,15 +42,21 @@ Hosted on Cloudflare Pages. No build step, no bundler — vanilla JS/HTML/CSS in
   Sport-agnostic — reuse this for any future tournament's match cards instead of copying the logic.
 - `mergeKoMatches()` / `window.koResults` — knockout match results, keyed by match ID (`M74` etc.).
   Runs in a bounded loop (max 4 passes — one per knockout round, R32→R16→QF→SF), rebuilding
-  `buildKoAwaitingMap()`'s team→slot map fresh each pass, so a round that finishes mid-batch (e.g.
-  the last R32 match completing) unlocks the next round's team names within the SAME fetch cycle
-  instead of waiting for the next poll. Each API match record is tracked by id in a `processed` set
-  so it is never re-merged in a later pass — without that guard, a team that has since advanced
-  gets its OLD (already-finished) match record reattributed to its NEW round's mid on the next
-  pass, fabricating a result for a round that hasn't been played yet (caught live, Jul 2026, before
-  QF/SF had even started — see CHANGES.md). Do not remove either the loop or the `processed` guard
-  in isolation; they depend on each other.
-- `resolveWinner()` / `getMatchParticipants()` / `buildKoAwaitingMap()` — R16+ auto-advance chain.
+  `buildKoPairMap()`'s team-PAIR→mid map fresh each pass, so a round that finishes mid-batch (e.g.
+  the last R32 match completing) unlocks the next round's team pairing within the SAME fetch cycle
+  instead of waiting for the next poll. Resolves `mid` by matching the incoming match's (home, away)
+  pair against `getMatchParticipants(mid)` via `koPairKey()` — NOT by looking up a single team name
+  (that was `buildKoAwaitingMap()`, removed Jul 2026 after a confirmed cross-poll-cycle fabrication
+  bug: once a team's round was marked done, the name-only map pointed their name at their NEXT round
+  instead, so their OLD match record — still present in every fetch, since the API returns full
+  history — got misattributed to the new round's mid on a later, independent poll; the `processed`
+  set below couldn't catch this since it only guards within one call, not across separate polls).
+  Two teams can only ever meet at one bracket slot, so pair-keying is structurally immune to this
+  regardless of poll count or done status — it also means `koResults` corrections after `done:true`
+  are no longer silently dropped (see CHANGES.md, this closes what was known issue #2). `processed`
+  is now an efficiency guard against redundant same-pass rewrites, not a correctness requirement —
+  do not read too much into it being "the" safety mechanism anymore; the pair key is.
+- `resolveWinner()` / `getMatchParticipants()` / `buildKoPairMap()` — R16+ auto-advance chain.
   `resolveWinner()` only ever returns a team name when `koResults` is confirmed done, unambiguous,
   and both participants resolved to two different teams — never guesses. This safeguard is
   non-negotiable; it's what the previous revert (`43cf4b3`) was missing. Verified live against real
@@ -95,11 +101,17 @@ Hosted on Cloudflare Pages. No build step, no bundler — vanilla JS/HTML/CSS in
   knockout status — `renderFbGroups()` must not do this (see known issues history).
 - `updateProgressBar()` (Jul 2026 rewrite) — counts across ALL trackable stages, not just the 72
   group fixtures: R32/R16/QF/SF via `koResults` (same `countRound`-style approach as
-  `buildKoAwaitingMap`), plus Final/Third-Place counted directly by `stage` from
+  `buildKoPairMap`), plus Final/Third-Place counted directly by `stage` from
   `window._allMatches` (the raw match list snapshotted in `fetchFbData()` right after the
   `type=matches` fetch). Final/Third-Place have no bracket-def mid (`getMatchParticipants` can't
   resolve their team names — known issue #5), but a done/live COUNT doesn't need that resolution,
-  so this is a legitimately smaller fix than #5, not a workaround for it. Drives both
+  so this is a legitimately smaller fix than #5, not a workaround for it. `fb-live-chip` (the
+  LIVE/COMPLETE badge) only says "COMPLETE" in the final `current === null` branch (everything
+  trackable through Final/Third-Place is done) — do NOT let the `current`-round branch fall back to
+  "COMPLETE" just because nothing is live *right now*; a round with matches still unplayed but none
+  currently in progress must show "IN PROGRESS" (amber), not "COMPLETE" (green). Got this backwards
+  once already (caught during the hotfix-merge review) — `totalLive === 0` means "nothing live this
+  instant," not "this round is finished." Drives both
   `fb-progress-label`/`fb-remaining-count` and `fb-stage-chip` (a second element that was ALSO a
   static "GROUP STAGE" string before this — JS never touched it). `wcsw-chip`/`wcsw-info` lookups
   in this function are dead code (no such elements exist in the HTML) — pre-existing, not
@@ -127,7 +139,7 @@ Hosted on Cloudflare Pages. No build step, no bundler — vanilla JS/HTML/CSS in
   with football's own color tokens (`--football`/`--status-amber-*`) instead of F1's blue
   `--pip-*` tokens — don't wire football's stepper to the `--pip-*` variables, they're tuned for F1.
 
-## Known open issues (as of Jul 2026, post post-groupstage-restructure session)
+## Known open issues (as of Jul 2026, post-groupstage-restructure + ko-pair-key-matching hotfix merge)
 1. **CONFIRMED BUG (Jul 6): penalty-shootout matches show a summed, incorrect score.** Not a
    theoretical gap anymore — verified against official FIFA.com match center results. M74 (Germany v
    Paraguay, R32) really finished 1-1 after regulation, Paraguay won 4-3 on penalties — but our data
@@ -154,28 +166,16 @@ Hosted on Cloudflare Pages. No build step, no bundler — vanilla JS/HTML/CSS in
    - Deliberately NOT fixed this session — diagnosed and documented per Sai's call; no UI workaround
      (e.g. an "may include ET/penalties" caption) was applied either, since captioning a wrong number
      doesn't fix a wrong number.
-2. **Score corrections after `done:true` are silently dropped, forever.** `buildKoAwaitingMap()`
-   permanently excludes a mid from its team→slot map once `koResults[mid].done` is true ("already
-   finalized, don't remap") — so if football-data.org ever corrects an already-FINISHED knockout
-   score, the corrected match record has no `mid` to resolve to via `mergeKoMatches()`'s `teamMap`
-   lookup and is dropped without a trace. This is NOT the `processed` dedup set added for the
-   cascade fix (that's call-scoped, resets every poll, and isn't the blocker) — it's
-   `buildKoAwaitingMap`'s own done-exclusion, present since the Jul 2026 R16+ auto-advance work.
-   Deferred structural fix discussed: resolve `mid` by a canonical team-*pair* key (via
-   `getMatchParticipants()`, done or not) instead of by single team name, since two specific teams
-   can only ever meet at one bracket slot — this also happens to be immune to the cross-round
-   misattribution bug the `processed` set guards against today. Not implemented — needs the same
-   live-verification rigor as the cascade fix before shipping. No known real-world trigger yet.
-3. **R32 results have no static seed fallback, unlike group stage.** `fbGroups[gk].fixtures` bakes
+2. **R32 results have no static seed fallback, unlike group stage.** `fbGroups[gk].fixtures` bakes
    in real scores for every played group match, so the group table survives a slow or failed
    fetch. `r32defs` has no equivalent — result data (`window.koResults`) is 100% fetch-dependent,
    forever, even for matches that are now historical fact. Backfilling already-decided R32 results
    into `r32defs` the same way would make the bracket as resilient as group stage.
-4. **`aiGo()` (AI panel, cricket tab) is broken in production.** It calls `api.anthropic.com`
+3. **`aiGo()` (AI panel, cricket tab) is broken in production.** It calls `api.anthropic.com`
    directly from the browser with no auth — works only inside a Claude Artifact sandbox, fails
    with 401/CORS on the real deployed site. Also has a hardcoded stale date in the system prompt.
    Decide: cut it, or rebuild through the existing Worker pattern.
-5. **No bracket definitions for Final/Third-Place beyond `sfdefs`.** `getMatchParticipants()` only
+4. **No bracket definitions for Final/Third-Place beyond `sfdefs`.** `getMatchParticipants()` only
    handles R32/R16/QF/SF — there's no equivalent def for the Final or third-place playoff, so
    auto-advance stops at SF winners, and neither match can show team names/scores in the bracket UI
    (though `updateProgressBar()` can now at least count them done/live by stage — see above). Not

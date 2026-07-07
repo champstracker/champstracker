@@ -1,5 +1,70 @@
 # CHANGES
 
+## 2026-07-07 — hotfix: cross-poll knockout result fabrication (confirmed live, urgent)
+- fix: found via live review of the post-group-stage-restructure preview branch (not yet merged):
+  `window.koResults['M97']`/`['M98']`/`['M99']` (all Quarter-Final matches) showed fabricated
+  `done:true` results — real scores, but for matches that can't have happened yet, since R16 wasn't
+  finished. Reproduced directly: calling `mergeKoMatches()` with the live current API data
+  corrupted these three mids on the spot, and `Morocco` incorrectly resolved as "awaiting" a
+  semifinal (M101) they hadn't reached — the corruption cascades past just the score.
+- Root cause: `buildKoAwaitingMap()` mapped a single team NAME to whichever mid they're currently
+  awaiting, excluding mids already marked done. Once a team's earlier round finishes, the map
+  correctly stops pointing their name at the old mid — but starts pointing it at their NEW
+  (not-yet-decided) mid instead. The API always returns full match history, so that team's OLD,
+  already-correctly-attributed match record is still present in every future fetch — and gets
+  reprocessed and misattributed to the new round's mid the next time `mergeKoMatches` runs. The
+  `processed` dedup set from the earlier session's fix (documented as protecting against exactly
+  this class of misattribution) couldn't catch it: `processed` is a fresh `Set` on every call, so it
+  only ever protected against reattribution *within one batch's 4-pass loop* — never *across
+  separate poll cycles*, which is exactly where this manifestation lived. Confirmed this is not a
+  regression from the restructuring branch's work (banner counting, section reorder, stepper) —
+  `buildKoAwaitingMap`/`mergeKoMatches` were byte-for-byte identical to what's already on `main`.
+  Initially over-claimed this meant production was actively affected right now; Sai checked
+  champstracker.in directly and it wasn't (R16 genuinely incomplete, no QF fabrication visible at
+  that moment) — correction noted: "same code" doesn't mean "same live failure," verify directly
+  before declaring an active incident.
+- Fix: replaced the team-NAME map with a team-PAIR map (`buildKoPairMap`/`koPairKey`) — `mid` is now
+  resolved by matching the incoming match's (home, away) pair against each mid's own
+  `getMatchParticipants()` output, not by looking up either team name individually. Two specific
+  teams can only ever meet at one bracket slot in a single-elimination tournament, so this is
+  structurally immune to the misattribution regardless of poll count or done status. This was
+  already the deferred fix on file for a separate, previously-known gap (score corrections to an
+  already-`done` match being silently dropped, since done mids were excluded from the old map) —
+  one change now closes both.
+- Verified live, same rigor as the original cascade fix: reproduced the exact fabrication with the
+  same live data that triggered it, confirmed it no longer occurs; ran 5 independent poll cycles
+  back-to-back with no drift or corruption (the original bug's blind spot was specifically
+  cross-cycle); confirmed a simulated correction to an already-done match (M89) is now picked up
+  instead of dropped; confirmed the existing same-cycle cascade behavior (a round resolving
+  immediately once its feeder round completes, from a cold/empty `koResults`) still works.
+- Branched off `main` directly (not off the pending restructuring branch), so this ships
+  independently and doesn't have to wait on that branch's visual review.
+- Merged into `main` and verified live on champstracker.in the same day, ahead of QF starting Jul 9.
+
+### Bringing the hotfix into the restructuring branch
+- Merged `main` (including the pair-key hotfix above) into `feat/post-groupstage-restructure`, since
+  that branch was cut before the hotfix landed and still had the old, buggy `mergeKoMatches`/
+  `buildKoAwaitingMap` — the same branch the fabricated QF scores were originally caught on. `index.html`
+  auto-merged cleanly (the two branches touched different functions); `CHANGES.md`/`CLAUDE.md` had
+  straightforward conflicts (both added entries), resolved by keeping both sets of changes. Fixed one
+  stale comment left behind by the merge (`updateProgressBar()` referenced the now-removed
+  `buildKoAwaitingMap` by name).
+- fix: also re-checked and fixed a second bug flagged on this branch — the top `fb-live-chip` badge
+  showed "✅ COMPLETE" for a round that was only partially done (e.g. "QUARTER-FINALS" chip green/
+  complete while the label below and the round stepper both correctly said "in progress (3/4 done)").
+  Root cause: the chip's own logic only checked `totalLive > 0` (any match live *right now*) to decide
+  between "LIVE" and "COMPLETE", never checking whether the round itself (`current`) was actually
+  fully done — so the instant nothing happened to be live (between matches, or before the last game
+  in the round kicked off), it defaulted to "COMPLETE" regardless of how many matches in the round
+  were still unplayed. Changed the non-live case inside the `current` (round-in-progress) branch to
+  show "IN PROGRESS" (amber, matching the stepper's "up next" color) instead of "COMPLETE" — that
+  word is now reserved for the branch where `current` is actually `null` (every trackable round
+  through Final/Third-Place is done). Verified live.
+- Verified live: reproduced the original QF fabrication on this branch before the merge, confirmed
+  `buildKoPairMap`/`koPairKey` are present and `buildKoAwaitingMap` is gone (only a stale-comment
+  mention remained, now fixed) after merging, and confirmed `window.koResults['M97']`/`['M98']`/
+  `['M99']` stay `null` rather than fabricating results, on this branch specifically.
+
 ## 2026-07-06 (fourth session — post-group-stage restructure)
 - feat: extended `updateProgressBar()` to count every trackable stage (group + R32 +
   R16 + QF + SF + Final/Third-Place), not just the 72 group fixtures. The header and
