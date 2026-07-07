@@ -93,8 +93,41 @@ Hosted on Cloudflare Pages. No build step, no bundler — vanilla JS/HTML/CSS in
 - `renderWCSW()` — "Who Can Still Win" page; knockout-aware via `buildKoEliminatedSet()` (Jul 2026).
   This is deliberately the ONLY place that overrides group-stage qualification with current
   knockout status — `renderFbGroups()` must not do this (see known issues history).
+- `updateProgressBar()` (Jul 2026 rewrite) — counts across ALL trackable stages, not just the 72
+  group fixtures: R32/R16/QF/SF via `koResults` (same `countRound`-style approach as
+  `buildKoAwaitingMap`), plus Final/Third-Place counted directly by `stage` from
+  `window._allMatches` (the raw match list snapshotted in `fetchFbData()` right after the
+  `type=matches` fetch). Final/Third-Place have no bracket-def mid (`getMatchParticipants` can't
+  resolve their team names — known issue #5), but a done/live COUNT doesn't need that resolution,
+  so this is a legitimately smaller fix than #5, not a workaround for it. Drives both
+  `fb-progress-label`/`fb-remaining-count` and `fb-stage-chip` (a second element that was ALSO a
+  static "GROUP STAGE" string before this — JS never touched it). `wcsw-chip`/`wcsw-info` lookups
+  in this function are dead code (no such elements exist in the HTML) — pre-existing, not
+  introduced by this rewrite; left alone as harmless no-ops.
+- Football panel section order (Jul 2026): Knockouts → Who Can Still Win → Final Group Standings →
+  Best 3rd-Placed Teams · Final — reordered from the original Groups-first layout now that group
+  stage is long over. The tournament-wide intro banner (title/stage chip/progress bar) was split
+  into its own `id="fb-intro"` block so it stays pinned above whichever section is first,
+  regardless of section order — do NOT merge it back into the `fb-groups` header. `fb-groups`
+  itself now refers to the repositioned "Final Group Standings" section (unchanged id, moved +
+  relabeled). The subnav order and the `fbSections` scroll-spy array (in the `window.addEventListener('scroll', ...)`
+  handler) must stay in sync with the actual DOM order — if you reorder sections again, update
+  both. The old `initFootball()` logic that auto-scrolled to Knockouts once group stage completed
+  was removed as redundant (Knockouts is the first section by default now) — don't re-add it
+  without re-checking whether the reorder is still in place.
+- `renderBracket()`'s round-progress stepper + graduated round emphasis (Jul 2026): `koRoundCounts()`
+  (counts a round's mids via `koResults`, mirrors `updateProgressBar`'s counting — intentionally
+  duplicated rather than shared, to avoid touching the already-verified progress-bar code for an
+  unrelated feature), `roundInfo`/`currentRound` (first round not fully done), and
+  `roundCardClass()`/`roundRowClass()`/`roundNote()` helpers. Applied via a `roundKey` param
+  threaded through `vTbdCard()` (R16/QF/SF only — `vR32Card`/`mobMatch`/`mobR16` hardcode their own
+  fixed round). Adds `active-round`/`future-round` modifier classes to `.hkb-vcard`/`.hkb-pod-match`
+  and `next`/`future` to `.hkb-vlabel`, layered on top of (not replacing) `koOutcomeClass`'s
+  winner/loser styling. The stepper itself reuses the F1 `.pip-strip` component's shape/pattern but
+  with football's own color tokens (`--football`/`--status-amber-*`) instead of F1's blue
+  `--pip-*` tokens — don't wire football's stepper to the `--pip-*` variables, they're tuned for F1.
 
-## Known open issues (as of Jul 2026, post render/UX-fixes session)
+## Known open issues (as of Jul 2026, post post-groupstage-restructure session)
 1. **CONFIRMED BUG (Jul 6): penalty-shootout matches show a summed, incorrect score.** Not a
    theoretical gap anymore — verified against official FIFA.com match center results. M74 (Germany v
    Paraguay, R32) really finished 1-1 after regulation, Paraguay won 4-3 on penalties — but our data
@@ -144,14 +177,9 @@ Hosted on Cloudflare Pages. No build step, no bundler — vanilla JS/HTML/CSS in
    Decide: cut it, or rebuild through the existing Worker pattern.
 5. **No bracket definitions for Final/Third-Place beyond `sfdefs`.** `getMatchParticipants()` only
    handles R32/R16/QF/SF — there's no equivalent def for the Final or third-place playoff, so
-   auto-advance stops at SF winners. Not urgent (Final is Jul 19), but worth adding before then.
-6. **`updateProgressBar()`'s header/progress-bar freezes at "group stage complete."** It only ever
-   counts `fbGroups[gk].fixtures` (72 group-stage matches) — once `done >= 72`, it hardcodes
-   "72 matches played · 32 remaining · Round of 32 underway from Jun 28" forever, regardless of how
-   many knockout matches have since been played (confirmed live Jul 6: R32 100% done, R16 mostly
-   done, banner still said "Round of 32 underway"). Explicitly out of scope for the Jul 6
-   render/UX-fixes session (part of the top-banner tournament-stage messaging, being handled
-   separately) — flagged here only, not fixed.
+   auto-advance stops at SF winners, and neither match can show team names/scores in the bracket UI
+   (though `updateProgressBar()` can now at least count them done/live by stage — see above). Not
+   urgent (Final is Jul 19), but worth adding before then.
 
 ## Commit message convention
 One line, plain English, with a prefix:

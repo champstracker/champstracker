@@ -1,5 +1,52 @@
 # CHANGES
 
+## 2026-07-06 (fourth session — post-group-stage restructure)
+- feat: extended `updateProgressBar()` to count every trackable stage (group + R32 +
+  R16 + QF + SF + Final/Third-Place), not just the 72 group fixtures. The header and
+  progress bar had been frozen at "Group stage complete · Round of 32 underway from
+  Jun 28" since the moment group stage ended (confirmed dormant since the Jul 6
+  render/UX-fixes session, deliberately deferred then). R32-SF counted via
+  `koResults` (same approach as `buildKoAwaitingMap`); Final/Third-Place (no
+  bracket-def mid — known issue #5) counted directly by `stage` from a new
+  `window._allMatches` snapshot taken in `fetchFbData()` — a done/live count doesn't
+  need the team-name resolution issue #5 is actually about, so this didn't need to
+  wait for that fix. `fb-stage-chip` (a second static "GROUP STAGE" string JS never
+  touched) now updates too. Verified live: banner correctly reads "Round of 32
+  complete · Round of 16 in progress (4/8 done)" against current data.
+- feat: reordered the football panel's sections — Knockouts and Who Can Still Win
+  (current tournament status) now come before Final Group Standings and Best
+  3rd-Placed Teams (renamed, explicitly marked as the historical/final record now
+  that group stage is over). Split the tournament-wide intro banner out from the old
+  "Groups" section header (new `id="fb-intro"`) so it stays pinned at the top
+  regardless of section order. Removed the now-redundant JS that used to
+  auto-scroll to Knockouts once group stage completed, since Knockouts is the first
+  section by default now. Updated the subnav order/labels and the scroll-spy
+  section-index array to match. Verified live: subnav reads Knockouts / Who Can Win?
+  / Final Standings / Best 3rd, in that order, both desktop and mobile.
+- feat: visual refresh of the Knockouts tab. Added a round-progress stepper
+  (R32→R16→QF→SF→F, shown once group stage is complete) reusing the existing F1
+  pip-strip component's shape but recolored with football's own tokens instead of
+  F1's blue. Added graduated round-row emphasis: the current round's label and cards
+  get an amber highlight plus a small "X/Y done" or "Starts <date>" chip; later,
+  not-yet-started rounds render muted (dashed, reduced opacity). Builds on top of
+  (doesn't replace) the existing win/loss card styling and stage-labeled elimination
+  from the earlier Jul 6 session. Presented a rendered mockup (screenshot, not just a
+  description) for review before implementing, per Sai's request. Verified live on
+  both desktop and mobile.
+- No SKILL.md design-guidance file was available in this environment
+  (`/mnt/skills/public/frontend-design/SKILL.md` doesn't exist here, and no
+  frontend-design skill was available to invoke) — the visual direction was grounded
+  in the site's actual existing CSS variables and general UI judgment instead, not
+  that skill's guidance. Flagging in case a future session has access and wants to
+  cross-check this work against it.
+- Minor, not fixed: found two other pre-existing but harmless issues while in this
+  code — `r32Card()`/`tbdCard()` (the older, non-"v"-prefixed horizontal bracket
+  card functions in `renderBracket()`) are dead code, superseded by `vR32Card()`/
+  `vTbdCard()` and never called; and `wcsw-chip`/`wcsw-info` element lookups in
+  `updateProgressBar()` are no-ops since no such elements exist in the HTML. Neither
+  is new to this session and neither affects behavior — left alone, flagged here for
+  awareness only.
+
 ## 2026-07-06
 - fix: spot-checked `resolveWinner`/`mergeKoMatches` against live R16 data ahead of QF
   (Jul 9) and found a real bug — verified against the actual running site, not just
