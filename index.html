@@ -2784,10 +2784,31 @@ function resolveWinner(mid){
   return kr.hs > kr.as ? home : away;
 }
 
-// Map team name → the bracket match (any round) they're currently waiting on or
-// playing live, so an incoming API result gets attributed to the right match id
-// instead of always the team's original R32 slot.
-function buildKoAwaitingMap(){
+// Canonical key for a specific two-team pairing, order-independent, so the same
+// two teams always resolve to the same key regardless of which side is home/away.
+function koPairKey(a, b){
+  return [a, b].sort().join('|');
+}
+
+// Map "team pair" key -> mid, for every bracket match whose participants are
+// currently resolvable via getMatchParticipants(), REGARDLESS of done status. Two
+// specific teams can only ever meet at ONE bracket slot in a single-elimination
+// tournament, so this key is unambiguous even once a team has multiple historical
+// matches - unlike the old team-NAME-only map (buildKoAwaitingMap, removed), which
+// conflated a team's already-decided match with whatever new match they're now
+// awaiting once they advance. That conflation caused a confirmed cross-poll-cycle
+// fabrication bug: once a team's earlier round was marked done, the name-only map
+// stopped pointing their name at it and started pointing at their NEXT round instead
+// - so the team's old, unrelated match record (still present in every fetch, since
+// the API always returns full match history) got misattributed to the new round's
+// mid on a LATER poll. The within-call `processed` guard below could never catch
+// this, since it resets fresh every call - it only ever protected against
+// misattribution within one batch's multi-pass loop, not across separate polls.
+// Pair-keying removes the ambiguity structurally: it doesn't matter how many polls
+// pass, or whether a mid is already done - two named teams always mean one mid.
+// This also fixes the separate "score corrections after done:true are silently
+// dropped" gap, since done mids are no longer excluded from the map.
+function buildKoPairMap(){
   if(!window._r32map) return {};
   const map = {};
   const allMids = Object.keys(window._r32map)
@@ -2795,12 +2816,9 @@ function buildKoAwaitingMap(){
     .concat(qfdefs.map(q => q.id))
     .concat(sfdefs.map(s => s.id));
   allMids.forEach(mid => {
-    const kr = window.koResults[mid];
-    if(kr && kr.done) return; // already finalized, don't remap
     const [home, away] = getMatchParticipants(mid);
-    if(!home || !away) return;
-    map[home] = {mid, side:'home'};
-    map[away] = {mid, side:'away'};
+    if(!home || !away || home === away) return;
+    map[koPairKey(home, away)] = mid;
   });
   return map;
 }
@@ -2809,21 +2827,16 @@ function mergeKoMatches(matches){
   if(!Array.isArray(matches) || !matches.length) return;
   const LIVE_STATUSES = ['IN_PLAY','PAUSED','HALFTIME','LIVE'];
 
-  // Re-derive teamMap and reprocess after each pass: a result that completes one
-  // round (e.g. R32) must be visible to buildKoAwaitingMap() before the next round
-  // (R16) can resolve, but a teamMap computed once up-front (before this same batch
-  // writes those R32 results) never sees the update — so the later round silently
-  // waits for the NEXT poll cycle instead of resolving in this one. Bounded to 4
-  // passes since there are only 4 knockout rounds to cascade through (R32→R16→QF→SF).
-  // A match record already merged in an earlier pass must never be reprocessed in
-  // a later one: once a team advances (its round is marked done), buildKoAwaitingMap()
-  // remaps that team's name to its NEXT round's mid — so re-running the same old,
-  // already-finished match against the new map would misattribute its score onto a
-  // future round's (unplayed) slot. Track merged records by match id to prevent that.
+  // Re-derive the pair map and reprocess after each pass, so a round that finishes
+  // mid-batch unlocks the next round's team pairing within the SAME fetch cycle
+  // instead of waiting for the next poll. Bounded to 4 passes (R32, R16, QF, SF).
+  // `processed` is now just an efficiency guard against redundant identical writes
+  // within one call - not a correctness requirement, since a pair key resolves to
+  // the same mid on every pass regardless of how many times it's reprocessed.
   const processed = new Set();
 
   for(let pass=0; pass<4; pass++){
-    const teamMap = buildKoAwaitingMap();
+    const pairMap = buildKoPairMap();
     let wroteAny = false;
 
     matches.forEach(m => {
@@ -2838,25 +2851,16 @@ function mergeKoMatches(matches){
 
       const home = koCanonical(m.homeTeam);
       const away = koCanonical(m.awayTeam);
+      if(home === away) return;
 
-      // Resolve each side independently — a home-side match must not silently
-      // short-circuit and hide a conflicting (or confirming) away-side match.
-      let mid = null, hs = m.homeScore, as_ = m.awayScore;
-      const homeMid = teamMap[home] && teamMap[home].mid;
-      const awayMid = teamMap[away] && teamMap[away].mid;
-      if(homeMid && awayMid){
-        if(homeMid !== awayMid) return; // conflicting slots — don't guess, don't corrupt either
-        mid = homeMid;
-      } else {
-        mid = homeMid || awayMid || null;
-      }
-      if(!mid) return;
-
-      // Skip group stage matches — knockout matches have stage != GROUP_STAGE and group == null
+      // Skip group stage matches - knockout matches have stage != GROUP_STAGE and group == null
       const stage = (m.stage || '').toUpperCase();
       if(stage === 'GROUP_STAGE' || m.group) return;
 
-      window.koResults[mid] = { hs, as: as_, done: isDone, live: isLive };
+      const mid = pairMap[koPairKey(home, away)];
+      if(!mid) return;
+
+      window.koResults[mid] = { hs: m.homeScore, as: m.awayScore, done: isDone, live: isLive };
       processed.add(recordKey);
       wroteAny = true;
     });
