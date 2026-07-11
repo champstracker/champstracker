@@ -1,5 +1,28 @@
 # CHANGES
 
+## 2026-07-11 — fix: SF bracket-half grouping wrong (M101/M102 pulling from wrong QF pair)
+- fix: `sfdefs` paired `{qfa:'M97', qfb:'M99'}` for M101 and `{qfa:'M98', qfb:'M100'}` for M102 —
+  Sai confirmed against official FIFA match numbering (cross-checked CBS Sports/MLS Soccer
+  schedules) that the real pairing is M101=W97vW98 (Dallas, Jul 14) and M102=W99vW100 (Atlanta,
+  Jul 15). `r16defs`/`qfdefs` (the R32→R16→QF chain) were already correct — the bug was isolated to
+  which two QFs get grouped into which SF-feeding bracket half.
+- Fixing `sfdefs` alone would have created a worse, purely-visual bug: the desktop bracket's
+  half-grouping arrays (`topR32ids`/`topR16arr`/`topQFarr` and the bottom equivalents) and the SVG
+  connector-line pairs in `drawBracketConnectors()` all separately hardcode the same top/bottom
+  split, and were still grouped `{M97,M99}`/`{M98,M100}` — so the team names would update correctly
+  but the connector lines would visually draw the old (wrong) pairing. Fixed all three layers
+  together in one pass so the data and visual layers can't drift apart.
+- Added a console assertion (`assertBracketHalvesConsistent`, runs on every `renderBracket()` call)
+  that checks `sfdefs`' `qfa`/`qfb` are in the matching half's QF array, each QF's `r16a`/`r16b` are
+  in that half's R16 array, and each R16's `r32a`/`r32b` are in that half's R32 array — logs loudly
+  via `console.error` (non-throwing) if a future edit reintroduces a data/visual mismatch.
+- Verified locally: with M97 (France 2-0 Morocco) and M98 (Spain 2-1 Belgium) already decided, M101
+  now correctly resolves to "France vs Spain" instead of the old wrong pairing. M102 correctly shows
+  the `W·M99`/`W·M100` placeholder since QF3/QF4 (Norway v England, Argentina v Switzerland) hadn't
+  been played yet. No console errors from the new consistency assertion.
+- Pushed to `fix/ko-sf-half-grouping` for preview only — not merged to `main` pending Sai's
+  confirmation on the preview deployment.
+
 ## 2026-07-07 — hotfix: cross-poll knockout result fabrication (confirmed live, urgent)
 - fix: found via live review of the post-group-stage-restructure preview branch (not yet merged):
   `window.koResults['M97']`/`['M98']`/`['M99']` (all Quarter-Final matches) showed fabricated
