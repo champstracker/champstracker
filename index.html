@@ -3585,10 +3585,15 @@ const qfdefs = [
 ];
 
 // ── Official SF pairings ──────────────────────────────────
-// M101=W97vsW99 (Dallas), M102=W98vsW100 (Atlanta)
+// M101=W97vsW98 (Dallas), M102=W99vsW100 (Atlanta) — confirmed against official
+// FIFA match numbering, cross-checked with CBS Sports/MLS Soccer schedules (Jul 2026).
+// Bracket halves: top (→M101) = QF{97,98}/R16{89,90,93,94}/R32{73,74,75,77,81,82,83,84};
+// bottom (→M102) = QF{99,100}/R16{91,92,95,96}/R32{76,78,79,80,85,86,87,88}. r16defs/
+// qfdefs' r16a/r16b/r32a/r32b were already correct — the bug was isolated to which QFs
+// get grouped into which SF-feeding half (was {97,99}/{98,100}, is now {97,98}/{99,100}).
 const sfdefs = [
-  {id:'M101',date:'Jul 14',venue:'Dallas',   qfa:'M97', qfb:'M99'},
-  {id:'M102',date:'Jul 15',venue:'Atlanta',  qfa:'M98', qfb:'M100'},
+  {id:'M101',date:'Jul 14',venue:'Dallas',   qfa:'M97', qfb:'M98'},
+  {id:'M102',date:'Jul 15',venue:'Atlanta',  qfa:'M99', qfb:'M100'},
 ];
 
 function renderBracket(){
@@ -3852,12 +3857,45 @@ function renderBracket(){
     return '<div class="hkb-vlabel ' + rowCls + '">' + text + (sub ? '<small>' + sub + '</small>' : '') + chip + '</div>';
   }
 
-  var topR32ids = ['M74','M77','M73','M75','M76','M78','M79','M80'];
-  var botR32ids = ['M83','M84','M81','M82','M86','M88','M85','M87'];
-  var topR16arr = [r16defs[0],r16defs[1],r16defs[2],r16defs[3]];
-  var botR16arr = [r16defs[4],r16defs[5],r16defs[6],r16defs[7]];
-  var topQFarr  = [qfdefs[0], qfdefs[2]];
-  var botQFarr  = [qfdefs[1], qfdefs[3]];
+  // Halves must feed sfdefs consistently: top → M101 (QF{97,98}), bottom → M102 (QF{99,100}).
+  // See sfdefs comment above for the full confirmed R32/R16/QF membership per half.
+  var topR32ids = ['M74','M77','M73','M75','M83','M84','M81','M82'];
+  var botR32ids = ['M76','M78','M79','M80','M86','M88','M85','M87'];
+  var topR16arr = [r16defs[0],r16defs[1],r16defs[4],r16defs[5]];
+  var botR16arr = [r16defs[2],r16defs[3],r16defs[6],r16defs[7]];
+  var topQFarr  = [qfdefs[0], qfdefs[1]];
+  var botQFarr  = [qfdefs[2], qfdefs[3]];
+
+  // Regression guard (Jul 2026, ko-sf-half-grouping fix): sfdefs' qfa/qfb say which two
+  // QFs feed each SF, and these six arrays say which visual half those QFs render in —
+  // the two must never drift apart again the way they did before this fix (SF paired
+  // {97,98}/{99,100} while the halves were still grouped {97,99}/{98,100}). Checks, per
+  // half: both of sfdefs[i]'s {qfa,qfb} are in that half's QF array, both of each QF's
+  // {r16a,r16b} are in that half's R16 array, and both of each R16's {r32a,r32b} are in
+  // that half's R32 array. Logs loudly (does not throw) so a future edit to any one of
+  // sfdefs/topQFarr/topR16arr/topR32ids (or the bottom equivalents) without updating the
+  // others is caught in devtools instead of silently mis-rendering the bracket.
+  (function assertBracketHalvesConsistent(){
+    [['top', topR32ids, topR16arr, topQFarr, sfdefs[0]],
+     ['bottom', botR32ids, botR16arr, botQFarr, sfdefs[1]]].forEach(function(half){
+      var name = half[0], r32ids = half[1], r16arr = half[2], qfArr = half[3], sf = half[4];
+      var qfIds = qfArr.map(function(q){ return q.id; });
+      [sf.qfa, sf.qfb].forEach(function(id){
+        if(qfIds.indexOf(id) === -1) console.error('[bracket-consistency] sfdefs ' + sf.id + ' expects QF ' + id + ' in the ' + name + ' half, but ' + name + 'QFarr is ' + qfIds.join(','));
+      });
+      qfArr.forEach(function(q){
+        [q.r16a, q.r16b].forEach(function(id){
+          if(r16arr.map(function(r){return r.id;}).indexOf(id) === -1) console.error('[bracket-consistency] QF ' + q.id + ' expects R16 ' + id + ' in the ' + name + ' half, but ' + name + 'R16arr is ' + r16arr.map(function(r){return r.id;}).join(','));
+        });
+      });
+      r16arr.forEach(function(r){
+        [r.r32a, r.r32b].forEach(function(id){
+          if(r32ids.indexOf(id) === -1) console.error('[bracket-consistency] R16 ' + r.id + ' expects R32 ' + id + ' in the ' + name + ' half, but ' + name + 'R32ids is ' + r32ids.join(','));
+        });
+      });
+    });
+  })();
+
   var SEP = '<div style="width:' + G + 'px;flex-shrink:0"></div>';
 
   var topR32html = topR32ids.map(vR32Card).join(SEP);
@@ -4013,20 +4051,22 @@ function drawBracketConnectors(){
     p.setAttribute('stroke-linejoin','round');
     svg.appendChild(p);
   }
+  // Top half (→M101): R32{74,77,73,75,83,84,81,82} → R16{89,90,93,94} → QF{97,98}
   line('M74','M89','down'); line('M77','M89','down');
   line('M73','M90','down'); line('M75','M90','down');
-  line('M76','M91','down'); line('M78','M91','down');
-  line('M79','M92','down'); line('M80','M92','down');
+  line('M83','M93','down'); line('M84','M93','down');
+  line('M81','M94','down'); line('M82','M94','down');
   line('M89','M97','down'); line('M90','M97','down');
-  line('M91','M99','down'); line('M92','M99','down');
-  line('M97','M101','down'); line('M99','M101','down');
-  line('M83','M93','up'); line('M84','M93','up');
-  line('M81','M94','up'); line('M82','M94','up');
+  line('M93','M98','down'); line('M94','M98','down');
+  line('M97','M101','down'); line('M98','M101','down');
+  // Bottom half (→M102): R32{76,78,79,80,86,88,85,87} → R16{91,92,95,96} → QF{99,100}
+  line('M76','M91','up'); line('M78','M91','up');
+  line('M79','M92','up'); line('M80','M92','up');
   line('M86','M95','up'); line('M88','M95','up');
   line('M85','M96','up'); line('M87','M96','up');
-  line('M93','M98','up'); line('M94','M98','up');
+  line('M91','M99','up'); line('M92','M99','up');
   line('M95','M100','up'); line('M96','M100','up');
-  line('M98','M102','up'); line('M100','M102','up');
+  line('M99','M102','up'); line('M100','M102','up');
 }
 
 function renderWCSW(){
